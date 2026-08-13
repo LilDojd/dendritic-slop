@@ -1,0 +1,31 @@
+name: Publish to FlakeHub
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+*"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - uses: DeterminateSystems/determinate-nix-action@61cbfe2efc2d4e7a8a6d56967c3c1058e846c858 # v3
+
+      - run: nix flake check --no-build --all-systems --no-update-lock-file
+      - run: nix flake check -L --no-update-lock-file
+
+      - uses: DeterminateSystems/flakehub-push@abcff4fb351e63f852f5fb2b9af0ae4e69de07d4
+        with:
+          visibility: public
+          tag: ${{ github.ref_name }}
+          spdx-expression: MIT
+          error-on-conflict: true
