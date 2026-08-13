@@ -72,15 +72,20 @@
         ];
       };
 
-      bro = config.flake.lib.mkSkill {
-        inherit pkgs;
-        name = "bro";
-        text = builtins.readFile ../skills/bro/SKILL.md;
+      allSkills = pkgs.symlinkJoin {
+        name = "all-dendritic-slop-skills";
+        paths = lib.mapAttrsToList (
+          name: resource:
+          config.flake.lib.mkSkill {
+            inherit pkgs name;
+            text = builtins.readFile resource.source;
+          }
+        ) config.dendriticSlopInternal.resources.skills;
       };
     in
     {
       checks = {
-        bro-skill = bro;
+        all-skills = allSkills;
         home-manager-module = home.activationPackage;
       }
       // lib.optionalAttrs pkgs.stdenv.isLinux {
@@ -91,6 +96,6 @@
       };
 
       formatter = pkgs.nixfmt-tree;
-      packages.bro-skill = bro;
+      packages.all-skills = allSkills;
     };
 }

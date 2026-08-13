@@ -6,7 +6,6 @@ let
     "herdr"
     "pi"
     "rules"
-    "skills"
   ];
 
   isValidSkillName =

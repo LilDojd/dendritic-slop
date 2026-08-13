@@ -1,0 +1,15 @@
+[book]
+title = "dendritic-slop"
+description = "Declarative Pi and LLM tooling for Nix"
+src = "src"
+
+[build]
+create-missing = false
+
+[output.html]
+git-repository-url = "https://github.com/LilDojd/dendritic-slop"
+no-section-label = true
+site-url = "/dendritic-slop/"
+
+[output.html.playground]
+runnable = false
