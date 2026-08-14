@@ -9,6 +9,11 @@
   };
 
   inputs = {
+    astral-agent-skills = {
+      url = "github:astral-sh/claude-code-plugins/f3ce88a7ba830f53afd6d944c1d0278ed318e142";
+      flake = false;
+    };
+
     actionbook-rust-skills = {
       url = "github:actionbook/rust-skills";
       flake = false;

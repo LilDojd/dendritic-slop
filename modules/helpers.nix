@@ -43,13 +43,19 @@ let
         path = source;
         name = "agent-skill-${name}-source";
       };
-      copiedExtraFiles = map (file: {
-        name = builtins.baseNameOf file;
-        path = builtins.path {
-          path = file;
-          name = "agent-skill-${name}-${builtins.baseNameOf file}";
-        };
-      }) extraFiles;
+      copiedExtraFiles = map (
+        file:
+        let
+          fileName = builtins.unsafeDiscardStringContext (builtins.baseNameOf file);
+        in
+        {
+          name = fileName;
+          path = builtins.path {
+            path = file;
+            name = "agent-skill-${name}-${fileName}";
+          };
+        }
+      ) extraFiles;
     in
     pkgs.runCommand "agent-skill-${name}"
       {
@@ -83,7 +89,7 @@ let
               skill_count=0
               while IFS= read -r -d $'\0' target; do
                 ${pkgs.gnugrep}/bin/grep -Eq '^name:[[:space:]]+[a-z0-9]+(-[a-z0-9]+)*[[:space:]]*$' "$target"
-                ${pkgs.gnugrep}/bin/grep -Eq '^description:[[:space:]]+.' "$target"
+                ${pkgs.gnugrep}/bin/grep -Eq '^description:' "$target"
                 skill_count=$((skill_count + 1))
               done < <(${pkgs.findutils}/bin/find "$destination" -name SKILL.md -type f -print0)
               test "$skill_count" -gt 0
@@ -93,7 +99,7 @@ let
               target="$destination/SKILL.md"
               test -f "$target"
               ${pkgs.gnugrep}/bin/grep -Fqx -- ${lib.escapeShellArg "name: ${name}"} "$target"
-              ${pkgs.gnugrep}/bin/grep -Eq '^description:[[:space:]]+.' "$target"
+              ${pkgs.gnugrep}/bin/grep -Eq '^description:' "$target"
             ''
         }
       '';

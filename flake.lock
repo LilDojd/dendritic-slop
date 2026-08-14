@@ -16,6 +16,23 @@
         "type": "github"
       }
     },
+    "astral-agent-skills": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1772208555,
+        "narHash": "sha256-yQ8R2R95QFXjYYbwAN0NdySObo8S2Cf/TecOQ9Ucr/A=",
+        "owner": "astral-sh",
+        "repo": "claude-code-plugins",
+        "rev": "f3ce88a7ba830f53afd6d944c1d0278ed318e142",
+        "type": "github"
+      },
+      "original": {
+        "owner": "astral-sh",
+        "repo": "claude-code-plugins",
+        "rev": "f3ce88a7ba830f53afd6d944c1d0278ed318e142",
+        "type": "github"
+      }
+    },
     "bun2nix": {
       "inputs": {
         "flake-parts": [
@@ -395,6 +412,7 @@
     "root": {
       "inputs": {
         "actionbook-rust-skills": "actionbook-rust-skills",
+        "astral-agent-skills": "astral-agent-skills",
         "flake-parts": "flake-parts",
         "herdr-plugin-jj-workspace": "herdr-plugin-jj-workspace",
         "herdr-src": "herdr-src",
