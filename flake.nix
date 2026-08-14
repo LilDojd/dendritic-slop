@@ -9,6 +9,11 @@
   };
 
   inputs = {
+    actionbook-rust-skills = {
+      url = "github:actionbook/rust-skills";
+      flake = false;
+    };
+
     flake-parts = {
       url = "https://flakehub.com/f/hercules-ci/flake-parts/0.1.*";
       inputs.nixpkgs-lib.follows = "nixpkgs";
@@ -36,6 +41,11 @@
     nix-darwin = {
       url = "github:nix-darwin/nix-darwin";
       inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    leonardomso-rust-skills = {
+      url = "github:leonardomso/rust-skills";
+      flake = false;
     };
 
     llm-agents.url = "github:numtide/llm-agents.nix";

@@ -13,6 +13,7 @@ let
         manifest = import manifestPath { inherit inputs; };
         allowed = [
           "actions"
+          "collection"
           "defaultEnable"
           "description"
           "environment"
@@ -21,6 +22,7 @@ let
           "homepage"
           "id"
           "keybindings"
+          "members"
           "package"
           "pluginRoot"
           "requiresTargets"
@@ -41,6 +43,18 @@ let
       assert lib.assertMsg (
         builtins.isString manifest.description && manifest.description != ""
       ) "${kind}/${name}.description must be non-empty";
+      assert lib.assertMsg (
+        !(manifest ? collection) || (kind == "skills" && builtins.isBool manifest.collection)
+      ) "${kind}/${name}.collection must be a Boolean for a skill";
+      assert lib.assertMsg (
+        !(manifest ? members)
+        || (
+          kind == "skills"
+          && manifest.collection or false
+          && builtins.isList manifest.members
+          && builtins.all validName manifest.members
+        )
+      ) "${kind}/${name}.members must be valid skill names in a collection";
       assert lib.assertMsg (
         !(manifest ? defaultEnable) || builtins.isBool manifest.defaultEnable
       ) "${kind}/${name}.defaultEnable must be a Boolean";
@@ -121,10 +135,12 @@ let
       // {
         inherit kind name;
         actions = manifest.actions or [ ];
+        collection = manifest.collection or false;
         defaultEnable = if isHerdrPlugin then false else manifest.defaultEnable or true;
         environment = manifest.environment or { };
         extraFiles = manifest.extraFiles or [ ];
         keybindings = manifest.keybindings or [ ];
+        members = manifest.members or [ ];
         requiresTargets = manifest.requiresTargets or [ ];
         runtimeInputs = manifest.runtimeInputs or (_: [ ]);
       }

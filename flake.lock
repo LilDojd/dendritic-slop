@@ -1,5 +1,21 @@
 {
   "nodes": {
+    "actionbook-rust-skills": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1779665610,
+        "narHash": "sha256-OPvcLvHqWwBTolIvQU9YP8Fl/Ntsjo5OP4Y6g8Hy/Dw=",
+        "owner": "actionbook",
+        "repo": "rust-skills",
+        "rev": "fa60f7931223646fb71c4586b4a6c8545016076a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "actionbook",
+        "repo": "rust-skills",
+        "type": "github"
+      }
+    },
     "bun2nix": {
       "inputs": {
         "flake-parts": [
@@ -245,6 +261,22 @@
         "type": "sourcehut"
       }
     },
+    "leonardomso-rust-skills": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1781477469,
+        "narHash": "sha256-B6E8JP78/wDdJYHp1l5cpEgxRuCzAhOhUtst4pueMw0=",
+        "owner": "leonardomso",
+        "repo": "rust-skills",
+        "rev": "fd2a861ab0406a4ac536a55274d14ea6fd1ca9c9",
+        "type": "github"
+      },
+      "original": {
+        "owner": "leonardomso",
+        "repo": "rust-skills",
+        "type": "github"
+      }
+    },
     "llm-agents": {
       "inputs": {
         "bun2nix": "bun2nix",
@@ -362,12 +394,14 @@
     },
     "root": {
       "inputs": {
+        "actionbook-rust-skills": "actionbook-rust-skills",
         "flake-parts": "flake-parts",
         "herdr-plugin-jj-workspace": "herdr-plugin-jj-workspace",
         "herdr-src": "herdr-src",
         "home-manager": "home-manager",
         "impermanence": "impermanence",
         "import-tree": "import-tree",
+        "leonardomso-rust-skills": "leonardomso-rust-skills",
         "llm-agents": "llm-agents",
         "nix-darwin": "nix-darwin",
         "nixpkgs": "nixpkgs_3",

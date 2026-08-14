@@ -34,7 +34,12 @@ let
         name: resource:
         mkSkill {
           inherit pkgs name;
-          inherit (resource) extraFiles source;
+          inherit (resource)
+            collection
+            extraFiles
+            members
+            source
+            ;
           runtimeInputs = resource.runtimeInputs pkgs;
         }
       ) enabledSkills;
