@@ -1,7 +1,6 @@
 { config, inputs, ... }:
 let
   coreModule = config.flake.modules.homeManager.core;
-  inherit (config.flake.lib) mkEnableTarget;
   herdrPlugins = config.dendriticSlopInternal.resources.herdrPlugins;
 
   targetModule =
@@ -150,8 +149,9 @@ let
     in
     {
       options.dendriticSlop = {
-        targets.herdr.enable = mkEnableTarget {
-          inherit config lib;
+        targets.herdr.enable = lib.mkOption {
+          type = lib.types.bool;
+          default = false;
           description = "Install Herdr.";
         };
         herdr.plugins = pluginOptions;

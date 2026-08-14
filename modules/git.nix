@@ -1,13 +1,12 @@
 { config, ... }:
 let
   coreModule = config.flake.modules.homeManager.core;
-  inherit (config.flake.lib) mkEnableTarget;
-
   targetModule =
     { config, lib, ... }:
     {
-      options.dendriticSlop.targets.git.enable = mkEnableTarget {
-        inherit config lib;
+      options.dendriticSlop.targets.git.enable = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
         description = "Add .mcp.json and mcp.json to the global Git ignore list.";
       };
 

@@ -52,27 +52,32 @@ Import the aggregate once and enable it:
     username = "alice";
     context7ApiKeyFile = "/run/agenix/context7ApiKey";
 
-    # Explicit overrides; Herdr plugins and web-access are opt-in.
-    targets.herdr.enable = true;
+    profiles = {
+      core.enable = true;
+      rust.enable = true;
+      python.enable = true;
+    };
+    migrations.globalSkills.takeOver = true;
+
+    # Explicit leaf exceptions and opt-ins override profile defaults.
     herdr.plugins.jj-workspace.enable = true;
-    skills.jujutsu.enable = true;
-    extensions.ask-user.enable = false;
+    skills.ty.enable = false;
     extensions.web-access.enable = true;
   };
 }
 ```
 
-`dendriticSlop.autoEnable` defaults to `true` and enables imported Home Manager targets and resources whose catalog defaults permit automatic activation. Set it to `false` to opt in individually, or override `targets.<name>.enable`, `skills.<name>.enable`, `extensions.<name>.enable`, and `herdr.plugins.<name>.enable`. `web-access` and all Herdr plugins remain disabled until explicitly enabled.
+Resources and targets are disabled unless selected by an explicit profile or leaf setting. Profile members use module defaults, so explicit `targets.<name>.enable`, `skills.<name>.enable`, `extensions.<name>.enable`, and `herdr.plugins.<name>.enable` values win.
 
 `web-access` is opt-in because it accesses the network and processes untrusted remote content. Its default configuration denies browser-cookie access and remote hosted extraction and keeps SSRF protection enabled. Herdr plugins are opt-in because they execute as the user. Enabling a plugin registers the pinned build with Herdr; disabling it removes the registration only while dendritic-slop still owns it. Manually managed registrations are left unchanged.
 
-The NixOS aggregate persists `.pi/agent` unless `dendriticSlop.targets.persistence.enable = false`; this persistence default is independent of `autoEnable`.
+The NixOS aggregate persists `.pi/agent` and `.local/state/dendritic-slop` unless `dendriticSlop.targets.persistence.enable = false`.
 
 The Jujutsu workspace plugin exposes `new` and `new-tab` actions for creating a Jujutsu workspace as a Herdr workspace or tab. Its wizard runs `jj git fetch` before creation; fetch failure is nonfatal. New workspaces are based on `trunk()` by default and receive a matching bookmark. Set `JJ_BASE_REV` or `JJ_WORKSPACE_ROOT` in the plugin config directory's `.env` file to override the base revision or checkout root. The `remove` action runs `jj workspace forget`, deletes the focused secondary workspace directory, and closes its Herdr workspace.
 
 Consumers of `nixos.slop` must import Home Manager and impermanence; consumers of `darwin.slop` must import Home Manager. Store credentials outside the Nix store and pass only absolute runtime paths to secret files.
 
-For standalone Home Manager, import `inputs.dendritic-slop.modules.homeManager.slop`, set `dendriticSlop.enable = true`, and configure `dendriticSlop.context7.apiKeyFile` if needed. Individual feature modules can be imported instead of `slop`; each exposes `dendriticSlop.enable`, `autoEnable`, and its own feature options.
+For standalone Home Manager, import `inputs.dendritic-slop.modules.homeManager.slop`, set `dendriticSlop.enable = true`, and configure `dendriticSlop.context7.apiKeyFile` if needed. Individual feature modules can be imported instead of `slop`; each exposes `dendriticSlop.enable` and its own feature options.
 
 ## Development
 

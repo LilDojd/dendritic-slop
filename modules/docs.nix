@@ -23,7 +23,7 @@ let
         ${resource.description}
 
         - Option: `dendriticSlop.${kind}.${name}.enable`
-        - Default when `autoEnable` is true: `${if resource.defaultEnable then "enabled" else "disabled"}`
+        - Default: `disabled` unless selected by a profile
         - Definition: [`${kind}/${name}`](${repository}/resources/${kind}/${name})
         ${lib.optionalString (
           resource ? homepage
@@ -51,7 +51,7 @@ let
         ${resource.description}
 
         - Option: `dendriticSlop.herdr.plugins.${name}.enable`
-        - Default: `disabled` (not affected by `autoEnable`)
+        - Default: `disabled`
         - Required target: `herdr`
         - Plugin ID: `${resource.id}`
         - Version: `${resource.version}`
@@ -67,7 +67,7 @@ let
   catalog = ''
     # Resource catalog
 
-    Each resource can be enabled independently. Skills and extensions shown as enabled by default follow `dendriticSlop.autoEnable`; opt-in resources remain disabled until explicitly enabled. Herdr plugins are always opt-in.
+    Each resource can be enabled independently or through an explicit profile. Herdr plugins are always opt-in unless a selected profile names them.
 
     ${renderKind "skills" resources.skills}
     ${renderKind "extensions" resources.extensions}

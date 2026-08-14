@@ -6,22 +6,28 @@ let
   piModule = config.flake.modules.homeManager.pi;
 
   resourceOptions =
-    hmConfig: resources:
+    resources:
     lib.mapAttrs (_: resource: {
       enable = lib.mkOption {
         type = lib.types.bool;
-        default = resource.defaultEnable && hmConfig.dendriticSlop.autoEnable;
-        defaultText = lib.literalExpression (
-          if resource.defaultEnable then "config.dendriticSlop.autoEnable" else "false"
-        );
+        default = false;
         description = "Whether to enable ${resource.title}. ${resource.description}";
       };
     }) resources;
+
+  profileOptions = lib.mapAttrs (_: profile: {
+    enable = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Whether to enable the ${profile.title} profile. ${profile.description}";
+    };
+  }) catalog.profiles;
 
   targetModule =
     {
       config,
       lib,
+      options,
       pkgs,
       ...
     }:
@@ -50,6 +56,26 @@ let
         builtins.attrValues enabledExtensions
       );
       pathExtensions = lib.filterAttrs (_: resource: resource ? source) enabledExtensions;
+      availableTargets = builtins.attrNames (options.dendriticSlop.targets or { });
+      profileDefaults = lib.mapAttrsToList (
+        name: profile:
+        lib.mkIf config.dendriticSlop.profiles.${name}.enable {
+          dendriticSlop = {
+            targets = lib.genAttrs (lib.intersectLists availableTargets profile.targets) (_: {
+              enable = lib.mkDefault true;
+            });
+            skills = lib.genAttrs profile.members.skills (_: {
+              enable = lib.mkDefault true;
+            });
+            extensions = lib.genAttrs profile.members.extensions (_: {
+              enable = lib.mkDefault true;
+            });
+            herdr.plugins = lib.genAttrs profile.members.herdrPlugins (_: {
+              enable = lib.mkDefault true;
+            });
+          };
+        }
+      ) catalog.profiles;
       pathExtensionFiles = lib.mapAttrs' (
         _: resource:
         lib.nameValuePair ".pi/agent/extensions/${resource.fileName}" {
@@ -60,34 +86,37 @@ let
     in
     {
       options.dendriticSlop = {
-        skills = resourceOptions config catalog.skills;
-        extensions = resourceOptions config legacyExtensions;
+        profiles = profileOptions;
+        skills = resourceOptions catalog.skills;
+        extensions = resourceOptions legacyExtensions;
       };
 
-      config = lib.mkIf config.dendriticSlop.enable {
-        dendriticSlop.targets = lib.genAttrs requiredTargets (_: {
-          enable = lib.mkDefault true;
-        });
+      config = lib.mkMerge (
+        profileDefaults
+        ++ [
+          (lib.mkIf config.dendriticSlop.enable {
+            dendriticSlop.targets = lib.genAttrs requiredTargets (_: {
+              enable = lib.mkDefault true;
+            });
 
-        home = {
-          file = pathExtensionFiles // {
-            ".agents/skills" = {
-              source = managedSkills;
-              force = true;
+            home = {
+              file = pathExtensionFiles // {
+                ".agents/skills".source = managedSkills;
+              };
+              packages = skillRuntimePackages;
             };
-          };
-          packages = skillRuntimePackages;
-        };
 
-        programs.pi.coding-agent = {
-          settings.packages = [
-            # renovate: datasource=npm depName=pi-mcp-adapter
-            "npm:pi-mcp-adapter@2.22.0"
-          ]
-          ++ map (resource: resource.package) packageResources;
-          environment = lib.mkMerge (map (resource: resource.environment or { }) allEnabled);
-        };
-      };
+            programs.pi.coding-agent = {
+              settings.packages = [
+                # renovate: datasource=npm depName=pi-mcp-adapter
+                "npm:pi-mcp-adapter@2.22.0"
+              ]
+              ++ map (resource: resource.package) packageResources;
+              environment = lib.mkMerge (map (resource: resource.environment or { }) allEnabled);
+            };
+          })
+        ]
+      );
     };
 in
 {

@@ -556,18 +556,5 @@ in
       resourceKinds
       targetNames
       ;
-
-    mkEnableTarget =
-      {
-        config,
-        lib,
-        description,
-      }:
-      lib.mkOption {
-        type = lib.types.bool;
-        default = config.dendriticSlop.autoEnable;
-        defaultText = lib.literalExpression "config.dendriticSlop.autoEnable";
-        inherit description;
-      };
   };
 }

@@ -168,11 +168,31 @@
         };
 
       home = mkHome { };
+      homeWithProfiles = mkHome {
+        dendriticSlop = {
+          profiles = {
+            core.enable = true;
+            python.enable = true;
+          };
+          skills = {
+            brainstorming.enable = true;
+            bro.enable = false;
+            ty.enable = false;
+          };
+          targets.git.enable = false;
+        };
+      };
+      homeWithTakeover = mkHome {
+        dendriticSlop.migrations.globalSkills.takeOver = true;
+      };
       homeWithWebAccess = mkHome {
         dendriticSlop.extensions.web-access.enable = true;
       };
       homeWithJjWorkspace = mkHome {
-        dendriticSlop.herdr.plugins.jj-workspace.enable = true;
+        dendriticSlop = {
+          herdr.plugins.jj-workspace.enable = true;
+          targets.herdr.enable = true;
+        };
       };
       jjWorkspaceResource = config.dendriticSlopInternal.resources.herdrPlugins.jj-workspace;
       jjWorkspacePackage = jjWorkspaceResource.package pkgs;
@@ -190,7 +210,8 @@
         touch "$out"
       '';
       herdrAgentStateResource = config.dendriticSlopInternal.resources.extensions.herdr-agent-state;
-      managedHerdrAgentState = home.config.home.file.".pi/agent/extensions/herdr-agent-state.ts";
+      managedHerdrAgentState =
+        homeWithProfiles.config.home.file.".pi/agent/extensions/herdr-agent-state.ts";
       managedSkills = home.config.home.file.".agents/skills";
       webAccessPackage = config.dendriticSlopInternal.resources.extensions.web-access.package;
       defaultPackages = home.config.programs.pi.coding-agent.settings.packages;
@@ -243,10 +264,322 @@
         ];
       };
 
+      mkBridgeSystem =
+        hostSelection: homeDefaults:
+        let
+          hostModule = {
+            dendriticSlop = {
+              enable = true;
+              username = testUser;
+            }
+            // hostSelection;
+            home-manager.users.${testUser} = {
+              dendriticSlop = homeDefaults;
+              home.stateVersion = "25.11";
+            };
+          };
+        in
+        if pkgs.stdenv.hostPlatform.isDarwin then
+          inputs.nix-darwin.lib.darwinSystem {
+            inherit system;
+            modules = [
+              inputs.home-manager.darwinModules.home-manager
+              config.flake.modules.darwin.slop
+              hostModule
+              {
+                system.stateVersion = 6;
+                users.users.${testUser}.home = "/Users/${testUser}";
+              }
+            ];
+          }
+        else
+          inputs.nixpkgs.lib.nixosSystem {
+            inherit system;
+            modules = [
+              inputs.home-manager.nixosModules.home-manager
+              inputs.impermanence.nixosModules.impermanence
+              config.flake.modules.nixos.slop
+              hostModule
+              {
+                boot.loader.grub.devices = [ "nodev" ];
+                fileSystems = {
+                  "/" = {
+                    device = "none";
+                    fsType = "tmpfs";
+                  };
+                  "/persistent" = {
+                    device = "none";
+                    fsType = "tmpfs";
+                    neededForBoot = true;
+                  };
+                };
+                system.stateVersion = "25.11";
+                users.users.${testUser}.isNormalUser = true;
+              }
+            ];
+          };
+      bridgeHome = host: host.config.home-manager.users.${testUser}.dendriticSlop;
+      bridgeUnset = bridgeHome (
+        mkBridgeSystem { } {
+          profiles.core.enable = lib.mkDefault true;
+          skills.ty.enable = lib.mkDefault true;
+        }
+      );
+      bridgeTrue = bridgeHome (
+        mkBridgeSystem
+          {
+            profiles.core.enable = true;
+            skills.ty.enable = true;
+          }
+          {
+            profiles.core.enable = lib.mkDefault false;
+            skills.ty.enable = lib.mkDefault false;
+          }
+      );
+      bridgeFalse = bridgeHome (
+        mkBridgeSystem
+          {
+            profiles.core.enable = false;
+            skills.ty.enable = false;
+          }
+          {
+            profiles.core.enable = lib.mkDefault true;
+            skills.ty.enable = lib.mkDefault true;
+          }
+      );
+
       allSkills = realizedSkills.tree;
+      globalSkillsActivation = homeWithTakeover.config.home.activation.dendriticSlopGlobalSkillsTakeOver;
+      globalSkillsTakeoverScript =
+        homeWithTakeover.config.dendriticSlopInternal.globalSkills.takeoverScript;
     in
     {
       checks = {
+        profile-selection =
+          assert !(home.options.dendriticSlop ? autoEnable);
+          assert !builtins.hasAttr "actionbook-rust" home.options.dendriticSlop.skills;
+          assert !builtins.hasAttr "astral-python" home.options.dendriticSlop.skills;
+          assert !builtins.hasAttr "superpowers" home.options.dendriticSlop.skills;
+          assert
+            builtins.attrNames home.config.dendriticSlop.profiles == [
+              "core"
+              "python"
+              "rust"
+              "superpowers"
+              "web"
+            ];
+          assert lib.all (name: !home.config.dendriticSlop.skills.${name}.enable) (
+            builtins.attrNames catalog.skills
+          );
+          assert homeWithProfiles.config.dendriticSlop.profiles.core.enable;
+          assert homeWithProfiles.config.dendriticSlop.profiles.python.enable;
+          assert !homeWithProfiles.config.dendriticSlop.skills.bro.enable;
+          assert homeWithProfiles.config.dendriticSlop.skills.herdr.enable;
+          assert homeWithProfiles.config.dendriticSlop.skills.jujutsu.enable;
+          assert homeWithProfiles.config.dendriticSlop.skills.ruff.enable;
+          assert !homeWithProfiles.config.dendriticSlop.skills.ty.enable;
+          assert homeWithProfiles.config.dendriticSlop.skills.uv.enable;
+          assert homeWithProfiles.config.dendriticSlop.skills.brainstorming.enable;
+          assert !homeWithProfiles.config.dendriticSlop.targets.git.enable;
+          assert homeWithProfiles.config.dendriticSlop.targets.herdr.enable;
+          assert homeWithProfiles.config.dendriticSlop.targets.pi.enable;
+          assert homeWithProfiles.config.dendriticSlop.targets.rules.enable;
+          assert bridgeUnset.profiles.core.enable && bridgeUnset.skills.ty.enable;
+          assert bridgeTrue.profiles.core.enable && bridgeTrue.skills.ty.enable;
+          assert !bridgeFalse.profiles.core.enable && !bridgeFalse.skills.ty.enable;
+          pkgs.runCommand "profile-selection-check" { } ''
+            touch "$out"
+          '';
+        global-skills-activation =
+          assert builtins.elem "checkLinkTargets" globalSkillsActivation.before;
+          pkgs.runCommand "global-skills-activation-check" { } ''
+            set -euo pipefail
+            takeover=${globalSkillsTakeoverScript}
+
+            expect_stop() {
+              local point="$1"
+              local home="$2"
+              shift 2
+              set +e
+              HOME="$home" DENDRITIC_SLOP_TEST_STOP_AFTER="$point" "$@" "$takeover"
+              status=$?
+              set -e
+              test "$status" -eq 75
+            }
+
+            expect_failure() {
+              local home="$1"
+              shift
+              if HOME="$home" "$@" "$takeover"; then
+                echo "expected takeover failure for $home" >&2
+                exit 1
+              fi
+            }
+
+            expect_publication_race_refusal() {
+              local mode="$1"
+              local point="$2"
+              local home="$3"
+              local ready="$home/race-ready"
+              local release="$home/race-release"
+              local destination="$home/.local/state/dendritic-slop/global-skills/backups/.skill-lock.json"
+              local pid status attempt
+
+              mkdir -p "$home/.agents"
+              printf transaction-source > "$home/.agents/.skill-lock.json"
+              if test "$mode" = exdev; then
+                HOME="$home" \
+                  DENDRITIC_SLOP_TEST_FORCE_EXDEV=skill-lock \
+                  DENDRITIC_SLOP_TEST_PAUSE_AFTER_READY="$point" \
+                  DENDRITIC_SLOP_TEST_READY_SIGNAL="$ready" \
+                  DENDRITIC_SLOP_TEST_RELEASE_SIGNAL="$release" \
+                  "$takeover" &
+              else
+                HOME="$home" \
+                  DENDRITIC_SLOP_TEST_PAUSE_AFTER_READY="$point" \
+                  DENDRITIC_SLOP_TEST_READY_SIGNAL="$ready" \
+                  DENDRITIC_SLOP_TEST_RELEASE_SIGNAL="$release" \
+                  "$takeover" &
+              fi
+              pid=$!
+
+              for attempt in {1..1000}; do
+                test ! -e "$ready" || break
+                sleep 0.01
+              done
+              if test ! -e "$ready"; then
+                kill "$pid" 2>/dev/null || true
+                wait "$pid" 2>/dev/null || true
+                echo "takeover did not reach $point" >&2
+                exit 1
+              fi
+
+              printf post-ready-collision > "$destination"
+              touch "$release"
+              set +e
+              wait "$pid"
+              status=$?
+              set -e
+
+              test "$status" -ne 0
+              test "$(cat "$destination")" = post-ready-collision
+              test "$(cat "$home/.agents/.skill-lock.json")" = transaction-source
+            }
+
+            fake="$TMPDIR/fake-homes"
+            mkdir -p "$fake"
+
+            # No prior directory: record both absent steps and complete.
+            home="$fake/absent"
+            mkdir -p "$home"
+            HOME="$home" "$takeover"
+            test -e "$home/.local/state/dendritic-slop/global-skills/completed"
+            test ! -e "$home/.local/state/dendritic-slop/global-skills/backups/skills"
+
+            # A prior managed symlink is backed up as a symlink, then a store
+            # symlink is accepted on an idempotent completed rerun.
+            home="$fake/managed-link"
+            mkdir -p "$home/.agents"
+            ln -s ${allSkills} "$home/.agents/skills"
+            HOME="$home" "$takeover"
+            test -L "$home/.local/state/dendritic-slop/global-skills/backups/skills"
+            test "$(readlink "$home/.local/state/dendritic-slop/global-skills/backups/skills")" = ${allSkills}
+            ln -s ${allSkills} "$home/.agents/skills"
+            HOME="$home" "$takeover"
+
+            # Known and unknown unmanaged entries, plus the old lock, survive
+            # together in the persistent transaction backup.
+            home="$fake/unmanaged"
+            mkdir -p "$home/.agents/skills/dioxus" "$home/.agents/skills/unknown"
+            printf known > "$home/.agents/skills/dioxus/SKILL.md"
+            printf unknown > "$home/.agents/skills/unknown/custom.txt"
+            printf lock > "$home/.agents/.skill-lock.json"
+            HOME="$home" "$takeover"
+            backup="$home/.local/state/dendritic-slop/global-skills/backups"
+            test "$(cat "$backup/skills/dioxus/SKILL.md")" = known
+            test "$(cat "$backup/skills/unknown/custom.txt")" = unknown
+            test "$(cat "$backup/.skill-lock.json")" = lock
+            test ! -e "$home/.agents/skills"
+            test ! -e "$home/.agents/.skill-lock.json"
+
+            # Existing backup destinations are never overwritten.
+            home="$fake/existing-backup"
+            mkdir -p "$home/.agents/skills" "$home/.local/state/dendritic-slop/global-skills/backups/skills"
+            printf source > "$home/.agents/skills/source"
+            printf backup > "$home/.local/state/dendritic-slop/global-skills/backups/skills/existing"
+            expect_failure "$home" env
+            test "$(cat "$home/.agents/skills/source")" = source
+            test "$(cat "$home/.local/state/dendritic-slop/global-skills/backups/skills/existing")" = backup
+
+            # A destination created after the ready marker wins the race and
+            # survives atomic no-replace publication on both transfer paths.
+            expect_publication_race_refusal \
+              same-filesystem skill-lock-rename-ready "$fake/same-filesystem-publication-race"
+            expect_publication_race_refusal \
+              exdev skill-lock-copy-ready "$fake/exdev-publication-race"
+
+            # Resume directly from a prepared journal.
+            home="$fake/prepared-resume"
+            mkdir -p "$home/.agents/skills"
+            printf prepared > "$home/.agents/skills/value"
+            expect_stop prepared "$home" env
+            test -e "$home/.local/state/dendritic-slop/global-skills/journal/inventory/skills"
+            mkdir "$home/.local/state/dendritic-slop/global-skills/lock"
+            HOME="$home" "$takeover"
+            test "$(cat "$home/.local/state/dendritic-slop/global-skills/backups/skills/value")" = prepared
+
+            # Resume a same-filesystem rename interrupted before its done marker.
+            home="$fake/rename-resume"
+            mkdir -p "$home/.agents/skills"
+            printf renamed > "$home/.agents/skills/value"
+            expect_stop skills-transferred "$home" env
+            test ! -e "$home/.agents/skills"
+            test ! -e "$home/.local/state/dendritic-slop/global-skills/journal/steps/skills.done"
+            HOME="$home" "$takeover"
+            test -e "$home/.local/state/dendritic-slop/global-skills/journal/steps/skills.done"
+
+            # A completed path step will not delete content recreated at its source.
+            home="$fake/interrupted-collision"
+            mkdir -p "$home/.agents/skills"
+            printf original > "$home/.agents/skills/value"
+            expect_stop skills "$home" env
+            mkdir -p "$home/.agents/skills"
+            printf collision > "$home/.agents/skills/value"
+            expect_failure "$home" env
+            test "$(cat "$home/.agents/skills/value")" = collision
+            test "$(cat "$home/.local/state/dendritic-slop/global-skills/backups/skills/value")" = original
+
+            # Exercise the EXDEV branch for both a directory and regular file.
+            home="$fake/exdev"
+            mkdir -p "$home/.agents/skills"
+            printf copied > "$home/.agents/skills/value"
+            printf lock > "$home/.agents/.skill-lock.json"
+            expect_stop skills-copy-ready "$home" env DENDRITIC_SLOP_TEST_FORCE_EXDEV=all
+            HOME="$home" DENDRITIC_SLOP_TEST_FORCE_EXDEV=all "$takeover"
+            test "$(cat "$home/.local/state/dendritic-slop/global-skills/backups/skills/value")" = copied
+            test "$(cat "$home/.local/state/dendritic-slop/global-skills/backups/.skill-lock.json")" = lock
+            test -e "$home/.local/state/dendritic-slop/global-skills/journal/steps/skills.cross-filesystem"
+            test -e "$home/.local/state/dendritic-slop/global-skills/journal/steps/skill-lock.cross-filesystem"
+
+            # A collision after completion is reported and preserved.
+            home="$fake/completed-collision"
+            mkdir -p "$home"
+            HOME="$home" "$takeover"
+            mkdir -p "$home/.agents/skills"
+            printf post > "$home/.agents/skills/value"
+            expect_failure "$home" env
+            test "$(cat "$home/.agents/skills/value")" = post
+
+            # The obsolete lock source is also forbidden after completion.
+            home="$fake/completed-lock-collision"
+            mkdir -p "$home"
+            HOME="$home" "$takeover"
+            printf new-manager-state > "$home/.agents/.skill-lock.json"
+            expect_failure "$home" env
+            test "$(cat "$home/.agents/.skill-lock.json")" = new-manager-state
+
+            touch "$out"
+          '';
         skill-projections =
           let
             actionbookRepository = catalog.repositories.actionbook-rust;
@@ -472,7 +805,7 @@
           ) catalog.profiles.superpowers.members.skills;
           assert managedHerdrAgentState.source == herdrAgentStateResource.source;
           assert managedHerdrAgentState.force;
-          assert managedSkills.force;
+          assert !managedSkills.force;
           assert !builtins.elem webAccessPackage defaultPackages;
           home.activationPackage;
         web-access-opt-in =
@@ -502,7 +835,18 @@
           homeWithJjWorkspace.activationPackage;
       }
       // lib.optionalAttrs pkgs.stdenv.isLinux {
-        nixos-module = nixos.config.system.build.toplevel;
+        nixos-module =
+          assert builtins.elem ".pi/agent" (
+            map (
+              entry: entry.directory
+            ) nixos.config.environment.persistence."/persistent".users.${testUser}.directories
+          );
+          assert builtins.elem ".local/state/dendritic-slop" (
+            map (
+              entry: entry.directory
+            ) nixos.config.environment.persistence."/persistent".users.${testUser}.directories
+          );
+          nixos.config.system.build.toplevel;
       }
       // lib.optionalAttrs pkgs.stdenv.isDarwin {
         darwin-module = darwin.system;

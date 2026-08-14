@@ -1,13 +1,12 @@
 { config, ... }:
 let
   piModule = config.flake.modules.homeManager.pi;
-  inherit (config.flake.lib) mkEnableTarget;
-
   targetModule =
     { config, lib, ... }:
     {
-      options.dendriticSlop.targets.rules.enable = mkEnableTarget {
-        inherit config lib;
+      options.dendriticSlop.targets.rules.enable = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
         description = "Enable Pi rules for declarative global tooling and Herdr agent selection.";
       };
 

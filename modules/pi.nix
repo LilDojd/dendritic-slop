@@ -1,8 +1,6 @@
 { config, inputs, ... }:
 let
   coreModule = config.flake.modules.homeManager.core;
-  inherit (config.flake.lib) mkEnableTarget;
-
   targetModule =
     {
       config,
@@ -13,8 +11,9 @@ let
     {
       imports = [ inputs.pi.homeModules.default ];
 
-      options.dendriticSlop.targets.pi.enable = mkEnableTarget {
-        inherit config lib;
+      options.dendriticSlop.targets.pi.enable = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
         description = "Enable Pi and its pinned MCP adapter.";
       };
 

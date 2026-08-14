@@ -1,7 +1,7 @@
 { config, lib, ... }:
 let
   inherit (config.flake.lib) targetNames;
-  inherit (config.dendriticSlopInternal) resources;
+  catalog = config.dendriticSlopInternal.catalog;
   homeManagerSlop = {
     imports = [
       config.flake.modules.homeManager.core
@@ -10,14 +10,14 @@ let
   };
 
   nullableResourceOptions =
-    catalog:
+    resources:
     lib.mapAttrs (_: resource: {
       enable = lib.mkOption {
         type = lib.types.nullOr lib.types.bool;
         default = null;
-        description = "Override automatic activation of ${resource.title}.";
+        description = "Override profile selection of ${resource.title}.";
       };
-    }) catalog;
+    }) resources;
 
   bridge =
     { config, lib, ... }:
@@ -33,11 +33,6 @@ let
     {
       options.dendriticSlop = {
         enable = lib.mkEnableOption "declarative Pi and LLM tooling";
-        autoEnable = lib.mkOption {
-          type = lib.types.bool;
-          default = true;
-          description = "Enable imported targets and resources whose catalog defaults permit automatic activation.";
-        };
         username = lib.mkOption {
           type = lib.types.str;
           description = "Home Manager user to configure.";
@@ -51,24 +46,32 @@ let
           enable = lib.mkOption {
             type = lib.types.nullOr lib.types.bool;
             default = null;
-            description = "Override automatic activation of the ${name} target.";
+            description = "Override profile selection of the ${name} target.";
           };
         });
-        skills = nullableResourceOptions resources.skills;
-        extensions = nullableResourceOptions resources.extensions;
-        herdr.plugins = nullableResourceOptions resources.herdrPlugins;
+        profiles = nullableResourceOptions catalog.profiles;
+        skills = nullableResourceOptions catalog.skills;
+        extensions = nullableResourceOptions catalog.extensions;
+        herdr.plugins = nullableResourceOptions catalog.herdrPlugins;
+        migrations.globalSkills.takeOver = lib.mkOption {
+          type = lib.types.bool;
+          default = false;
+          description = "Back up existing global skill-manager state before Home Manager takes ownership.";
+        };
       };
 
       config.home-manager.users.${cfg.username}.imports = [
         homeManagerSlop
         {
           dendriticSlop = {
-            inherit (cfg) enable autoEnable;
+            inherit (cfg) enable;
             context7.apiKeyFile = cfg.context7ApiKeyFile;
             targets = explicit homeTargets;
+            profiles = explicit cfg.profiles;
             skills = explicit cfg.skills;
             extensions = explicit cfg.extensions;
             herdr.plugins = explicit cfg.herdr.plugins;
+            migrations.globalSkills.takeOver = cfg.migrations.globalSkills.takeOver;
           };
         }
       ];

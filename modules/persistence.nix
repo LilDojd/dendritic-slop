@@ -8,6 +8,7 @@
     {
       config = lib.mkIf enabled {
         environment.persistence."/persistent".users.${cfg.username}.directories = [
+          ".local/state/dendritic-slop"
           ".pi/agent"
         ];
       };

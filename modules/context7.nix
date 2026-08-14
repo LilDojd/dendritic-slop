@@ -1,8 +1,6 @@
 { config, ... }:
 let
   piModule = config.flake.modules.homeManager.pi;
-  inherit (config.flake.lib) mkEnableTarget;
-
   targetModule =
     { config, lib, ... }:
     let
@@ -11,8 +9,9 @@ let
     in
     {
       options.dendriticSlop = {
-        targets.context7.enable = mkEnableTarget {
-          inherit config lib;
+        targets.context7.enable = lib.mkOption {
+          type = lib.types.bool;
+          default = false;
           description = "Enable the Context7 MCP server.";
         };
 
