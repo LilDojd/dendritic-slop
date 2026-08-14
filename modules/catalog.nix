@@ -148,9 +148,16 @@ let
 in
 {
   options.dendriticSlopInternal.resources = lib.mkOption {
-    type = lib.types.raw;
+    type = lib.types.submodule {
+      options = {
+        skills = lib.mkOption { type = lib.types.attrsOf lib.types.raw; };
+        extensions = lib.mkOption { type = lib.types.attrsOf lib.types.raw; };
+        herdrPlugins = lib.mkOption { type = lib.types.attrsOf lib.types.raw; };
+      };
+    };
     readOnly = true;
     internal = true;
+    description = "Legacy declarations used only as source material for the typed catalog.";
   };
 
   config.dendriticSlopInternal.resources = {
