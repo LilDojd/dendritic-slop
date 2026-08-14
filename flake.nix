@@ -65,6 +65,21 @@
       };
     };
 
+    pi-ask-user = {
+      url = "github:edlsh/pi-ask-user/2de7e145227f7a527e995e323a50e7ee9bf88b0e";
+      flake = false;
+    };
+
+    pi-mcp-adapter = {
+      url = "github:nicobailon/pi-mcp-adapter/852a12fa27b42c53d1d455c5937b9101d71af48a";
+      flake = false;
+    };
+
+    pi-web-access = {
+      url = "github:nicobailon/pi-web-access/7e488620f32de239992d45eac83235d03c9c6bbd";
+      flake = false;
+    };
+
     superpowers = {
       url = "github:obra/superpowers";
       flake = false;

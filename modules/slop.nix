@@ -52,6 +52,7 @@ let
         profiles = nullableResourceOptions catalog.profiles;
         skills = nullableResourceOptions catalog.skills;
         extensions = nullableResourceOptions catalog.extensions;
+        tools = nullableResourceOptions catalog.tools;
         herdr.plugins = nullableResourceOptions catalog.herdrPlugins;
         migrations.globalSkills.takeOver = lib.mkOption {
           type = lib.types.bool;
@@ -70,6 +71,7 @@ let
             profiles = explicit cfg.profiles;
             skills = explicit cfg.skills;
             extensions = explicit cfg.extensions;
+            tools = explicit cfg.tools;
             herdr.plugins = explicit cfg.herdr.plugins;
             migrations.globalSkills.takeOver = cfg.migrations.globalSkills.takeOver;
           };

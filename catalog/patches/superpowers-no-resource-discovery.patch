@@ -1,0 +1,27 @@
+--- a/.pi/extensions/superpowers.ts
++++ b/.pi/extensions/superpowers.ts
+@@ -16,10 +16,6 @@
+ export default function superpowersPiExtension(pi: ExtensionAPI) {
+ 	let injectBootstrap = true;
+ 
+-	pi.on("resources_discover", async () => ({
+-		skillPaths: [skillsDir],
+-	}));
+-
+ 	pi.on("session_start", async () => {
+ 		injectBootstrap = true;
+ 	});
+--- a/package.json
++++ b/package.json
+@@ -11,9 +11,7 @@
+   "pi": {
+     "extensions": [
+       "./.pi/extensions/superpowers.ts"
+-    ],
+-    "skills": [
+-      "./skills"
+-    ]
++    ],
++    "skills": []
+   }
+ }

@@ -1,8 +1,7 @@
 { config, lib, ... }:
 let
   catalog = config.dendriticSlopInternal.catalog;
-  legacyExtensions = config.dendriticSlopInternal.resources.extensions;
-  inherit (config.flake.lib) mkSkillTree realizeSkills;
+  inherit (config.flake.lib) mkSkillTree realizePiPackages realizeSkills;
   piModule = config.flake.modules.homeManager.pi;
 
   resourceOptions =
@@ -38,7 +37,8 @@ let
       ) catalog.skills;
       enabledExtensions = lib.filterAttrs (
         name: _: config.dendriticSlop.extensions.${name}.enable
-      ) legacyExtensions;
+      ) catalog.extensions;
+      enabledTools = lib.filterAttrs (name: _: config.dendriticSlop.tools.${name}.enable) catalog.tools;
       selectedTargets = lib.filterAttrs (name: _: builtins.hasAttr name enabledSkills) realized.targets;
       managedSkills = mkSkillTree {
         inherit pkgs;
@@ -50,12 +50,43 @@ let
           builtins.attrNames enabledSkills
         )
       );
-      allEnabled = builtins.attrValues enabledSkills ++ builtins.attrValues enabledExtensions;
+      allEnabled =
+        builtins.attrValues enabledSkills
+        ++ builtins.attrValues enabledExtensions
+        ++ builtins.attrValues enabledTools;
       requiredTargets = lib.unique (lib.concatMap (resource: resource.requiresTargets) allEnabled);
-      packageResources = lib.filter (resource: resource ? package) (
-        builtins.attrValues enabledExtensions
+      requiredTargetAssertions = lib.concatLists (
+        lib.mapAttrsToList
+          (
+            kind: resources:
+            lib.concatLists (
+              lib.mapAttrsToList (
+                name: resource:
+                map (target: {
+                  assertion = config.dendriticSlop.targets.${target}.enable;
+                  message = "${kind}.${name} requires dendriticSlop.targets.${target}.enable = true";
+                }) resource.requiresTargets
+              ) resources
+            )
+          )
+          {
+            extensions = enabledExtensions;
+            skills = enabledSkills;
+            tools = enabledTools;
+          }
       );
-      pathExtensions = lib.filterAttrs (_: resource: resource ? source) enabledExtensions;
+      realizedPiPackages = realizePiPackages {
+        extensions = enabledExtensions;
+        inherit pkgs;
+      };
+      pathExtensions = lib.filterAttrs (
+        _: resource: resource.realization.type == "path"
+      ) enabledExtensions;
+      extensionEnvironment = lib.mkMerge (
+        map (
+          extension: lib.mapAttrs (_: declaration: { inherit (declaration) value; }) extension.environment
+        ) (builtins.attrValues enabledExtensions)
+      );
       availableTargets = builtins.attrNames (options.dendriticSlop.targets or { });
       profileDefaults = lib.mapAttrsToList (
         name: profile:
@@ -70,6 +101,9 @@ let
             extensions = lib.genAttrs profile.members.extensions (_: {
               enable = lib.mkDefault true;
             });
+            tools = lib.genAttrs profile.members.tools (_: {
+              enable = lib.mkDefault true;
+            });
             herdr.plugins = lib.genAttrs profile.members.herdrPlugins (_: {
               enable = lib.mkDefault true;
             });
@@ -78,8 +112,8 @@ let
       ) catalog.profiles;
       pathExtensionFiles = lib.mapAttrs' (
         _: resource:
-        lib.nameValuePair ".pi/agent/extensions/${resource.fileName}" {
-          source = resource.source;
+        lib.nameValuePair resource.realization.destination {
+          source = resource.realization.source;
           force = true;
         }
       ) pathExtensions;
@@ -88,13 +122,16 @@ let
       options.dendriticSlop = {
         profiles = profileOptions;
         skills = resourceOptions catalog.skills;
-        extensions = resourceOptions legacyExtensions;
+        extensions = resourceOptions catalog.extensions;
+        tools = resourceOptions catalog.tools;
       };
 
       config = lib.mkMerge (
         profileDefaults
         ++ [
           (lib.mkIf config.dendriticSlop.enable {
+            assertions = requiredTargetAssertions;
+
             dendriticSlop.targets = lib.genAttrs requiredTargets (_: {
               enable = lib.mkDefault true;
             });
@@ -107,12 +144,8 @@ let
             };
 
             programs.pi.coding-agent = {
-              settings.packages = [
-                # renovate: datasource=npm depName=pi-mcp-adapter
-                "npm:pi-mcp-adapter@2.22.0"
-              ]
-              ++ map (resource: resource.package) packageResources;
-              environment = lib.mkMerge (map (resource: resource.environment or { }) allEnabled);
+              settings.packages = realizedPiPackages.settingsPackages;
+              environment = extensionEnvironment;
             };
           })
         ]
@@ -120,16 +153,31 @@ let
     };
 in
 {
-  options.dendriticSlopInternal.realized.skills = lib.mkOption {
-    type = lib.types.functionTo lib.types.raw;
-    readOnly = true;
-    internal = true;
+  options.dendriticSlopInternal.realized = {
+    extensions = lib.mkOption {
+      type = lib.types.functionTo lib.types.raw;
+      readOnly = true;
+      internal = true;
+    };
+    skills = lib.mkOption {
+      type = lib.types.functionTo lib.types.raw;
+      readOnly = true;
+      internal = true;
+    };
   };
 
   config = {
     dendriticSlopInternal = {
       homeManagerTargets = [ targetModule ];
-      realized.skills = pkgs: realizeSkills { inherit catalog pkgs; };
+      realized = {
+        extensions =
+          pkgs:
+          realizePiPackages {
+            inherit (catalog) extensions;
+            inherit pkgs;
+          };
+        skills = pkgs: realizeSkills { inherit catalog pkgs; };
+      };
     };
 
     flake.modules.homeManager.resources.imports = [
@@ -145,6 +193,10 @@ in
       {
         packages =
           lib.mapAttrs' (name: package: lib.nameValuePair "skill-${name}" package) realized.packages
+          // lib.mapAttrs' (
+            name: extension: lib.nameValuePair "extension-${name}" (extension.realization.package pkgs)
+          ) (lib.filterAttrs (_: extension: extension.realization.type == "package") catalog.extensions)
+          // lib.mapAttrs' (name: tool: lib.nameValuePair "tool-${name}" (tool.package pkgs)) catalog.tools
           // {
             all-skills = realized.tree;
           };

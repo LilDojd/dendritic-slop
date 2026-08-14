@@ -9,6 +9,28 @@ let
   profileDeclarations = import ../catalog/profiles.nix;
   repositories = import ../catalog/repositories.nix { inherit inputs; };
   skills = import ../catalog/skills.nix { inherit inputs; };
+  projectionSkills = lib.mapAttrs (
+    _: skill:
+    skill
+    // {
+      repository = skill.repository or null;
+      runtimeExecutables = skill.runtimeExecutables or [ ];
+      runtimePackages = skill.runtimePackages or (_: [ ]);
+    }
+  ) skills;
+  superpowersPackage =
+    pkgs:
+    config.flake.lib.mkRepositoryProjection {
+      inherit pkgs;
+      skills = projectionSkills;
+      name = "superpowers";
+      repository = repositories.superpowers;
+      leafPaths = map (skill: skill.repositoryPath) (
+        lib.filter (skill: (skill.repository or null) == "superpowers") (builtins.attrValues skills)
+      );
+    };
+  extensions = import ../catalog/extensions.nix { inherit inputs superpowersPackage; };
+  tools = import ../catalog/tools.nix { inherit inputs; };
   resourceKinds = [
     "skills"
     "mcps"
@@ -42,27 +64,6 @@ let
     requiresTargets = resource.requiresTargets or [ ];
   };
 
-  legacyExtensions = lib.mapAttrs (
-    name: resource:
-    common "extensions" name resource
-    // {
-      environment = resource.environment;
-      realization =
-        if resource ? source then
-          {
-            type = "path";
-            inherit (resource) source;
-            destination = ".pi/agent/extensions/${resource.fileName}";
-          }
-        else
-          {
-            type = "package";
-            package = _: resource.package;
-            packageId = name;
-          };
-    }
-  ) legacy.extensions;
-
   legacyHerdrPlugins = lib.mapAttrs (
     name: resource:
     common "herdrPlugins" name resource
@@ -80,10 +81,14 @@ let
   ) legacy.herdrPlugins;
 
   declarations = {
-    inherit repositories profiles skills;
+    inherit
+      extensions
+      profiles
+      repositories
+      skills
+      tools
+      ;
     mcps = { };
-    extensions = legacyExtensions;
-    tools = { };
     herdrPlugins = legacyHerdrPlugins;
   };
 

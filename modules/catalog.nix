@@ -146,7 +146,7 @@ in
 
   config.dendriticSlopInternal.resources = {
     skills = discover "skills" ../resources/skills;
-    extensions = discover "extensions" ../resources/extensions;
+    extensions = { };
     herdrPlugins = discover "herdr-plugins" ../resources/herdr-plugins;
   };
 }

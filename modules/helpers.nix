@@ -468,6 +468,48 @@ let
       )}
     '';
 
+  realizePiPackages =
+    {
+      extensions,
+      pkgs,
+    }:
+    let
+      packageEntries = lib.mapAttrsToList (
+        name: extension:
+        let
+          package = extension.realization.package pkgs;
+        in
+        assert lib.assertMsg (lib.isDerivation package) "extensions.${name} must realize to a Nix package";
+        {
+          inherit name package;
+          inherit (extension.realization) packageId version;
+          reference = "extensions.${name}";
+          root = toString package;
+        }
+      ) (lib.filterAttrs (_: extension: extension.realization.type == "package") extensions);
+      entriesById = lib.groupBy (entry: entry.packageId) packageEntries;
+      packageIds = builtins.attrNames entriesById;
+      validateIdentity =
+        packageId:
+        let
+          entries = entriesById.${packageId};
+          versions = lib.unique (map (entry: entry.version) entries);
+          roots = lib.unique (map (entry: entry.root) entries);
+          references = lib.concatStringsSep ", " (map (entry: entry.reference) entries);
+        in
+        assert lib.assertMsg (builtins.length versions == 1)
+          "Pi package ${packageId} has conflicting versions ${lib.concatStringsSep ", " versions} from ${references}";
+        assert lib.assertMsg (builtins.length roots == 1)
+          "Pi package ${packageId}@${toString (builtins.head versions)} has conflicting package roots from ${references}";
+        builtins.head entries;
+      uniqueEntries = map validateIdentity packageIds;
+    in
+    {
+      inherit packageEntries uniqueEntries;
+      packages = map (entry: entry.package) uniqueEntries;
+      settingsPackages = map (entry: entry.root) uniqueEntries;
+    };
+
   realizeSkills =
     {
       catalog,
@@ -551,6 +593,7 @@ in
       mkRepositoryProjection
       mkSkillLink
       mkSkillTree
+      realizePiPackages
       realizeSkills
       resolveResources
       resourceKinds

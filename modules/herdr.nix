@@ -1,7 +1,8 @@
-{ config, inputs, ... }:
+{ config, ... }:
 let
   coreModule = config.flake.modules.homeManager.core;
   herdrPlugins = config.dendriticSlopInternal.resources.herdrPlugins;
+  herdrTool = config.dendriticSlopInternal.catalog.tools.herdr;
 
   targetModule =
     {
@@ -12,7 +13,7 @@ let
     }:
     let
       cfg = config.dendriticSlop;
-      herdrPackage = inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.herdr;
+      herdrPackage = herdrTool.package pkgs;
       herdr = lib.getExe herdrPackage;
       awk = lib.getExe pkgs.gawk;
       jq = lib.getExe pkgs.jq;

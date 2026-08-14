@@ -175,7 +175,10 @@
       }
     ];
     ignoredEntrypoints = [ "skills/writing-skills/render-graphs.js" ];
-    patches = [ ./patches/superpowers-writing-skills-no-render.patch ];
+    patches = [
+      ./patches/superpowers-no-resource-discovery.patch
+      ./patches/superpowers-writing-skills-no-render.patch
+    ];
     buildInputs = [
       (pkgs: pkgs.makeWrapper)
       (pkgs: pkgs.patch)
