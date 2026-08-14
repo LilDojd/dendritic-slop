@@ -34,7 +34,14 @@ let
       packageResources = lib.filter (resource: resource ? package) (
         builtins.attrValues enabledExtensions
       );
-      pathExtensions = lib.filter (resource: resource ? source) (builtins.attrValues enabledExtensions);
+      pathExtensions = lib.filterAttrs (_: resource: resource ? source) enabledExtensions;
+      pathExtensionFiles = lib.mapAttrs' (
+        _: resource:
+        lib.nameValuePair ".pi/agent/extensions/${resource.fileName}" {
+          source = resource.source;
+          force = true;
+        }
+      ) pathExtensions;
     in
     {
       options.dendriticSlop = {
@@ -47,6 +54,8 @@ let
           enable = lib.mkDefault true;
         });
 
+        home.file = pathExtensionFiles;
+
         programs.pi.coding-agent = {
           skills = lib.mapAttrsToList (
             name: resource:
@@ -56,7 +65,6 @@ let
             }
           ) enabledSkills;
 
-          extensions = map (resource: resource.source) pathExtensions;
           settings.packages = [
             # renovate: datasource=npm depName=pi-mcp-adapter
             "npm:pi-mcp-adapter@2.21.2"

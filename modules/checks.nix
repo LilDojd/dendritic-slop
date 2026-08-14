@@ -50,6 +50,8 @@
         ${pkgs.gnugrep}/bin/grep -Fqx 'id = "remove"' ${jjWorkspaceRoot}/herdr-plugin.toml
         touch "$out"
       '';
+      herdrAgentStateResource = config.dendriticSlopInternal.resources.extensions.herdr-agent-state;
+      managedHerdrAgentState = home.config.home.file.".pi/agent/extensions/herdr-agent-state.ts";
       webAccessPackage = config.dendriticSlopInternal.resources.extensions.web-access.package;
       defaultPackages = home.config.programs.pi.coding-agent.settings.packages;
       optedInPackages = homeWithWebAccess.config.programs.pi.coding-agent.settings.packages;
@@ -116,6 +118,9 @@
       checks = {
         all-skills = allSkills;
         home-manager-module =
+          assert home.config.programs.pi.coding-agent.extensions == [ ];
+          assert managedHerdrAgentState.source == herdrAgentStateResource.source;
+          assert managedHerdrAgentState.force;
           assert !builtins.elem webAccessPackage defaultPackages;
           home.activationPackage;
         web-access-opt-in =
@@ -129,6 +134,18 @@
           assert homeWithJjWorkspace.config.dendriticSlop.herdr.plugins.jj-workspace.enable;
           assert builtins.isString defaultJjWorkspaceActivation && defaultJjWorkspaceActivation != "";
           assert builtins.isString jjWorkspaceActivation && jjWorkspaceActivation != "";
+          assert
+            map (binding: binding.key) jjWorkspaceResource.keybindings == [
+              "prefix+a"
+              "prefix+shift+a"
+              "prefix+d"
+            ];
+          assert
+            map (binding: binding.command) jjWorkspaceResource.keybindings == [
+              "nathanflurry.jj-workspace.new-tab"
+              "nathanflurry.jj-workspace.new"
+              "nathanflurry.jj-workspace.remove"
+            ];
           assert defaultJjWorkspaceActivation != jjWorkspaceActivation;
           homeWithJjWorkspace.activationPackage;
       }

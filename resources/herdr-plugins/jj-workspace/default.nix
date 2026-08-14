@@ -10,6 +10,23 @@ rec {
     "new-tab — create and open a Jujutsu workspace as a tab"
     "remove — forget the focused secondary Jujutsu workspace, delete its directory, and close its Herdr workspace"
   ];
+  keybindings = [
+    {
+      key = "prefix+a";
+      command = "${id}.new-tab";
+      description = "New jj workspace in a tab";
+    }
+    {
+      key = "prefix+shift+a";
+      command = "${id}.new";
+      description = "New jj workspace";
+    }
+    {
+      key = "prefix+d";
+      command = "${id}.remove";
+      description = "Remove jj workspace";
+    }
+  ];
 
   package =
     pkgs:

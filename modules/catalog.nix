@@ -16,8 +16,10 @@ let
           "defaultEnable"
           "description"
           "environment"
+          "fileName"
           "homepage"
           "id"
+          "keybindings"
           "package"
           "pluginRoot"
           "requiresTargets"
@@ -26,6 +28,7 @@ let
           "version"
         ];
         isHerdrPlugin = kind == "herdr-plugins";
+        isPathExtension = kind == "extensions" && manifest ? source;
         unknown = lib.subtractLists allowed (builtins.attrNames manifest);
       in
       assert lib.assertMsg (builtins.pathExists manifestPath) "${kind}/${name} is missing default.nix";
@@ -47,6 +50,25 @@ let
         || (builtins.isList manifest.actions && builtins.all builtins.isString manifest.actions)
       ) "${kind}/${name}.actions must be a list of strings";
       assert lib.assertMsg (
+        !(manifest ? keybindings)
+        || (
+          isHerdrPlugin
+          && builtins.isList manifest.keybindings
+          && builtins.all (
+            binding:
+            builtins.isAttrs binding
+            &&
+              builtins.attrNames binding == [
+                "command"
+                "description"
+                "key"
+              ]
+            && builtins.all builtins.isString (builtins.attrValues binding)
+            && builtins.all (value: value != "") (builtins.attrValues binding)
+          ) manifest.keybindings
+        )
+      ) "${kind}/${name}.keybindings must define non-empty command, description, and key strings";
+      assert lib.assertMsg (
         isHerdrPlugin || manifest ? source || manifest ? package
       ) "${kind}/${name} needs source or package";
       assert lib.assertMsg (
@@ -55,6 +77,18 @@ let
       assert lib.assertMsg (
         !(manifest ? source) || builtins.pathExists manifest.source
       ) "${kind}/${name}.source does not exist";
+      assert lib.assertMsg (
+        !isPathExtension
+        || (
+          manifest ? fileName
+          && builtins.isString manifest.fileName
+          && manifest.fileName != ""
+          && builtins.baseNameOf manifest.fileName == manifest.fileName
+        )
+      ) "${kind}/${name} needs a plain fileName for Pi auto-discovery";
+      assert lib.assertMsg (
+        isPathExtension || !(manifest ? fileName)
+      ) "${kind}/${name}.fileName is only valid for path extensions";
       assert lib.assertMsg (
         !isHerdrPlugin
         || (
@@ -76,6 +110,7 @@ let
         actions = manifest.actions or [ ];
         defaultEnable = if isHerdrPlugin then false else manifest.defaultEnable or true;
         environment = manifest.environment or { };
+        keybindings = manifest.keybindings or [ ];
         requiresTargets = manifest.requiresTargets or [ ];
       }
     ) (builtins.readDir root);
