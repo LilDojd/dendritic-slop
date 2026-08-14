@@ -30,6 +30,17 @@ let
       enabledSkills = enabled "skills";
       enabledExtensions = enabled "extensions";
       allEnabled = builtins.attrValues enabledSkills ++ builtins.attrValues enabledExtensions;
+      skillPackages = lib.mapAttrs (
+        name: resource:
+        mkSkill {
+          inherit pkgs name;
+          inherit (resource) extraFiles source;
+          runtimeInputs = resource.runtimeInputs pkgs;
+        }
+      ) enabledSkills;
+      skillRuntimeInputs = lib.unique (
+        lib.concatMap (resource: resource.runtimeInputs pkgs) (builtins.attrValues enabledSkills)
+      );
       requiredTargets = lib.unique (lib.concatMap (resource: resource.requiresTargets) allEnabled);
       packageResources = lib.filter (resource: resource ? package) (
         builtins.attrValues enabledExtensions
@@ -54,16 +65,13 @@ let
           enable = lib.mkDefault true;
         });
 
-        home.file = pathExtensionFiles;
+        home = {
+          file = pathExtensionFiles;
+          packages = skillRuntimeInputs;
+        };
 
         programs.pi.coding-agent = {
-          skills = lib.mapAttrsToList (
-            name: resource:
-            mkSkill {
-              inherit pkgs name;
-              text = builtins.readFile resource.source;
-            }
-          ) enabledSkills;
+          skills = builtins.attrValues skillPackages;
 
           settings.packages = [
             # renovate: datasource=npm depName=pi-mcp-adapter

@@ -18,28 +18,53 @@ let
     {
       pkgs,
       name,
-      text,
-      formatter ? null,
-      formatterArgs ? [ ],
+      source,
+      extraFiles ? [ ],
+      runtimeInputs ? [ ],
     }:
     assert lib.assertMsg (isValidSkillName name)
       "Skill names must be lowercase alphanumeric words separated by single hyphens";
-    assert lib.assertMsg (builtins.isString text) "Skill text must be a string";
-    assert lib.assertMsg (
-      formatter == null || lib.isDerivation formatter
-    ) "Skill formatter must be a package or null";
-    pkgs.writeTextFile {
-      name = "agent-skill-${name}";
-      destination = "/${name}/SKILL.md";
-      inherit text;
-      checkPhase = ''
-        ${lib.optionalString (formatter != null) ''
-          ${lib.getExe formatter} ${lib.escapeShellArgs formatterArgs} "$target"
-        ''}
+    assert lib.assertMsg (builtins.pathExists source) "Skill source does not exist";
+    assert lib.assertMsg (builtins.all builtins.pathExists extraFiles)
+      "A skill extra file does not exist";
+    assert lib.assertMsg (builtins.all lib.isDerivation runtimeInputs)
+      "Skill runtime inputs must be packages";
+    let
+      sourcePath = builtins.path {
+        path = source;
+        name = "agent-skill-${name}-source";
+      };
+      copiedExtraFiles = map (file: {
+        name = builtins.baseNameOf file;
+        path = builtins.path {
+          path = file;
+          name = "agent-skill-${name}-${builtins.baseNameOf file}";
+        };
+      }) extraFiles;
+    in
+    pkgs.runCommand "agent-skill-${name}"
+      {
+        nativeBuildInputs = runtimeInputs;
+        passthru = { inherit runtimeInputs; };
+      }
+      ''
+        destination="$out/${name}"
+        mkdir -p "$destination"
+        if [ -d ${lib.escapeShellArg sourcePath} ]; then
+          cp -R ${lib.escapeShellArg "${sourcePath}/."} "$destination/"
+        else
+          cp ${lib.escapeShellArg sourcePath} "$destination/SKILL.md"
+        fi
+        ${lib.concatMapStringsSep "\n" (file: ''
+          cp ${lib.escapeShellArg file.path} "$destination/${file.name}"
+        '') copiedExtraFiles}
+        chmod -R u+w "$destination"
+        patchShebangs "$destination"
+        target="$destination/SKILL.md"
+        test -f "$target"
         ${pkgs.gnugrep}/bin/grep -Fqx -- ${lib.escapeShellArg "name: ${name}"} "$target"
         ${pkgs.gnugrep}/bin/grep -Eq '^description:[[:space:]]+.' "$target"
       '';
-    };
 in
 {
   options.dendriticSlopInternal.homeManagerTargets = lib.mkOption {

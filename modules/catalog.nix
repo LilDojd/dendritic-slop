@@ -16,6 +16,7 @@ let
           "defaultEnable"
           "description"
           "environment"
+          "extraFiles"
           "fileName"
           "homepage"
           "id"
@@ -23,6 +24,7 @@ let
           "package"
           "pluginRoot"
           "requiresTargets"
+          "runtimeInputs"
           "source"
           "title"
           "version"
@@ -78,6 +80,17 @@ let
         !(manifest ? source) || builtins.pathExists manifest.source
       ) "${kind}/${name}.source does not exist";
       assert lib.assertMsg (
+        !(manifest ? extraFiles)
+        || (
+          kind == "skills"
+          && builtins.isList manifest.extraFiles
+          && builtins.all builtins.pathExists manifest.extraFiles
+        )
+      ) "${kind}/${name}.extraFiles must be a list of existing skill files";
+      assert lib.assertMsg (
+        !(manifest ? runtimeInputs) || (kind == "skills" && builtins.isFunction manifest.runtimeInputs)
+      ) "${kind}/${name}.runtimeInputs must be a package function";
+      assert lib.assertMsg (
         !isPathExtension
         || (
           manifest ? fileName
@@ -110,8 +123,10 @@ let
         actions = manifest.actions or [ ];
         defaultEnable = if isHerdrPlugin then false else manifest.defaultEnable or true;
         environment = manifest.environment or { };
+        extraFiles = manifest.extraFiles or [ ];
         keybindings = manifest.keybindings or [ ];
         requiresTargets = manifest.requiresTargets or [ ];
+        runtimeInputs = manifest.runtimeInputs or (_: [ ]);
       }
     ) (builtins.readDir root);
 in

@@ -109,7 +109,8 @@
           name: resource:
           config.flake.lib.mkSkill {
             inherit pkgs name;
-            text = builtins.readFile resource.source;
+            inherit (resource) extraFiles source;
+            runtimeInputs = resource.runtimeInputs pkgs;
           }
         ) config.dendriticSlopInternal.resources.skills;
       };
