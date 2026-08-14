@@ -52,6 +52,7 @@
       '';
       herdrAgentStateResource = config.dendriticSlopInternal.resources.extensions.herdr-agent-state;
       managedHerdrAgentState = home.config.home.file.".pi/agent/extensions/herdr-agent-state.ts";
+      managedSkills = home.config.home.file.".agents/skills";
       webAccessPackage = config.dendriticSlopInternal.resources.extensions.web-access.package;
       defaultPackages = home.config.programs.pi.coding-agent.settings.packages;
       optedInPackages = homeWithWebAccess.config.programs.pi.coding-agent.settings.packages;
@@ -125,8 +126,11 @@
         all-skills = allSkills;
         home-manager-module =
           assert home.config.programs.pi.coding-agent.extensions == [ ];
+          assert home.config.programs.pi.coding-agent.skills == [ ];
+          assert !home.config.dendriticSlop.skills.superpowers.enable;
           assert managedHerdrAgentState.source == herdrAgentStateResource.source;
           assert managedHerdrAgentState.force;
+          assert managedSkills.force;
           assert !builtins.elem webAccessPackage defaultPackages;
           home.activationPackage;
         web-access-opt-in =

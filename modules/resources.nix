@@ -46,6 +46,10 @@ let
       skillRuntimeInputs = lib.unique (
         lib.concatMap (resource: resource.runtimeInputs pkgs) (builtins.attrValues enabledSkills)
       );
+      managedSkills = pkgs.symlinkJoin {
+        name = "dendritic-slop-agent-skills";
+        paths = builtins.attrValues skillPackages;
+      };
       requiredTargets = lib.unique (lib.concatMap (resource: resource.requiresTargets) allEnabled);
       packageResources = lib.filter (resource: resource ? package) (
         builtins.attrValues enabledExtensions
@@ -71,13 +75,16 @@ let
         });
 
         home = {
-          file = pathExtensionFiles;
+          file = pathExtensionFiles // {
+            ".agents/skills" = {
+              source = managedSkills;
+              force = true;
+            };
+          };
           packages = skillRuntimeInputs;
         };
 
         programs.pi.coding-agent = {
-          skills = builtins.attrValues skillPackages;
-
           settings.packages = [
             # renovate: datasource=npm depName=pi-mcp-adapter
             "npm:pi-mcp-adapter@2.22.0"
