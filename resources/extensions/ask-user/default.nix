@@ -4,6 +4,7 @@
   description = "Collect structured choices and freeform answers from the user.";
   homepage = "https://github.com/edlsh/pi-ask-user";
   package = {
+    # renovate: datasource=npm depName=pi-ask-user
     source = "npm:pi-ask-user@0.14.0";
     skills = [ ];
   };

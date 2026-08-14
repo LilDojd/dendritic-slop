@@ -75,4 +75,4 @@ nix flake check --no-eval-cache --no-build --all-systems
 
 The generated [mdBook catalog](https://lildojd.github.io/dendritic-slop/) lists available resources without hand-written HTML.
 
-Third-party inputs and Pi packages are pinned. Dependabot groups weekly Nix and GitHub Actions updates; review them rather than auto-merging because skills and extensions execute with the agent's authority. CI checks formatting, every skill, generated docs, every supported system, and native Home Manager plus NixOS or nix-darwin module tests. SemVer tags publish to FlakeHub through short-lived GitHub OIDC credentials.
+Third-party inputs and Pi packages are pinned. Renovate groups weekly Nix flake, GitHub Actions, and Pi npm package updates; review them rather than auto-merging because skills and extensions execute with the agent's authority. Npm package pins marked with a `renovate:` annotation are discovered through Renovate's npm datasource. CI checks formatting, every skill, generated docs, every supported system, and native Home Manager plus NixOS or nix-darwin module tests. SemVer tags publish to FlakeHub through short-lived GitHub OIDC credentials.

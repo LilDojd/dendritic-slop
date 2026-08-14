@@ -1,0 +1,45 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "timezone": "Etc/UTC",
+  "schedule": ["before 6am on Monday"],
+  "nix": {
+    "enabled": true
+  },
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 6am on Monday"]
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update pinned Pi npm packages",
+      "managerFilePatterns": ["/\\.nix$/"],
+      "matchStrings": [
+        "# renovate: datasource=npm depName=(?<depName>\\S+)\\s+(?:source\\s*=\\s*)?\"npm:.*@(?<currentValue>[^\"\\s]+)\""
+      ],
+      "datasourceTemplate": "npm",
+      "versioningTemplate": "npm"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Group GitHub Actions updates",
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Actions"
+    },
+    {
+      "description": "Group Nix flake input updates",
+      "matchManagers": ["nix"],
+      "groupName": "Nix flake inputs"
+    },
+    {
+      "description": "Group reviewed Pi package updates",
+      "matchManagers": ["custom.regex"],
+      "matchDatasources": ["npm"],
+      "groupName": "Pi npm packages",
+      "minimumReleaseAge": "3 days",
+      "rangeStrategy": "pin"
+    }
+  ]
+}

@@ -56,6 +56,7 @@ let
 
           extensions = map (resource: resource.source) pathExtensions;
           settings.packages = [
+            # renovate: datasource=npm depName=pi-mcp-adapter
             "npm:pi-mcp-adapter@2.21.2"
           ]
           ++ map (resource: resource.package) packageResources;
