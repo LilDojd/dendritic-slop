@@ -101,7 +101,6 @@
         ];
       };
 
-      herdrSkillText = builtins.readFile config.dendriticSlopInternal.resources.skills.herdr.source;
       allSkills = pkgs.symlinkJoin {
         name = "all-dendritic-slop-skills";
         paths = lib.mapAttrsToList (
@@ -115,11 +114,7 @@
     in
     {
       checks = {
-        all-skills =
-          assert lib.hasInfix "--kind pi" herdrSkillText;
-          assert !(lib.hasInfix "--kind codex" herdrSkillText);
-          assert lib.hasInfix "Use Pi unless the user explicitly requests another supported agent kind" herdrSkillText;
-          allSkills;
+        all-skills = allSkills;
         home-manager-module =
           assert !builtins.elem webAccessPackage defaultPackages;
           home.activationPackage;
