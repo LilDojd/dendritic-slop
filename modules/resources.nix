@@ -1,11 +1,12 @@
 { config, lib, ... }:
 let
-  inherit (config.dendriticSlopInternal) resources;
-  inherit (config.flake.lib) mkSkill;
+  catalog = config.dendriticSlopInternal.catalog;
+  legacyExtensions = config.dendriticSlopInternal.resources.extensions;
+  inherit (config.flake.lib) mkSkillTree realizeSkills;
   piModule = config.flake.modules.homeManager.pi;
 
   resourceOptions =
-    hmConfig: catalog:
+    hmConfig: resources:
     lib.mapAttrs (_: resource: {
       enable = lib.mkOption {
         type = lib.types.bool;
@@ -15,7 +16,7 @@ let
         );
         description = "Whether to enable ${resource.title}. ${resource.description}";
       };
-    }) catalog;
+    }) resources;
 
   targetModule =
     {
@@ -25,31 +26,25 @@ let
       ...
     }:
     let
-      enabled =
-        kind: lib.filterAttrs (name: _: config.dendriticSlop.${kind}.${name}.enable) resources.${kind};
-      enabledSkills = enabled "skills";
-      enabledExtensions = enabled "extensions";
-      allEnabled = builtins.attrValues enabledSkills ++ builtins.attrValues enabledExtensions;
-      skillPackages = lib.mapAttrs (
-        name: resource:
-        mkSkill {
-          inherit pkgs name;
-          inherit (resource)
-            collection
-            extraFiles
-            members
-            source
-            ;
-          runtimeInputs = resource.runtimeInputs pkgs;
-        }
-      ) enabledSkills;
-      skillRuntimeInputs = lib.unique (
-        lib.concatMap (resource: resource.runtimeInputs pkgs) (builtins.attrValues enabledSkills)
-      );
-      managedSkills = pkgs.symlinkJoin {
-        name = "dendritic-slop-agent-skills";
-        paths = builtins.attrValues skillPackages;
+      realized = realizeSkills { inherit catalog pkgs; };
+      enabledSkills = lib.filterAttrs (
+        name: _: config.dendriticSlop.skills.${name}.enable
+      ) catalog.skills;
+      enabledExtensions = lib.filterAttrs (
+        name: _: config.dendriticSlop.extensions.${name}.enable
+      ) legacyExtensions;
+      selectedTargets = lib.filterAttrs (name: _: builtins.hasAttr name enabledSkills) realized.targets;
+      managedSkills = mkSkillTree {
+        inherit pkgs;
+        name = "dendritic-slop-selected-agent-skills";
+        targets = selectedTargets;
       };
+      skillRuntimePackages = lib.unique (
+        lib.concatMap (name: realized.realizedLeaves.${name}.runtimePackages) (
+          builtins.attrNames enabledSkills
+        )
+      );
+      allEnabled = builtins.attrValues enabledSkills ++ builtins.attrValues enabledExtensions;
       requiredTargets = lib.unique (lib.concatMap (resource: resource.requiresTargets) allEnabled);
       packageResources = lib.filter (resource: resource ? package) (
         builtins.attrValues enabledExtensions
@@ -65,8 +60,8 @@ let
     in
     {
       options.dendriticSlop = {
-        skills = resourceOptions config resources.skills;
-        extensions = resourceOptions config resources.extensions;
+        skills = resourceOptions config catalog.skills;
+        extensions = resourceOptions config legacyExtensions;
       };
 
       config = lib.mkIf config.dendriticSlop.enable {
@@ -81,7 +76,7 @@ let
               force = true;
             };
           };
-          packages = skillRuntimeInputs;
+          packages = skillRuntimePackages;
         };
 
         programs.pi.coding-agent = {
@@ -90,15 +85,40 @@ let
             "npm:pi-mcp-adapter@2.22.0"
           ]
           ++ map (resource: resource.package) packageResources;
-          environment = lib.mkMerge (map (resource: resource.environment) allEnabled);
+          environment = lib.mkMerge (map (resource: resource.environment or { }) allEnabled);
         };
       };
     };
 in
 {
-  dendriticSlopInternal.homeManagerTargets = [ targetModule ];
-  flake.modules.homeManager.resources.imports = [
-    piModule
-    targetModule
-  ];
+  options.dendriticSlopInternal.realized.skills = lib.mkOption {
+    type = lib.types.functionTo lib.types.raw;
+    readOnly = true;
+    internal = true;
+  };
+
+  config = {
+    dendriticSlopInternal = {
+      homeManagerTargets = [ targetModule ];
+      realized.skills = pkgs: realizeSkills { inherit catalog pkgs; };
+    };
+
+    flake.modules.homeManager.resources.imports = [
+      piModule
+      targetModule
+    ];
+
+    perSystem =
+      { pkgs, ... }:
+      let
+        realized = realizeSkills { inherit catalog pkgs; };
+      in
+      {
+        packages =
+          lib.mapAttrs' (name: package: lib.nameValuePair "skill-${name}" package) realized.packages
+          // {
+            all-skills = realized.tree;
+          };
+      };
+  };
 }

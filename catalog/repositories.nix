@@ -46,6 +46,18 @@
       "rust-trait-explorer"
       "unsafe-checker"
     ];
+    ignoredLeaves = [
+      "core-actionbook"
+      "core-agent-browser"
+      "core-dynamic-skills"
+      "core-fix-skill-docs"
+    ];
+    supportPaths = [
+      "_meta"
+      "agents"
+      "metadata.json"
+      "README.md"
+    ];
   };
 
   astral-python = {
@@ -63,6 +75,10 @@
       "ty"
       "uv"
     ];
+    supportPaths = [
+      "LICENSE-APACHE"
+      "LICENSE-MIT"
+    ];
   };
 
   leonardomso-rust-skills = {
@@ -73,6 +89,11 @@
     licenseEvidence = [ (inputs.leonardomso-rust-skills + "/LICENSE") ];
     reviewedRevision = "fd2a861ab0406a4ac536a55274d14ea6fd1ca9c9";
     exportedLeaves = [ "rust-skills" ];
+    supportPaths = [
+      "LICENSE"
+      "rules"
+      "SKILL.md"
+    ];
   };
 
   superpowers = {
@@ -97,6 +118,67 @@
       "verification-before-completion"
       "writing-plans"
       "writing-skills"
+    ];
+    supportPaths = [
+      ".pi/extensions/superpowers.ts"
+      "LICENSE"
+      "package.json"
+    ];
+    entrypoints = [
+      {
+        path = ".pi/extensions/superpowers.ts";
+        type = "interpreter";
+        interpreter = "pi";
+        owner = "using-superpowers";
+      }
+      {
+        path = "skills/brainstorming/scripts/helper.js";
+        type = "interpreter";
+        interpreter = "browser";
+        owner = "brainstorming";
+      }
+      {
+        path = "skills/brainstorming/scripts/server.cjs";
+        type = "interpreter";
+        interpreter = "node";
+        owner = "brainstorming";
+      }
+      {
+        path = "skills/brainstorming/scripts/start-server.sh";
+        type = "executable";
+        owner = "brainstorming";
+      }
+      {
+        path = "skills/brainstorming/scripts/stop-server.sh";
+        type = "executable";
+        owner = "brainstorming";
+      }
+      {
+        path = "skills/subagent-driven-development/scripts/review-package";
+        type = "executable";
+        owner = "subagent-driven-development";
+      }
+      {
+        path = "skills/subagent-driven-development/scripts/sdd-workspace";
+        type = "executable";
+        owner = "subagent-driven-development";
+      }
+      {
+        path = "skills/subagent-driven-development/scripts/task-brief";
+        type = "executable";
+        owner = "subagent-driven-development";
+      }
+      {
+        path = "skills/systematic-debugging/find-polluter.sh";
+        type = "executable";
+        owner = "systematic-debugging";
+      }
+    ];
+    ignoredEntrypoints = [ "skills/writing-skills/render-graphs.js" ];
+    patches = [ ./patches/superpowers-writing-skills-no-render.patch ];
+    buildInputs = [
+      (pkgs: pkgs.makeWrapper)
+      (pkgs: pkgs.patch)
     ];
   };
 }

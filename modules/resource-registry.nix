@@ -8,6 +8,7 @@ let
   legacy = config.dendriticSlopInternal.resources;
   profileDeclarations = import ../catalog/profiles.nix;
   repositories = import ../catalog/repositories.nix { inherit inputs; };
+  skills = import ../catalog/skills.nix { inherit inputs; };
   resourceKinds = [
     "skills"
     "mcps"
@@ -32,60 +33,19 @@ let
       lib.filterAttrs (_: profile: builtins.elem name profile.members.${kind}) profiles
     );
 
-  repositoryFor = {
-    actionbook-rust = "actionbook-rust";
-    astral-python = "astral-python";
-    rust-skills = "leonardomso-rust-skills";
-    superpowers = "superpowers";
-  };
-
-  repositoryPathFor =
-    collectionName: leafName:
-    if collectionName == "actionbook-rust" then
-      "skills/${leafName}"
-    else if collectionName == "astral-python" then
-      "plugins/astral/skills/${leafName}"
-    else if collectionName == "rust-skills" then
-      "."
-    else if collectionName == "superpowers" then
-      "skills/${leafName}"
-    else
-      null;
-
   common = kind: name: resource: {
     inherit (resource) title description;
     homepage = resource.homepage or null;
+    repository = resource.repository or null;
     defaultEnable = resource.defaultEnable;
-    repository = repositoryFor.${name} or null;
     profiles = profilesFor kind name;
     requiresTargets = resource.requiresTargets or [ ];
   };
-
-  legacySkills = lib.foldlAttrs (
-    result: collectionName: resource:
-    let
-      names = if resource.collection then resource.members else [ collectionName ];
-    in
-    result
-    // lib.genAttrs names (
-      name:
-      common "skills" name resource
-      // {
-        repository = repositoryFor.${collectionName} or null;
-        profiles = profilesFor "skills" name;
-        exposedName = name;
-        repositoryPath = repositoryPathFor collectionName name;
-        runtimePackages = resource.runtimeInputs;
-        source = if resource.collection then resource.source + "/${name}" else resource.source;
-      }
-    )
-  ) { } legacy.skills;
 
   legacyExtensions = lib.mapAttrs (
     name: resource:
     common "extensions" name resource
     // {
-      profiles = profilesFor "extensions" name;
       environment = resource.environment;
       realization =
         if resource ? source then
@@ -120,8 +80,7 @@ let
   ) legacy.herdrPlugins;
 
   declarations = {
-    inherit repositories profiles;
-    skills = legacySkills;
+    inherit repositories profiles skills;
     mcps = { };
     extensions = legacyExtensions;
     tools = { };
@@ -138,7 +97,7 @@ let
   repositoriesExist = lib.all (
     kind:
     lib.all (
-      resource: resource.repository == null || builtins.hasAttr resource.repository repositories
+      resource: (resource.repository or null) == null || builtins.hasAttr resource.repository repositories
     ) (builtins.attrValues declarations.${kind})
   ) resourceKinds;
 
@@ -148,10 +107,19 @@ let
     && lib.unique profile.targets == profile.targets
   ) (builtins.attrValues profiles);
 
+  profileMetadataAgrees = lib.all (
+    kind:
+    lib.all (name: declarations.${kind}.${name}.profiles == profilesFor kind name) (
+      builtins.attrNames declarations.${kind}
+    )
+  ) resourceKinds;
+
   catalog =
     assert lib.assertMsg referencesExist "A profile refers to an unknown typed resource leaf";
     assert lib.assertMsg repositoriesExist "A typed resource refers to an unknown repository";
     assert lib.assertMsg listsAreUnique "Profile target and resource memberships must be unique";
+    assert lib.assertMsg profileMetadataAgrees
+      "Resource profile metadata must match canonical profiles";
     declarations;
 in
 {

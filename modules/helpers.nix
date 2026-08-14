@@ -305,95 +305,236 @@ let
         ;
     };
 
-  mkSkill =
+  mkRepositoryProjection =
+    {
+      pkgs,
+      name,
+      repository,
+      leafPaths,
+      skills,
+    }:
+    let
+      allowedPaths = lib.unique (leafPaths ++ repository.supportPaths);
+      sourceString = toString repository.source;
+      filteredSource = builtins.path {
+        path = repository.source;
+        name = "reviewed-${name}-source";
+        filter =
+          path: _:
+          let
+            pathString = toString path;
+            relative =
+              if pathString == sourceString then "" else lib.removePrefix "${sourceString}/" pathString;
+          in
+          relative == ""
+          || lib.any (
+            allowed:
+            relative == allowed || lib.hasPrefix "${allowed}/" relative || lib.hasPrefix "${relative}/" allowed
+          ) allowedPaths;
+      };
+      packagingInputs = lib.unique (map (package: package pkgs) repository.buildInputs);
+      immutablePatches = map (
+        patchPath:
+        builtins.path {
+          path = patchPath;
+          name = "reviewed-${name}-${builtins.baseNameOf patchPath}";
+        }
+      ) repository.patches;
+      executableEntrypoints = lib.filter (
+        entrypoint: entrypoint.type == "executable"
+      ) repository.entrypoints;
+      interpreterEntrypoints = lib.filter (
+        entrypoint: entrypoint.type == "interpreter"
+      ) repository.entrypoints;
+      entrypointPackages =
+        entrypoint:
+        let
+          owner = skills.${entrypoint.owner};
+        in
+        lib.unique (
+          owner.runtimePackages pkgs ++ map (runtime: runtime.package pkgs) owner.runtimeExecutables
+        );
+      entrypointsAreOwned = lib.all (
+        entrypoint:
+        entrypoint.owner != null
+        && builtins.hasAttr entrypoint.owner skills
+        && skills.${entrypoint.owner}.repository == name
+      ) repository.entrypoints;
+    in
+    assert lib.assertMsg entrypointsAreOwned
+      "Every reviewed ${name} entrypoint must be owned by a leaf in that repository";
+    if
+      repository.entrypoints == [ ] && repository.ignoredEntrypoints == [ ] && repository.patches == [ ]
+    then
+      filteredSource
+    else
+      pkgs.runCommand "reviewed-${name}-projection"
+        {
+          nativeBuildInputs = packagingInputs;
+          passthru = {
+            inherit allowedPaths packagingInputs;
+            entrypoints = repository.entrypoints;
+          };
+        }
+        ''
+          mkdir -p "$out"
+          cp -R ${filteredSource}/. "$out/"
+          chmod -R u+w "$out"
+
+          ${lib.concatMapStringsSep "\n" (patch: ''
+            patch -d "$out" -p1 < ${lib.escapeShellArg patch}
+          '') immutablePatches}
+
+          ${lib.concatMapStringsSep "\n" (path: ''
+            test -f "$out/${path}"
+            rm "$out/${path}"
+          '') repository.ignoredEntrypoints}
+
+          ${lib.concatMapStringsSep "\n" (entrypoint: ''
+            test -f "$out/${entrypoint.path}"
+            chmod +x "$out/${entrypoint.path}"
+            patchShebangs "$out/${entrypoint.path}"
+            wrapProgram "$out/${entrypoint.path}" \
+              --prefix PATH : ${lib.escapeShellArg (lib.makeBinPath (entrypointPackages entrypoint))}
+          '') executableEntrypoints}
+
+          ${lib.concatMapStringsSep "\n" (entrypoint: ''
+            test -f "$out/${entrypoint.path}"
+          '') interpreterEntrypoints}
+        '';
+
+  mkLocalSkillRoot =
     {
       pkgs,
       name,
       source,
-      collection ? false,
-      extraFiles ? [ ],
-      members ? [ ],
-      runtimeInputs ? [ ],
     }:
-    assert lib.assertMsg (isValidSkillName name)
-      "Skill names must be lowercase alphanumeric words separated by single hyphens";
-    assert lib.assertMsg (builtins.pathExists source) "Skill source does not exist";
-    assert lib.assertMsg (builtins.isBool collection) "Skill collection must be a Boolean";
-    assert lib.assertMsg (
-      builtins.isList members && builtins.all isValidSkillName members && (members == [ ] || collection)
-    ) "Skill members must be valid names in a collection";
-    assert lib.assertMsg (builtins.all (
-      member: builtins.pathExists (source + "/${member}/SKILL.md")
-    ) members) "A skill collection member does not exist";
-    assert lib.assertMsg (builtins.all builtins.pathExists extraFiles)
-      "A skill extra file does not exist";
-    assert lib.assertMsg (builtins.all lib.isDerivation runtimeInputs)
-      "Skill runtime inputs must be packages";
     let
-      sourcePath = builtins.path {
+      immutableSource = builtins.path {
         path = source;
         name = "agent-skill-${name}-source";
       };
-      copiedExtraFiles = map (
-        file:
-        let
-          fileName = builtins.unsafeDiscardStringContext (builtins.baseNameOf file);
-        in
-        {
-          name = fileName;
-          path = builtins.path {
-            path = file;
-            name = "agent-skill-${name}-${fileName}";
-          };
-        }
-      ) extraFiles;
     in
-    pkgs.runCommand "agent-skill-${name}"
+    pkgs.runCommand "agent-skill-${name}-root" { } ''
+      mkdir -p "$out"
+      if [ -d ${immutableSource} ]; then
+        cp -R ${immutableSource}/. "$out/"
+      else
+        cp ${immutableSource} "$out/SKILL.md"
+      fi
+    '';
+
+  mkSkillLink =
+    {
+      pkgs,
+      name,
+      target,
+      runtimePackages ? [ ],
+      runtimeExecutables ? [ ],
+    }:
+    assert lib.assertMsg (isValidSkillName name)
+      "Skill names must be lowercase alphanumeric words separated by single hyphens";
+    assert lib.assertMsg (builtins.all lib.isDerivation runtimePackages)
+      "skill-${name} runtime packages must be derivations";
+    pkgs.runCommand "skill-${name}"
       {
-        nativeBuildInputs = runtimeInputs;
-        passthru = { inherit runtimeInputs; };
+        passthru = {
+          inherit runtimeExecutables runtimePackages target;
+        };
       }
       ''
-        destination=${if collection then ''"$out"'' else ''"$out/${name}"''}
-        mkdir -p "$destination"
-        if [ -d ${lib.escapeShellArg sourcePath} ]; then
-          ${
-            if members == [ ] then
-              ''cp -R ${lib.escapeShellArg "${sourcePath}/."} "$destination/"''
-            else
-              lib.concatMapStringsSep "\n" (member: ''
-                cp -R ${lib.escapeShellArg "${sourcePath}/${member}"} "$destination/${member}"
-              '') members
-          }
-        else
-          ${lib.optionalString collection "echo 'A skill collection source must be a directory' >&2; exit 1"}
-          cp ${lib.escapeShellArg sourcePath} "$destination/SKILL.md"
-        fi
-        ${lib.concatMapStringsSep "\n" (file: ''
-          cp ${lib.escapeShellArg file.path} "$destination/${file.name}"
-        '') copiedExtraFiles}
-        chmod -R u+w "$destination"
-        patchShebangs "$destination"
-        ${
-          if collection then
-            ''
-              skill_count=0
-              while IFS= read -r -d $'\0' target; do
-                ${pkgs.gnugrep}/bin/grep -Eq '^name:[[:space:]]+[a-z0-9]+(-[a-z0-9]+)*[[:space:]]*$' "$target"
-                ${pkgs.gnugrep}/bin/grep -Eq '^description:' "$target"
-                skill_count=$((skill_count + 1))
-              done < <(${pkgs.findutils}/bin/find "$destination" -name SKILL.md -type f -print0)
-              test "$skill_count" -gt 0
-            ''
-          else
-            ''
-              target="$destination/SKILL.md"
-              test -f "$target"
-              ${pkgs.gnugrep}/bin/grep -Fqx -- ${lib.escapeShellArg "name: ${name}"} "$target"
-              ${pkgs.gnugrep}/bin/grep -Eq '^description:' "$target"
-            ''
-        }
+        test -f ${lib.escapeShellArg "${target}/SKILL.md"}
+        ${pkgs.gnugrep}/bin/grep -Fqx -- ${lib.escapeShellArg "name: ${name}"} ${lib.escapeShellArg "${target}/SKILL.md"}
+        ${pkgs.gnugrep}/bin/grep -Eq '^description:' ${lib.escapeShellArg "${target}/SKILL.md"}
+        ${lib.concatMapStringsSep "\n" (runtime: ''
+          test -x ${lib.escapeShellArg "${runtime.package}/bin/${runtime.executable}"}
+        '') runtimeExecutables}
+        mkdir -p "$out"
+        ln -s ${lib.escapeShellArg target} "$out/${name}"
       '';
+
+  mkSkillTree =
+    {
+      pkgs,
+      name,
+      targets,
+    }:
+    pkgs.runCommand name { } ''
+      mkdir -p "$out"
+      ${lib.concatStringsSep "\n" (
+        lib.mapAttrsToList (skillName: target: ''
+          ln -s ${lib.escapeShellArg target} "$out/${skillName}"
+        '') targets
+      )}
+    '';
+
+  realizeSkills =
+    {
+      catalog,
+      pkgs,
+    }:
+    let
+      leafPathsFor =
+        repositoryName:
+        map (skill: skill.repositoryPath) (
+          lib.filter (skill: skill.repository == repositoryName) (builtins.attrValues catalog.skills)
+        );
+      repositories = lib.mapAttrs (
+        name: repository:
+        mkRepositoryProjection {
+          inherit pkgs name repository;
+          leafPaths = leafPathsFor name;
+          inherit (catalog) skills;
+        }
+      ) catalog.repositories;
+      targets = lib.mapAttrs (
+        name: skill:
+        if skill.repository != null then
+          repositories.${skill.repository} + "/${skill.repositoryPath}"
+        else
+          mkLocalSkillRoot {
+            inherit pkgs name;
+            inherit (skill) source;
+          }
+      ) catalog.skills;
+      realizedLeaves = lib.mapAttrs (
+        name: skill:
+        let
+          runtimeExecutables = map (runtime: {
+            package = runtime.package pkgs;
+            inherit (runtime) executable;
+          }) skill.runtimeExecutables;
+          runtimePackages = lib.unique (
+            skill.runtimePackages pkgs ++ map (runtime: runtime.package) runtimeExecutables
+          );
+        in
+        {
+          inherit runtimeExecutables runtimePackages;
+          target = targets.${name};
+          package = mkSkillLink {
+            inherit
+              name
+              pkgs
+              runtimeExecutables
+              runtimePackages
+              ;
+            target = targets.${name};
+          };
+        }
+      ) catalog.skills;
+    in
+    {
+      inherit realizedLeaves repositories targets;
+      packages = lib.mapAttrs (_: leaf: leaf.package) realizedLeaves;
+      runtimePackages = lib.unique (
+        lib.concatMap (leaf: leaf.runtimePackages) (builtins.attrValues realizedLeaves)
+      );
+      tree = mkSkillTree {
+        inherit pkgs;
+        name = "dendritic-slop-agent-skills";
+        inherit targets;
+      };
+    };
 in
 {
   options.dendriticSlopInternal.homeManagerTargets = lib.mkOption {
@@ -406,7 +547,11 @@ in
     inherit
       evalResourceSelection
       isValidSkillName
-      mkSkill
+      mkLocalSkillRoot
+      mkRepositoryProjection
+      mkSkillLink
+      mkSkillTree
+      realizeSkills
       resolveResources
       resourceKinds
       targetNames

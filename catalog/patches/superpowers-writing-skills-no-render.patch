@@ -1,0 +1,18 @@
+--- a/skills/writing-skills/SKILL.md
++++ b/skills/writing-skills/SKILL.md
+@@ -315,11 +315,10 @@
+ 
+ See `graphviz-conventions.dot` in this directory for graphviz style rules.
+ 
+-**Visualizing for your human partner:** Use `render-graphs.js` in this directory to render a skill's flowcharts to SVG:
+-```bash
+-./render-graphs.js ../some-skill           # Each diagram separately
+-./render-graphs.js ../some-skill --combine # All diagrams in one SVG
+-```
++**Visualizing for your human partner:** The upstream rendering helper is omitted from immutable installations because it
++writes generated files beside its input.
++Copy the skill into a writable project directory and use a project-owned Graphviz
++workflow when rendered SVG files are needed.
+ 
+ ## Code Examples
+ 

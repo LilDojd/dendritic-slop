@@ -289,6 +289,10 @@ let
         type = types.nullOr nonEmptyString;
         default = null;
       };
+      owner = mkOption {
+        type = types.nullOr resourceName;
+        default = null;
+      };
     };
   };
 
@@ -320,6 +324,14 @@ let
         };
         entrypoints = mkOption {
           type = types.listOf (types.submodule repositoryEntrypointModule);
+          default = [ ];
+        };
+        ignoredEntrypoints = mkOption {
+          type = types.listOf nonEmptyString;
+          default = [ ];
+        };
+        patches = mkOption {
+          type = types.listOf types.path;
           default = [ ];
         };
         buildInputs = mkOption {
