@@ -7,6 +7,7 @@
     profiles = [ "core" ];
     environment.PI_ASK_USER_DISPLAY_MODE.value = "inline";
     capabilities.executesCode = true;
+    secretCapable = true;
     realization = {
       type = "package";
       package = pkgs: pkgs.callPackage ../packages/pi-ask-user.nix { source = inputs.pi-ask-user; };
@@ -22,6 +23,7 @@
     profiles = [ "core" ];
     requiresTargets = [ "herdr" ];
     capabilities.executesCode = true;
+    secretCapable = true;
     realization = {
       type = "path";
       source = inputs.herdr-src + "/src/integration/assets/pi/herdr-agent-state.ts";
@@ -40,6 +42,7 @@
       network = true;
       mutatesUserConfig = true;
     };
+    secretCapable = true;
     realization = {
       type = "package";
       package = pkgs: pkgs.callPackage ../packages/pi-mcp-adapter.nix { source = inputs.pi-mcp-adapter; };
@@ -74,6 +77,7 @@
       network = true;
       readsSecrets = true;
     };
+    secretCapable = true;
     realization = {
       type = "package";
       package = pkgs: pkgs.callPackage ../packages/pi-web-access.nix { source = inputs.pi-web-access; };

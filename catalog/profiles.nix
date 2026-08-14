@@ -104,7 +104,10 @@
 
   web = {
     title = "Web";
-    description = "Reviewed web access for Pi.";
-    members.extensions = [ "web-access" ];
+    description = "Reviewed web access and local browser automation for Pi.";
+    members = {
+      extensions = [ "web-access" ];
+      mcps = [ "browser" ];
+    };
   };
 }

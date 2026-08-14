@@ -1,7 +1,6 @@
 { lib, ... }:
 let
   targetNames = [
-    "context7"
     "git"
     "herdr"
     "pi"

@@ -38,6 +38,10 @@ let
       enabledExtensions = lib.filterAttrs (
         name: _: config.dendriticSlop.extensions.${name}.enable
       ) catalog.extensions;
+      mcpSelection = config.dendriticSlop.mcps or { };
+      enabledMcps = lib.filterAttrs (
+        name: _: builtins.hasAttr name mcpSelection && mcpSelection.${name}.enable
+      ) catalog.mcps;
       enabledTools = lib.filterAttrs (name: _: config.dendriticSlop.tools.${name}.enable) catalog.tools;
       selectedTargets = lib.filterAttrs (name: _: builtins.hasAttr name enabledSkills) realized.targets;
       managedSkills = mkSkillTree {
@@ -50,30 +54,52 @@ let
           builtins.attrNames enabledSkills
         )
       );
-      allEnabled =
-        builtins.attrValues enabledSkills
-        ++ builtins.attrValues enabledExtensions
-        ++ builtins.attrValues enabledTools;
+      enabledResources = {
+        extensions = enabledExtensions;
+        mcps = enabledMcps;
+        skills = enabledSkills;
+        tools = enabledTools;
+      };
+      allEnabled = lib.concatMap builtins.attrValues (builtins.attrValues enabledResources);
       requiredTargets = lib.unique (lib.concatMap (resource: resource.requiresTargets) allEnabled);
       requiredTargetAssertions = lib.concatLists (
-        lib.mapAttrsToList
-          (
-            kind: resources:
-            lib.concatLists (
-              lib.mapAttrsToList (
-                name: resource:
-                map (target: {
-                  assertion = config.dendriticSlop.targets.${target}.enable;
-                  message = "${kind}.${name} requires dendriticSlop.targets.${target}.enable = true";
-                }) resource.requiresTargets
-              ) resources
-            )
+        lib.mapAttrsToList (
+          kind: resources:
+          lib.concatLists (
+            lib.mapAttrsToList (
+              name: resource:
+              map (target: {
+                assertion = config.dendriticSlop.targets.${target}.enable;
+                message = "${kind}.${name} requires dendriticSlop.targets.${target}.enable = true";
+              }) resource.requiresTargets
+            ) resources
           )
-          {
-            extensions = enabledExtensions;
-            skills = enabledSkills;
-            tools = enabledTools;
-          }
+        ) enabledResources
+      );
+      resourceEnabled =
+        reference:
+        let
+          parts = lib.splitString "." reference;
+          kind = builtins.head parts;
+          name = builtins.elemAt parts 1;
+        in
+        if kind == "herdrPlugins" then
+          config.dendriticSlop.herdr.plugins.${name}.enable
+        else
+          config.dendriticSlop.${kind}.${name}.enable;
+      requiredResourceAssertions = lib.concatLists (
+        lib.mapAttrsToList (
+          kind: resources:
+          lib.concatLists (
+            lib.mapAttrsToList (
+              name: resource:
+              map (reference: {
+                assertion = resourceEnabled reference;
+                message = "${kind}.${name} requires dendriticSlop.${reference}.enable = true";
+              }) resource.requiresResources
+            ) resources
+          )
+        ) enabledResources
       );
       realizedPiPackages = realizePiPackages {
         extensions = enabledExtensions;
@@ -99,6 +125,9 @@ let
               enable = lib.mkDefault true;
             });
             extensions = lib.genAttrs profile.members.extensions (_: {
+              enable = lib.mkDefault true;
+            });
+            mcps = lib.genAttrs profile.members.mcps (_: {
               enable = lib.mkDefault true;
             });
             tools = lib.genAttrs profile.members.tools (_: {
@@ -130,7 +159,7 @@ let
         profileDefaults
         ++ [
           (lib.mkIf config.dendriticSlop.enable {
-            assertions = requiredTargetAssertions;
+            assertions = requiredTargetAssertions ++ requiredResourceAssertions;
 
             dendriticSlop.targets = lib.genAttrs requiredTargets (_: {
               enable = lib.mkDefault true;

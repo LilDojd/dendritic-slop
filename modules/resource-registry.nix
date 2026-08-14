@@ -30,6 +30,7 @@ let
       );
     };
   extensions = import ../catalog/extensions.nix { inherit inputs superpowersPackage; };
+  mcps = import ../catalog/mcps.nix { inherit inputs; };
   tools = import ../catalog/tools.nix { inherit inputs; };
   resourceKinds = [
     "skills"
@@ -83,12 +84,12 @@ let
   declarations = {
     inherit
       extensions
+      mcps
       profiles
       repositories
       skills
       tools
       ;
-    mcps = { };
     herdrPlugins = legacyHerdrPlugins;
   };
 

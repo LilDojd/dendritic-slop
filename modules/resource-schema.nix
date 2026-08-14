@@ -159,7 +159,13 @@ let
   secretFileModule = {
     options = {
       description = mkOption { type = nonEmptyString; };
-      environment = mkOption { type = nonEmptyString; };
+      environment = mkOption {
+        type = types.addCheck nonEmptyString lib.isValidPosixName;
+      };
+      headers = mkOption {
+        type = types.attrsOf nonEmptyString;
+        default = { };
+      };
     };
   };
 
@@ -175,14 +181,12 @@ let
         transport = mkOption { type = mcpTransportType; };
         lifecycle = mkOption {
           type = types.enum [
-            "persistent"
-            "on-demand"
+            "eager"
+            "keep-alive"
+            "lazy"
+            "lazy-keep-alive"
           ];
-          default = "on-demand";
-        };
-        environmentNames = mkOption {
-          type = types.listOf nonEmptyString;
-          default = [ ];
+          default = "lazy";
         };
         secretFiles = mkOption {
           type = types.attrsOf (types.submodule secretFileModule);

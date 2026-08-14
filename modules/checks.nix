@@ -136,6 +136,20 @@
           duplicate-bro = true;
         };
       };
+      duplicateMcpCatalog = catalog // {
+        mcps = catalog.mcps // {
+          duplicate-context7 = catalog.mcps.context7 // {
+            name = "duplicate-context7";
+            profiles = [ ];
+          };
+        };
+      };
+      duplicateMcpId = tryResolve duplicateMcpCatalog {
+        mcps = {
+          context7 = true;
+          duplicate-context7 = true;
+        };
+      };
       unsupportedSystem = if system == "x86_64-linux" then "aarch64-darwin" else "x86_64-linux";
       unsupportedCatalog = catalog // {
         skills = catalog.skills // {
@@ -171,7 +185,90 @@
           ];
         };
 
+      tryHome =
+        extraModule:
+        builtins.tryEval (
+          let
+            evaluated = mkHome extraModule;
+          in
+          builtins.deepSeq evaluated.activationPackage evaluated.activationPackage
+        );
+
+      tryContext7Secret =
+        value:
+        builtins.tryEval (
+          let
+            evaluated = mkHome {
+              dendriticSlop.mcps.context7.secrets.apiKeyFile = value;
+            };
+            secret = evaluated.config.dendriticSlop.mcps.context7.secrets.apiKeyFile;
+          in
+          builtins.deepSeq secret secret
+        );
+
+      context7SecretPath = "/run/agenix/context7-api-key";
       home = mkHome { };
+      homeWithContext7 = mkHome {
+        dendriticSlop = {
+          profiles.core.enable = true;
+          mcps.context7 = {
+            enable = true;
+            secrets.apiKeyFile = context7SecretPath;
+          };
+        };
+      };
+      homeWithContext7NoSecret = mkHome {
+        dendriticSlop = {
+          profiles.core.enable = true;
+          mcps.context7.enable = true;
+        };
+      };
+      homeWithMergedMcps = mkHome {
+        dendriticSlop = {
+          profiles = {
+            core.enable = true;
+            web.enable = true;
+          };
+          mcps.context7 = {
+            enable = true;
+            secrets.apiKeyFile = context7SecretPath;
+          };
+        };
+      };
+      homeWithRelativeSecret = tryContext7Secret "relative/context7-key";
+      homeWithLiteralSecret = tryContext7Secret "literal-secret-value";
+      homeWithNixPathSecret = tryContext7Secret ./checks.nix;
+      homeWithStoreSecret = tryContext7Secret "${builtins.storeDir}/context7-key";
+      homeWithUnsafeSecretExtension = tryHome {
+        dendriticSlop = {
+          profiles.core.enable = true;
+          extensions.superpowers-bootstrap.enable = true;
+          mcps.context7 = {
+            enable = true;
+            secrets.apiKeyFile = context7SecretPath;
+          };
+        };
+      };
+      homeWithMcpCollision = tryHome {
+        dendriticSlopInternal.mcp.servers = [
+          {
+            owner = "fixture.first";
+            serverId = "collision";
+            transport = {
+              type = "remote";
+              url = "https://first.example.invalid/mcp";
+            };
+          }
+          {
+            owner = "fixture.second";
+            serverId = "collision";
+            transport = {
+              type = "remote";
+              url = "https://second.example.invalid/mcp";
+            };
+          }
+        ];
+      };
       homeWithProfiles = mkHome {
         dendriticSlop = {
           profiles = {
@@ -241,6 +338,25 @@
       finalPiPackage = homeWithProfiles.config.programs.pi.coding-agent.finalPackage;
       herdrPackage = catalog.tools.herdr.package pkgs;
       webAccessPackage = toString extensionPackages.web-access;
+      agentBrowserPackage = catalog.mcps.browser.transport.package pkgs;
+      agentBrowserCommand = lib.getExe' agentBrowserPackage catalog.mcps.browser.transport.executable;
+      mergedMcpJson = builtins.fromJSON (
+        builtins.unsafeDiscardStringContext homeWithMergedMcps.config.xdg.configFile."mcp/mcp.json".text
+      );
+      expectedMergedMcpJson = {
+        mcpServers = {
+          agent-browser = {
+            args = [ "mcp" ];
+            command = agentBrowserCommand;
+            lifecycle = "lazy";
+          };
+          context7 = {
+            headers.Authorization = "Bearer \${CONTEXT7_API_KEY}";
+            lifecycle = "lazy";
+            url = "https://mcp.context7.com/mcp";
+          };
+        };
+      };
       defaultPackages = home.config.programs.pi.coding-agent.settings.packages;
       corePackages = homeWithProfiles.config.programs.pi.coding-agent.settings.packages;
       optedInPackages = homeWithWebAccess.config.programs.pi.coding-agent.settings.packages;
@@ -268,6 +384,83 @@
         in
         builtins.deepSeq realized realized
       );
+      mcpSecretServer = pkgs.writeText "dendritic-slop-mcp-secret-server.mjs" ''
+        import { Server } from "${extensionPackages.pi-mcp-adapter}/node_modules/@modelcontextprotocol/sdk/dist/esm/server/index.js";
+        import { StdioServerTransport } from "${extensionPackages.pi-mcp-adapter}/node_modules/@modelcontextprotocol/sdk/dist/esm/server/stdio.js";
+        import { CallToolRequestSchema, ListToolsRequestSchema } from "${extensionPackages.pi-mcp-adapter}/node_modules/@modelcontextprotocol/sdk/dist/esm/types.js";
+
+        const server = new Server(
+          { name: "dendritic-secret-fixture", version: "1.0.0" },
+          { capabilities: { tools: {} } },
+        );
+        server.setRequestHandler(ListToolsRequestSchema, async () => ({
+          tools: [{
+            name: "read_secret",
+            description: "Return the child-scoped fake secret.",
+            inputSchema: { type: "object", properties: {} },
+          }],
+        }));
+        server.setRequestHandler(CallToolRequestSchema, async () => ({
+          content: [{ type: "text", text: process.env.FAKE_SECRET ?? "" }],
+        }));
+        await server.connect(new StdioServerTransport());
+      '';
+      mcpSecretProbe = pkgs.writeText "dendritic-slop-mcp-secret-probe.ts" ''
+        import { writeFileSync } from "node:fs";
+        import { createMcpAdapter } from "${extensionPackages.pi-mcp-adapter}/index.ts";
+
+        export default function (pi: any) {
+          const registeredTools = new Map<string, any>();
+          const adapterApi = new Proxy(pi, {
+            get(target, property) {
+              if (property === "registerTool") {
+                return (tool: any) => {
+                  registeredTools.set(tool.name, tool);
+                  return target.registerTool(tool);
+                };
+              }
+              const value = target[property];
+              return typeof value === "function" ? value.bind(target) : value;
+            },
+          });
+
+          createMcpAdapter({
+            config: {
+              mcpServers: {
+                secret: {
+                  command: "${lib.getExe pkgs.nodejs_24}",
+                  args: ["${mcpSecretServer}"],
+                  env: { FAKE_SECRET: "''${CONTEXT7_API_KEY}" },
+                  lifecycle: "lazy",
+                },
+              },
+            },
+          })(adapterApi);
+
+          pi.registerCommand("dendritic-mcp-secret-smoke", {
+            handler: async (_args: string, ctx: any) => {
+              const proxy = registeredTools.get("mcp");
+              if (!proxy) throw new Error("MCP proxy tool was not registered");
+              const result = await proxy.execute(
+                "dendritic-secret-smoke",
+                { tool: "secret_read_secret" },
+                undefined,
+                undefined,
+                ctx,
+              );
+              const text = result.content
+                .filter((block: any) => block.type === "text")
+                .map((block: any) => block.text)
+                .join("\n");
+              const expected = process.env.CONTEXT7_API_KEY;
+              if (!expected || !text.includes(expected)) {
+                throw new Error("MCP adapter did not interpolate the fake Pi-process secret into the child environment");
+              }
+              writeFileSync(process.env.DENDRITIC_SLOP_MCP_SECRET_MARKER!, "invoked\n");
+            },
+          });
+        }
+      '';
       piResourceProbe = pkgs.writeText "dendritic-slop-pi-resource-probe.ts" ''
         import { writeFileSync } from "node:fs";
 
@@ -498,10 +691,15 @@
           {
             profiles.core.enable = true;
             skills.ty.enable = true;
+            mcps.context7 = {
+              enable = true;
+              secrets.apiKeyFile = context7SecretPath;
+            };
           }
           {
             profiles.core.enable = lib.mkDefault false;
             skills.ty.enable = lib.mkDefault false;
+            mcps.context7.enable = lib.mkDefault false;
           }
       );
       bridgeFalse = bridgeHome (
@@ -509,10 +707,12 @@
           {
             profiles.core.enable = false;
             skills.ty.enable = false;
+            mcps.context7.enable = false;
           }
           {
             profiles.core.enable = lib.mkDefault true;
             skills.ty.enable = lib.mkDefault true;
+            mcps.context7.enable = lib.mkDefault true;
           }
       );
 
@@ -1212,6 +1412,123 @@
 
               touch "$out"
             '';
+        mcp-registry =
+          assert
+            builtins.attrNames catalog.mcps == [
+              "browser"
+              "context7"
+            ];
+          assert catalog.mcps.browser.transport.type == "local";
+          assert catalog.mcps.context7.transport.type == "remote";
+          assert catalog.mcps.browser.serverId == "agent-browser";
+          assert catalog.mcps.context7.serverId == "context7";
+          assert catalog.mcps.context7.secretFiles.apiKeyFile.environment == "CONTEXT7_API_KEY";
+          assert home.options.dendriticSlop.mcps.context7.secrets ? apiKeyFile;
+          assert !home.config.dendriticSlop.mcps.context7.enable;
+          assert home.config.dendriticSlop.mcps.context7.secrets.apiKeyFile == null;
+          assert !(home.config.xdg.configFile ? "mcp/mcp.json");
+          assert !(home.options.dendriticSlop ? context7);
+          assert !(home.options.dendriticSlop.targets ? context7);
+          assert !homeWithRelativeSecret.success;
+          assert !homeWithLiteralSecret.success;
+          assert !homeWithNixPathSecret.success;
+          assert !homeWithStoreSecret.success;
+          assert !homeWithUnsafeSecretExtension.success;
+          assert !homeWithMcpCollision.success;
+          assert !duplicateMcpId.success;
+          assert homeWithMergedMcps.config.dendriticSlop.mcps.browser.enable;
+          assert homeWithMergedMcps.config.dendriticSlop.mcps.context7.enable;
+          assert homeWithMergedMcps.config.dendriticSlop.extensions.pi-mcp-adapter.enable;
+          assert mergedMcpJson == expectedMergedMcpJson;
+          assert
+            homeWithContext7.config.programs.pi.coding-agent.environment.CONTEXT7_API_KEY.file
+            == context7SecretPath;
+          assert !(homeWithContext7NoSecret.config.programs.pi.coding-agent.environment ? CONTEXT7_API_KEY);
+          assert !lib.hasInfix context7SecretPath homeWithContext7.config.xdg.configFile."mcp/mcp.json".text;
+          assert lib.hasInfix "Bearer \${CONTEXT7_API_KEY}"
+            homeWithContext7.config.xdg.configFile."mcp/mcp.json".text;
+          assert bridgeTrue.mcps.context7.enable;
+          assert bridgeTrue.mcps.context7.secrets.apiKeyFile == context7SecretPath;
+          assert !bridgeFalse.mcps.context7.enable;
+          assert catalog.extensions.ask-user.secretCapable;
+          assert catalog.extensions.herdr-agent-state.secretCapable;
+          assert catalog.extensions.pi-mcp-adapter.secretCapable;
+          assert catalog.extensions.web-access.secretCapable;
+          assert !catalog.extensions.superpowers-bootstrap.secretCapable;
+          pkgs.runCommand "mcp-registry-check"
+            {
+              mcpConfig = pkgs.writeText "expected-mcp.json" (
+                homeWithMergedMcps.config.xdg.configFile."mcp/mcp.json".text
+              );
+              nativeBuildInputs = [
+                pkgs.coreutils
+                pkgs.jq
+              ];
+            }
+            ''
+              set -euo pipefail
+
+              test "$(jq -r '.mcpServers | keys | join(" ")' "$mcpConfig")" = \
+                'agent-browser context7'
+              test "$(jq -r '.mcpServers["agent-browser"].command' "$mcpConfig")" = \
+                ${lib.escapeShellArg agentBrowserCommand}
+              test "$(jq -r '.mcpServers["agent-browser"].args | join(" ")' "$mcpConfig")" = mcp
+              test "$(jq -r '.mcpServers.context7.headers.Authorization' "$mcpConfig")" = \
+                'Bearer ''${CONTEXT7_API_KEY}'
+              ! grep -F ${lib.escapeShellArg context7SecretPath} "$mcpConfig"
+              ${agentBrowserCommand} mcp --help > "$TMPDIR/agent-browser-mcp-help"
+              ${pkgs.gnugrep}/bin/grep -Fq 'Start an MCP stdio server' \
+                "$TMPDIR/agent-browser-mcp-help"
+
+              agent="$TMPDIR/agent"
+              work="$TMPDIR/work"
+              home_dir="$TMPDIR/home"
+              runtime="$TMPDIR/runtime"
+              marker="$TMPDIR/adapter-secret-invoked"
+              mkdir -p "$agent" "$work" "$home_dir" "$runtime"
+              runtime_secret="runtime-$RANDOM-$$"
+
+              cd "$work"
+              set +e
+              {
+                printf '%s\n' '{"type":"prompt","message":"/dendritic-mcp-secret-smoke"}'
+                for attempt in $(seq 1 600); do
+                  [ ! -f "$marker" ] || break
+                  sleep 0.1
+                done
+              } | \
+                env -i \
+                  HOME="$home_dir" \
+                  TMPDIR="$runtime" \
+                  PATH=${lib.escapeShellArg (lib.makeBinPath [ pkgs.coreutils ])} \
+                  PI_CODING_AGENT_DIR="$agent" \
+                  PI_OFFLINE=1 \
+                  CONTEXT7_API_KEY="$runtime_secret" \
+                  DENDRITIC_SLOP_MCP_SECRET_MARKER="$marker" \
+                  ${pkgs.coreutils}/bin/timeout 90 \
+                  ${lib.getExe piPackage} --offline --mode rpc --no-session --no-context-files \
+                    -e ${mcpSecretProbe} > "$TMPDIR/pi-mcp.stdout" 2> "$TMPDIR/pi-mcp.stderr"
+              status=$?
+              set -e
+
+              if [ "$status" -ne 0 ]; then
+                cat "$TMPDIR/pi-mcp.stdout" >&2
+                cat "$TMPDIR/pi-mcp.stderr" >&2
+                exit "$status"
+              fi
+              if [ ! -f "$marker" ]; then
+                cat "$TMPDIR/pi-mcp.stdout" >&2
+                cat "$TMPDIR/pi-mcp.stderr" >&2
+                echo "MCP secret adapter smoke test did not write its marker" >&2
+                exit 1
+              fi
+              test "$(cat "$marker")" = invoked
+              ! grep -F "$runtime_secret" "$mcpConfig" "$marker"
+              ! grep -Eq 'extension_error|Failed to load extension' \
+                "$TMPDIR/pi-mcp.stdout" "$TMPDIR/pi-mcp.stderr"
+
+              touch "$out"
+            '';
         registry-schema =
           assert catalogEvaluation.success;
           assert !invalidMcpVariant.success;
@@ -1248,8 +1565,10 @@
           assert !(profileWithDisable.value.skills ? bro);
           assert profileUnion.success;
           assert profileUnion.value.extensions ? web-access;
+          assert profileUnion.value.mcps ? browser;
           assert !disabledRequirement.success;
           assert !duplicateExposedName.success;
+          assert !duplicateMcpId.success;
           assert !unsupportedPackage.success;
           assert catalog.skills.bro.defaultEnable == legacyResources.skills.bro.defaultEnable;
           assert catalog.skills.coding-guidelines.defaultEnable;
