@@ -29,6 +29,10 @@ let
 
             These global-management rules do not restrict project-local Pi or MCP configuration.
 
+            # Python tool selection
+
+            Respect each repository's existing Python package manager, formatter, linter, and type checker. Prefer project-pinned `uv run` tools, then declaratively packaged tools. Do not use `uvx`, install packages, or migrate project tooling without explicit user approval.
+
             # Herdr agent selection
 
             When working in Herdr, only spawn Pi agents unless the user explicitly requests another agent kind.
