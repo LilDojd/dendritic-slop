@@ -9,9 +9,11 @@ let
     lib.mapAttrs (_: resource: {
       enable = lib.mkOption {
         type = lib.types.bool;
-        default = hmConfig.dendriticSlop.autoEnable;
-        defaultText = lib.literalExpression "config.dendriticSlop.autoEnable";
-        description = "Enable ${resource.title}. ${resource.description}";
+        default = resource.defaultEnable && hmConfig.dendriticSlop.autoEnable;
+        defaultText = lib.literalExpression (
+          if resource.defaultEnable then "config.dendriticSlop.autoEnable" else "false"
+        );
+        description = "Whether to enable ${resource.title}. ${resource.description}";
       };
     }) catalog;
 

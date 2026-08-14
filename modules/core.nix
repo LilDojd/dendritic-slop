@@ -8,7 +8,7 @@
         autoEnable = lib.mkOption {
           type = lib.types.bool;
           default = true;
-          description = "Automatically enable every imported dendritic-slop target.";
+          description = "Enable imported targets and resources whose catalog defaults permit automatic activation.";
         };
       };
     };

@@ -1,8 +1,8 @@
-{ inputs }:
+{ ... }:
 {
   title = "Herdr";
-  description = "Control Herdr workspaces, panes, and Pi agents.";
+  description = "Inspect and control Herdr workspaces, tabs, panes, commands, and Pi agents.";
   homepage = "https://github.com/herdrdev/herdr";
-  source = inputs.herdr + "/skills/herdr/SKILL.md";
+  source = ./SKILL.md;
   requiresTargets = [ "herdr" ];
 }

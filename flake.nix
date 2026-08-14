@@ -1,5 +1,5 @@
 {
-  description = "Minimal dendritic modules for Pi and LLM tooling";
+  description = "Dendritic Nix modules for Pi and LLM tooling";
 
   inputs = {
     flake-parts = {
@@ -10,6 +10,11 @@
     herdr = {
       url = "github:herdrdev/herdr";
       inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    herdr-plugin-jj-workspace = {
+      url = "github:NathanFlurry/herdr-plugin-jj-workspace/a9f1d3bcdaa2354e336a5173da85cbe4970c0f2e";
+      flake = false;
     };
 
     home-manager = {

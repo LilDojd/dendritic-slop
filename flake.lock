@@ -90,6 +90,23 @@
         "type": "github"
       }
     },
+    "herdr-plugin-jj-workspace": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1783487155,
+        "narHash": "sha256-xspdQfcwTEdUwZ0nWAfrdvz5IBVNVyMkmpmpzkUl0LE=",
+        "owner": "NathanFlurry",
+        "repo": "herdr-plugin-jj-workspace",
+        "rev": "a9f1d3bcdaa2354e336a5173da85cbe4970c0f2e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NathanFlurry",
+        "repo": "herdr-plugin-jj-workspace",
+        "rev": "a9f1d3bcdaa2354e336a5173da85cbe4970c0f2e",
+        "type": "github"
+      }
+    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -260,6 +277,7 @@
       "inputs": {
         "flake-parts": "flake-parts",
         "herdr": "herdr",
+        "herdr-plugin-jj-workspace": "herdr-plugin-jj-workspace",
         "home-manager": "home-manager",
         "impermanence": "impermanence",
         "import-tree": "import-tree",

@@ -8,7 +8,7 @@ let
     {
       options.dendriticSlop.targets.git.enable = mkEnableTarget {
         inherit config lib;
-        description = "Ignore local MCP configuration in Git repositories.";
+        description = "Add .mcp.json and mcp.json to the global Git ignore list.";
       };
 
       config = lib.mkIf (config.dendriticSlop.enable && config.dendriticSlop.targets.git.enable) {

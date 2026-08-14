@@ -34,7 +34,15 @@
       "groupName": "Nix flake inputs"
     },
     {
-      "description": "Group reviewed Pi package updates",
+      "description": "Separate Herdr plugin input updates",
+      "matchManagers": ["nix"],
+      "matchDepNames": ["herdr-plugin-jj-workspace"],
+      "groupName": "Herdr plugins",
+      "minimumReleaseAge": "3 days",
+      "automerge": false
+    },
+    {
+      "description": "Group pinned Pi npm package updates",
       "matchManagers": ["custom.regex"],
       "matchDatasources": ["npm"],
       "groupName": "Pi npm packages",

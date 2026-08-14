@@ -36,11 +36,11 @@ let
         autoEnable = lib.mkOption {
           type = lib.types.bool;
           default = true;
-          description = "Automatically enable every imported target and resource.";
+          description = "Enable imported targets and resources whose catalog defaults permit automatic activation.";
         };
         username = lib.mkOption {
           type = lib.types.str;
-          description = "Home Manager user receiving dendritic-slop.";
+          description = "Home Manager user to configure.";
         };
         context7ApiKeyFile = lib.mkOption {
           type = lib.types.nullOr lib.types.str;
@@ -56,6 +56,7 @@ let
         });
         skills = nullableResourceOptions resources.skills;
         extensions = nullableResourceOptions resources.extensions;
+        herdr.plugins = nullableResourceOptions resources.herdrPlugins;
       };
 
       config.home-manager.users.${cfg.username}.imports = [
@@ -67,6 +68,7 @@ let
             targets = explicit homeTargets;
             skills = explicit cfg.skills;
             extensions = explicit cfg.extensions;
+            herdr.plugins = explicit cfg.herdr.plugins;
           };
         }
       ];

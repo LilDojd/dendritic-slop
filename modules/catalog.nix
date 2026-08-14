@@ -12,14 +12,20 @@ let
         manifestPath = root + "/${name}/default.nix";
         manifest = import manifestPath { inherit inputs; };
         allowed = [
+          "actions"
+          "defaultEnable"
           "description"
           "environment"
           "homepage"
+          "id"
           "package"
+          "pluginRoot"
           "requiresTargets"
           "source"
           "title"
+          "version"
         ];
+        isHerdrPlugin = kind == "herdr-plugins";
         unknown = lib.subtractLists allowed (builtins.attrNames manifest);
       in
       assert lib.assertMsg (builtins.pathExists manifestPath) "${kind}/${name} is missing default.nix";
@@ -31,17 +37,44 @@ let
         builtins.isString manifest.description && manifest.description != ""
       ) "${kind}/${name}.description must be non-empty";
       assert lib.assertMsg (
-        manifest ? source || manifest ? package
+        !(manifest ? defaultEnable) || builtins.isBool manifest.defaultEnable
+      ) "${kind}/${name}.defaultEnable must be a Boolean";
+      assert lib.assertMsg (
+        !isHerdrPlugin || !(manifest ? defaultEnable)
+      ) "${kind}/${name} cannot override its opt-in default";
+      assert lib.assertMsg (
+        !(manifest ? actions)
+        || (builtins.isList manifest.actions && builtins.all builtins.isString manifest.actions)
+      ) "${kind}/${name}.actions must be a list of strings";
+      assert lib.assertMsg (
+        isHerdrPlugin || manifest ? source || manifest ? package
       ) "${kind}/${name} needs source or package";
       assert lib.assertMsg (
-        !(manifest ? source && manifest ? package)
+        isHerdrPlugin || !(manifest ? source && manifest ? package)
       ) "${kind}/${name} cannot have both source and package";
       assert lib.assertMsg (
         !(manifest ? source) || builtins.pathExists manifest.source
       ) "${kind}/${name}.source does not exist";
+      assert lib.assertMsg (
+        !isHerdrPlugin
+        || (
+          manifest ? id
+          && builtins.isString manifest.id
+          && manifest.id != ""
+          && manifest ? version
+          && builtins.isString manifest.version
+          && manifest.version != ""
+          && manifest ? package
+          && builtins.isFunction manifest.package
+          && manifest ? pluginRoot
+          && builtins.isFunction manifest.pluginRoot
+        )
+      ) "${kind}/${name} needs an id, version, package builder, and plugin-root builder";
       manifest
       // {
         inherit kind name;
+        actions = manifest.actions or [ ];
+        defaultEnable = if isHerdrPlugin then false else manifest.defaultEnable or true;
         environment = manifest.environment or { };
         requiresTargets = manifest.requiresTargets or [ ];
       }
@@ -57,5 +90,6 @@ in
   config.dendriticSlopInternal.resources = {
     skills = discover "skills" ../resources/skills;
     extensions = discover "extensions" ../resources/extensions;
+    herdrPlugins = discover "herdr-plugins" ../resources/herdr-plugins;
   };
 }

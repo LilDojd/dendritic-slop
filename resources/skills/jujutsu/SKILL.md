@@ -1,13 +1,13 @@
 ---
 name: jujutsu
-description: "REQUIRED: Load this skill before every Git or VCS operation (status, diff, commit, branch/bookmark, merge, rebase, fetch, push, worktree/workspace, or detached HEAD). If .jj exists, use Jujutsu and its native workspaces; avoid mutating Git commands because they can desynchronize colocated state or create divergent changes."
+description: "REQUIRED: Load this skill before every Git or VCS operation (status, diff, commit, branch/bookmark, merge, rebase, fetch, push, worktree/workspace, or detached HEAD). If .jj exists, use Jujutsu and its workspaces; avoid mutating Git commands because they can desynchronize colocated state or create divergent changes."
 ---
 
 # Jujutsu (jj)
 
 Use Jujutsu's mutable, automatically rebased commits without losing or mixing a user's work.
 
-**Reviewed against jj 0.44.0.** Start with `jj --version`. If the installed version differs or a flag fails, use `jj --no-pager help <command>` and the [official documentation](https://docs.jj-vcs.dev/latest/) rather than guessing. See the [changelog](https://docs.jj-vcs.dev/latest/changelog/), [CLI reference](https://docs.jj-vcs.dev/latest/cli-reference/), and [working-copy/workspace guide](https://docs.jj-vcs.dev/latest/working-copy/).
+**These instructions target jj 0.44.0.** Start with `jj --version`. If the installed version differs or a flag fails, use `jj --no-pager help <command>` and the [official documentation](https://docs.jj-vcs.dev/latest/) rather than guessing. See the [changelog](https://docs.jj-vcs.dev/latest/changelog/), [CLI reference](https://docs.jj-vcs.dev/latest/cli-reference/), and [working-copy/workspace guide](https://docs.jj-vcs.dev/latest/working-copy/).
 
 ## Mandatory agent rules
 
@@ -51,7 +51,7 @@ Useful revsets:
 | `divergent()` | Commits whose change ID has divergent versions  |
 | `mutable()`   | Revisions that current policy permits rewriting |
 
-String patterns are glob patterns by default in modern jj. Use `exact:`, `glob:`, `substring:`, or `regex:` when ambiguity matters. Hidden or divergent versions of a change can be selected as `CHANGE_ID/0`, `CHANGE_ID/1`, and so on.
+In jj 0.44, string patterns are glob patterns by default. Use `exact:`, `glob:`, `substring:`, or `regex:` when ambiguity matters. Hidden or divergent versions of a change can be selected as `CHANGE_ID/0`, `CHANGE_ID/1`, and so on.
 
 ## Safe task workflow
 
@@ -81,7 +81,7 @@ Do not assume a detached Git HEAD is an error; colocated jj repositories commonl
   jj new -m "Add user authentication"
   ```
 
-- If `@` contains unclear, unrelated, or user-owned work, do not rewrite it. Ask what to do or create an isolated native workspace based on an explicit revision.
+- If `@` contains unclear, unrelated, or user-owned work, do not rewrite it. Ask what to do or create an isolated Jujutsu workspace based on an explicit revision.
 - To modify a known existing change, first ensure another workspace is not editing it, then:
 
   ```bash
@@ -116,7 +116,7 @@ jj prev --edit
 jj next --edit
 ```
 
-`jj diff` defaults to jj's color-words format. Use `--git` when a unified `+`/`-` patch is easier for the agent to parse; the native format is not corruption.
+Use `--git` for a unified patch; otherwise `jj diff` uses its color-words format.
 
 ## Refining changes non-interactively
 
@@ -168,7 +168,7 @@ jj abandon <change-id>
 
 ### Rebase
 
-Use current `--onto/-o` terminology; `--destination/-d` is only a deprecated alias.
+Use `--onto/-o`; `--destination/-d` is a deprecated alias in jj 0.44.
 
 ```bash
 # Rebase the branch containing @ onto trunk
@@ -183,9 +183,9 @@ jj rebase -r <revset> -o <destination>
 
 Always inspect the graph and conflicts afterward.
 
-## Native workspaces
+## Jujutsu workspaces
 
-A workspace is jj's first-class equivalent of a Git worktree: a separate working directory and working-copy commit sharing commits, bookmarks, and the operation log with the same repository. Use `jj workspace`, never `git worktree`, in a jj repository.
+A Jujutsu workspace is a separate working directory and working-copy commit that shares commits, bookmarks, and the operation log with the repository. Use `jj workspace`, never `git worktree`, in a jj repository.
 
 ### Create and inspect
 
@@ -264,7 +264,7 @@ jj bookmark delete feature
 
 ### Clone, initialize, and fetch
 
-Git-backed clones and repositories are colocated by default in current jj:
+In jj 0.44, Git-backed clones are colocated by default:
 
 ```bash
 jj git clone <url> [destination]
@@ -284,7 +284,7 @@ jj rebase -b @ -o 'trunk()'
 
 ### Push safely (jj 0.44)
 
-`--allow-new` was removed in jj 0.42. Selecting an untracked bookmark with `--bookmark` now tracks it automatically for the chosen remote.
+In jj 0.44, `jj git push --bookmark <name>` tracks an untracked bookmark for the selected remote; do not pass `--allow-new`.
 
 ```bash
 # Point a bookmark at the intended commit
@@ -307,7 +307,7 @@ By default, `jj git push` pushes tracked bookmarks and tags in the relevant rang
 
 ## Colocated Git safety
 
-Current jj allows Git and jj commands to be mixed in a **colocated** workspace (`.jj` and `.git`), and automatically imports/exports Git refs on each jj command. Agents should still use jj for mutations because:
+In jj 0.44, colocated workspaces (`.jj` and `.git`) permit both Git and jj commands, and each jj command imports and exports Git refs. Agents should still use jj for mutations because:
 
 - jj usually leaves Git HEAD detached;
 - jj ignores Git's index/staging area;
@@ -357,7 +357,7 @@ jj op restore <op-id>   # restore the entire repo state to that operation
 jj --at-op=<op-id> --no-pager log
 ```
 
-Inspect `jj op log` before repeated `undo`: modern `jj undo` is sequential, so invoking it repeatedly walks backward through operations. `jj op undo` was removed in 0.39; use `jj undo`, `jj redo`, `jj op revert`, or `jj op restore`.
+Inspect `jj op log` before repeated `undo`. In jj 0.44, repeated `jj undo` calls walk backward through operations. Use `jj undo`, `jj redo`, `jj op revert`, or `jj op restore`; `jj op undo` is unavailable.
 
 ## Completion checklist
 

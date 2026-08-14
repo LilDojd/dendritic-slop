@@ -8,7 +8,7 @@ let
     {
       options.dendriticSlop.targets.rules.enable = mkEnableTarget {
         inherit config lib;
-        description = "Enable concise declarative-management rules for Pi.";
+        description = "Enable Pi rules for declarative global tooling and Herdr agent selection.";
       };
 
       config = lib.mkIf (config.dendriticSlop.enable && config.dendriticSlop.targets.rules.enable) {
@@ -20,14 +20,14 @@ let
 
             Global Pi and LLM tooling is managed by the `dendritic-slop` flake and its consuming host flake.
 
-            When asked to change global Pi or LLM tooling:
+            Apply these rules to global Pi and LLM tooling changes:
 
             1. Change `dendritic-slop` for shared resources, or the consuming flake for host selection and secrets. Do not mutate runtime configuration or use `pi install`.
             2. Pin and review external packages, skills, and extensions before enabling them.
             3. Keep credentials and transient state outside the Nix store.
             4. Format changed Nix files and run `nix flake check --no-eval-cache --no-build --all-systems`.
 
-            Project-local configuration may still be changed when explicitly requested.
+            These global-management rules do not restrict project-local Pi or MCP configuration.
 
             # Herdr agent selection
 

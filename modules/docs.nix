@@ -23,24 +23,55 @@ let
         ${resource.description}
 
         - Option: `dendriticSlop.${kind}.${name}.enable`
-        - Source: [`${kind}/${name}`](${repository}/resources/${kind}/${name})
+        - Default when `autoEnable` is true: `${if resource.defaultEnable then "enabled" else "disabled"}`
+        - Definition: [`${kind}/${name}`](${repository}/resources/${kind}/${name})
         ${lib.optionalString (
           resource ? homepage
-        ) "- Upstream: [${resource.homepage}](${resource.homepage})"}
+        ) "- Homepage: [${resource.homepage}](${resource.homepage})"}
         ${lib.optionalString (
           resource.requiresTargets != [ ]
-        ) "- Requires target: `${lib.concatStringsSep "`, `" resource.requiresTargets}`"}
+        ) "- Required target: `${lib.concatStringsSep "`, `" resource.requiresTargets}`"}
       ''
     ) (builtins.attrNames catalog)}
+  '';
+
+  renderHerdrPlugins = ''
+    ## Herdr plugins
+
+    Herdr plugins execute as the user, are disabled by default, and require `dendriticSlop.targets.herdr.enable = true`.
+
+    ${lib.concatMapStringsSep "\n" (
+      name:
+      let
+        resource = resources.herdrPlugins.${name};
+      in
+      ''
+        ### ${resource.title}
+
+        ${resource.description}
+
+        - Option: `dendriticSlop.herdr.plugins.${name}.enable`
+        - Default: `disabled` (not affected by `autoEnable`)
+        - Required target: `herdr`
+        - Plugin ID: `${resource.id}`
+        - Version: `${resource.version}`
+        - Actions: `${lib.concatStringsSep "`; `" resource.actions}`
+        - Definition: [`herdr-plugins/${name}`](${repository}/resources/herdr-plugins/${name})
+        ${lib.optionalString (
+          resource ? homepage
+        ) "- Homepage: [${resource.homepage}](${resource.homepage})"}
+      ''
+    ) (builtins.attrNames resources.herdrPlugins)}
   '';
 
   catalog = ''
     # Resource catalog
 
-    Resources are discovered from `resources/`. They follow `dendriticSlop.autoEnable` and can be overridden individually.
+    Each resource can be enabled independently. Skills and extensions shown as enabled by default follow `dendriticSlop.autoEnable`; opt-in resources remain disabled until explicitly enabled. Herdr plugins are always opt-in.
 
     ${renderKind "skills" resources.skills}
     ${renderKind "extensions" resources.extensions}
+    ${renderHerdrPlugins}
   '';
 in
 {
