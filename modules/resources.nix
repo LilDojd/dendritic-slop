@@ -67,7 +67,7 @@ let
 
           settings.packages = [
             # renovate: datasource=npm depName=pi-mcp-adapter
-            "npm:pi-mcp-adapter@2.21.2"
+            "npm:pi-mcp-adapter@2.22.0"
           ]
           ++ map (resource: resource.package) packageResources;
           environment = lib.mkMerge (map (resource: resource.environment) allEnabled);
