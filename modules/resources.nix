@@ -55,7 +55,10 @@ let
           ) enabledSkills;
 
           extensions = map (resource: resource.source) pathExtensions;
-          settings.packages = map (resource: resource.package) packageResources;
+          settings.packages = [
+            "npm:pi-mcp-adapter@2.21.2"
+          ]
+          ++ map (resource: resource.package) packageResources;
           environment = lib.mkMerge (map (resource: resource.environment) allEnabled);
         };
       };
