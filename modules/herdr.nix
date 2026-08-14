@@ -13,7 +13,7 @@ let
     }:
     let
       cfg = config.dendriticSlop;
-      herdrPackage = inputs.herdr.packages.${pkgs.stdenv.hostPlatform.system}.herdr;
+      herdrPackage = inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.herdr;
       herdr = lib.getExe herdrPackage;
       awk = lib.getExe pkgs.gawk;
       jq = lib.getExe pkgs.jq;

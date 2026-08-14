@@ -1,15 +1,22 @@
 {
   description = "Dendritic Nix modules for Pi and LLM tooling";
 
+  nixConfig = {
+    extra-substituters = [ "https://cache.numtide.com" ];
+    extra-trusted-public-keys = [
+      "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
+    ];
+  };
+
   inputs = {
     flake-parts = {
       url = "https://flakehub.com/f/hercules-ci/flake-parts/0.1.*";
       inputs.nixpkgs-lib.follows = "nixpkgs";
     };
 
-    herdr = {
+    herdr-src = {
       url = "github:herdrdev/herdr";
-      inputs.nixpkgs.follows = "nixpkgs";
+      flake = false;
     };
 
     herdr-plugin-jj-workspace = {
@@ -30,6 +37,8 @@
       url = "github:nix-darwin/nix-darwin";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    llm-agents.url = "github:numtide/llm-agents.nix";
 
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 

@@ -4,7 +4,12 @@ let
   inherit (config.flake.lib) mkEnableTarget;
 
   targetModule =
-    { config, lib, ... }:
+    {
+      config,
+      lib,
+      pkgs,
+      ...
+    }:
     {
       imports = [ inputs.pi.homeModules.default ];
 
@@ -16,6 +21,7 @@ let
       config = lib.mkIf (config.dendriticSlop.enable && config.dendriticSlop.targets.pi.enable) {
         programs.pi.coding-agent = {
           enable = true;
+          package = inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.pi;
           settings.packages = [ "npm:pi-mcp-adapter@2.21.2" ];
         };
       };
