@@ -1,7 +1,13 @@
 { config, lib, ... }:
 let
   catalog = config.dendriticSlopInternal.catalog;
-  inherit (config.flake.lib) mkSkillTree realizePiPackages realizeSkills;
+  inherit (config.flake.lib)
+    mkSkillTree
+    realizeHerdrPlugins
+    realizePiPackages
+    realizeProfile
+    realizeSkills
+    ;
   piModule = config.flake.modules.homeManager.pi;
 
   resourceOptions =
@@ -188,6 +194,16 @@ in
       readOnly = true;
       internal = true;
     };
+    herdrPlugins = lib.mkOption {
+      type = lib.types.functionTo lib.types.raw;
+      readOnly = true;
+      internal = true;
+    };
+    profiles = lib.mkOption {
+      type = lib.types.functionTo lib.types.raw;
+      readOnly = true;
+      internal = true;
+    };
     skills = lib.mkOption {
       type = lib.types.functionTo lib.types.raw;
       readOnly = true;
@@ -205,6 +221,38 @@ in
             inherit (catalog) extensions;
             inherit pkgs;
           };
+        herdrPlugins =
+          pkgs:
+          realizeHerdrPlugins {
+            plugins = catalog.herdrPlugins;
+            inherit pkgs;
+          };
+        profiles =
+          pkgs:
+          let
+            realizedExtensions = realizePiPackages {
+              inherit (catalog) extensions;
+              inherit pkgs;
+            };
+            realizedHerdrPlugins = realizeHerdrPlugins {
+              plugins = catalog.herdrPlugins;
+              inherit pkgs;
+            };
+            realizedSkills = realizeSkills { inherit catalog pkgs; };
+          in
+          lib.mapAttrs (
+            profileName: _:
+            realizeProfile {
+              inherit
+                catalog
+                pkgs
+                profileName
+                realizedExtensions
+                realizedHerdrPlugins
+                realizedSkills
+                ;
+            }
+          ) catalog.profiles;
         skills = pkgs: realizeSkills { inherit catalog pkgs; };
       };
     };
@@ -218,6 +266,27 @@ in
       { pkgs, ... }:
       let
         realized = realizeSkills { inherit catalog pkgs; };
+        realizedExtensions = realizePiPackages {
+          inherit (catalog) extensions;
+          inherit pkgs;
+        };
+        realizedHerdrPlugins = realizeHerdrPlugins {
+          plugins = catalog.herdrPlugins;
+          inherit pkgs;
+        };
+        profilePackages = lib.mapAttrs (
+          profileName: _:
+          realizeProfile {
+            inherit
+              catalog
+              pkgs
+              profileName
+              realizedExtensions
+              realizedHerdrPlugins
+              ;
+            realizedSkills = realized;
+          }
+        ) catalog.profiles;
       in
       {
         packages =
@@ -226,6 +295,10 @@ in
             name: extension: lib.nameValuePair "extension-${name}" (extension.realization.package pkgs)
           ) (lib.filterAttrs (_: extension: extension.realization.type == "package") catalog.extensions)
           // lib.mapAttrs' (name: tool: lib.nameValuePair "tool-${name}" (tool.package pkgs)) catalog.tools
+          // lib.mapAttrs' (
+            name: plugin: lib.nameValuePair "herdr-plugin-${name}" plugin.root
+          ) realizedHerdrPlugins
+          // lib.mapAttrs' (name: package: lib.nameValuePair "all-${name}" package) profilePackages
           // {
             all-skills = realized.tree;
           };

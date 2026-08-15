@@ -247,6 +247,10 @@ let
     options = {
       package = mkOption { type = packageFunction; };
       executable = mkOption { type = nonEmptyString; };
+      sourceVersion = mkOption {
+        type = types.nullOr nonEmptyString;
+        default = null;
+      };
     };
   };
 
@@ -258,16 +262,25 @@ let
     };
   };
 
+  herdrActionModule = {
+    options = {
+      id = mkOption { type = nonEmptyString; };
+      title = mkOption { type = nonEmptyString; };
+    };
+  };
+
   herdrPluginModule = {
     imports = [ commonMetadataModule ];
     options = {
+      source = mkOption { type = types.path; };
       package = mkOption { type = packageFunction; };
-      pluginRoot = mkOption { type = packageFunction; };
+      executable = mkOption { type = nonEmptyString; };
+      executablePath = mkOption { type = nonEmptyString; };
       pluginId = mkOption { type = nonEmptyString; };
       version = mkOption { type = nonEmptyString; };
       minimumHerdrVersion = mkOption { type = nonEmptyString; };
       actions = mkOption {
-        type = types.listOf nonEmptyString;
+        type = types.listOf (types.submodule herdrActionModule);
         default = [ ];
       };
       keybindings = mkOption {

@@ -5,7 +5,6 @@
   ...
 }:
 let
-  legacy = config.dendriticSlopInternal.resources;
   profileDeclarations = import ../catalog/profiles.nix;
   repositories = import ../catalog/repositories.nix { inherit inputs; };
   skills = import ../catalog/skills.nix { inherit inputs; };
@@ -32,6 +31,7 @@ let
   extensions = import ../catalog/extensions.nix { inherit inputs superpowersPackage; };
   mcps = import ../catalog/mcps.nix { inherit inputs; };
   tools = import ../catalog/tools.nix { inherit inputs; };
+  herdrPlugins = import ../catalog/herdr-plugins.nix { inherit inputs; };
   resourceKinds = [
     "skills"
     "mcps"
@@ -56,41 +56,16 @@ let
       lib.filterAttrs (_: profile: builtins.elem name profile.members.${kind}) profiles
     );
 
-  common = kind: name: resource: {
-    inherit (resource) title description;
-    homepage = resource.homepage or null;
-    repository = resource.repository or null;
-    defaultEnable = resource.defaultEnable;
-    profiles = profilesFor kind name;
-    requiresTargets = resource.requiresTargets or [ ];
-  };
-
-  legacyHerdrPlugins = lib.mapAttrs (
-    name: resource:
-    common "herdrPlugins" name resource
-    // {
-      inherit (resource)
-        actions
-        keybindings
-        package
-        pluginRoot
-        version
-        ;
-      pluginId = resource.id;
-      minimumHerdrVersion = "0.7.0";
-    }
-  ) legacy.herdrPlugins;
-
   declarations = {
     inherit
       extensions
+      herdrPlugins
       mcps
       profiles
       repositories
       skills
       tools
       ;
-    herdrPlugins = legacyHerdrPlugins;
   };
 
   referencesExist = lib.all (

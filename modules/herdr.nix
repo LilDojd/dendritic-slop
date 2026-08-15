@@ -1,8 +1,9 @@
 { config, ... }:
 let
   coreModule = config.flake.modules.homeManager.core;
-  herdrPlugins = config.dendriticSlopInternal.resources.herdrPlugins;
+  herdrPlugins = config.dendriticSlopInternal.catalog.herdrPlugins;
   herdrTool = config.dendriticSlopInternal.catalog.tools.herdr;
+  realizedPluginsFor = config.dendriticSlopInternal.realized.herdrPlugins;
 
   targetModule =
     {
@@ -14,10 +15,17 @@ let
     let
       cfg = config.dendriticSlop;
       herdrPackage = herdrTool.package pkgs;
+      herdrPackageVersion = herdrPackage.version or null;
+      herdrSourceVersion = herdrTool.sourceVersion;
+      herdrVersionsAgree =
+        herdrPackageVersion == null
+        || herdrSourceVersion == null
+        || herdrPackageVersion == herdrSourceVersion;
       herdr = lib.getExe herdrPackage;
       awk = lib.getExe pkgs.gawk;
       jq = lib.getExe pkgs.jq;
       stateDir = "${config.xdg.stateHome}/dendritic-slop/herdr-plugins";
+      realizedPlugins = realizedPluginsFor pkgs;
 
       pluginOptions = lib.mapAttrs (_: resource: {
         enable = lib.mkOption {
@@ -28,68 +36,94 @@ let
         };
       }) herdrPlugins;
 
-      pluginRoots = lib.mapAttrs (_: resource: resource.pluginRoot pkgs) herdrPlugins;
       pluginEnabled = name: cfg.enable && cfg.targets.herdr.enable && cfg.herdr.plugins.${name}.enable;
+      pluginNames = builtins.attrNames herdrPlugins;
+      enabledPluginNames = lib.filter pluginEnabled pluginNames;
+      pluginsMeetMinimumVersion = lib.all (
+        name:
+        herdrPackageVersion == null
+        || lib.versionAtLeast herdrPackageVersion herdrPlugins.${name}.minimumHerdrVersion
+      ) enabledPluginNames;
 
-      managePlugin =
-        name: resource:
+      keybindingsBegin = name: "# BEGIN dendritic-slop ${name} keybindings";
+      keybindingsEnd = name: "# END dendritic-slop ${name} keybindings";
+      keybindingsToml =
+        resource:
+        lib.concatMapStringsSep "\n" (binding: ''
+          [[keys.command]]
+          key = ${builtins.toJSON binding.key}
+          type = "plugin_action"
+          command = ${builtins.toJSON binding.command}
+          description = ${builtins.toJSON binding.description}
+        '') resource.keybindings;
+      pluginsWithKeybindings = lib.filter (name: herdrPlugins.${name}.keybindings != [ ]) pluginNames;
+      enabledPluginsWithKeybindings = lib.filter pluginEnabled pluginsWithKeybindings;
+      existingMarkerCondition = lib.concatMapStringsSep " || " (
+        name: "${pkgs.gnugrep}/bin/grep -Fqx ${lib.escapeShellArg (keybindingsBegin name)} \"$config_file\""
+      ) pluginsWithKeybindings;
+      stripManagedKeybindings = lib.concatMapStringsSep "\n" (name: ''
+        $0 == ${builtins.toJSON (keybindingsBegin name)} { managed = 1; next }
+        $0 == ${builtins.toJSON (keybindingsEnd name)} { managed = 0; next }
+      '') pluginsWithKeybindings;
+      renderedKeybindings = lib.concatMapStringsSep "\n" (name: ''
+        printf '\n%s\n%s\n%s\n' \
+          ${lib.escapeShellArg (keybindingsBegin name)} \
+          ${lib.escapeShellArg (keybindingsToml herdrPlugins.${name})} \
+          ${lib.escapeShellArg (keybindingsEnd name)} >> "$config_tmp"
+      '') enabledPluginsWithKeybindings;
+      renderKeybindings = lib.optionalString (pluginsWithKeybindings != [ ]) ''
+        config_file=${lib.escapeShellArg "${config.xdg.configHome}/herdr/config.toml"}
+        if [ ${if enabledPluginsWithKeybindings == [ ] then "0" else "1"} = 1 ] || \
+          { [ -f "$config_file" ] && { ${existingMarkerCondition}; }; }; then
+          ${pkgs.coreutils}/bin/mkdir -p "$(${pkgs.coreutils}/bin/dirname "$config_file")"
+          config_tmp="$(${pkgs.coreutils}/bin/mktemp "$config_file.XXXXXX")"
+          trap '${pkgs.coreutils}/bin/rm -f "$config_tmp"' EXIT
+
+          if [ -f "$config_file" ]; then
+            ${awk} '
+              ${stripManagedKeybindings}
+              !managed { print }
+            ' "$config_file" > "$config_tmp"
+          fi
+
+          ${renderedKeybindings}
+          HERDR_CONFIG_PATH="$config_tmp" ${herdr} config check >/dev/null
+          ${pkgs.coreutils}/bin/chmod 0600 "$config_tmp"
+          ${pkgs.coreutils}/bin/mv -f "$config_tmp" "$config_file"
+          trap - EXIT
+          ${herdr} server reload-config >/dev/null 2>&1 || true
+        fi
+      '';
+
+      managePluginCalls = lib.concatMapStringsSep "\n" (
+        name:
         let
-          desired = if pluginEnabled name then "1" else "0";
-          root = lib.optionalString (pluginEnabled name) (toString pluginRoots.${name});
-          keybindingsBegin = "# BEGIN dendritic-slop ${name} keybindings";
-          keybindingsEnd = "# END dendritic-slop ${name} keybindings";
-          keybindingsToml = lib.concatMapStringsSep "\n" (binding: ''
-            [[keys.command]]
-            key = ${builtins.toJSON binding.key}
-            type = "plugin_action"
-            command = ${builtins.toJSON binding.command}
-            description = ${builtins.toJSON binding.description}
-          '') resource.keybindings;
-          manageKeybindings = lib.optionalString (resource.keybindings != [ ]) ''
-            config_file=${lib.escapeShellArg "${config.xdg.configHome}/herdr/config.toml"}
-            bindings_begin=${lib.escapeShellArg keybindingsBegin}
-            bindings_end=${lib.escapeShellArg keybindingsEnd}
-
-            if [ "$desired" = 1 ] || { [ -f "$config_file" ] && ${pkgs.gnugrep}/bin/grep -Fqx "$bindings_begin" "$config_file"; }; then
-              ${pkgs.coreutils}/bin/mkdir -p "$(${pkgs.coreutils}/bin/dirname "$config_file")"
-              config_tmp="$(${pkgs.coreutils}/bin/mktemp "$config_file.XXXXXX")"
-              trap '${pkgs.coreutils}/bin/rm -f "$config_tmp"' EXIT
-
-              if [ -f "$config_file" ]; then
-                ${awk} -v begin="$bindings_begin" -v end="$bindings_end" '
-                  $0 == begin { managed = 1; next }
-                  $0 == end { managed = 0; next }
-                  !managed { print }
-                ' "$config_file" > "$config_tmp"
-              fi
-
-              if [ "$desired" = 1 ]; then
-                printf '\n%s\n%s\n%s\n' \
-                  "$bindings_begin" \
-                  ${lib.escapeShellArg keybindingsToml} \
-                  "$bindings_end" >> "$config_tmp"
-              fi
-
-              HERDR_CONFIG_PATH="$config_tmp" ${herdr} config check >/dev/null
-              ${pkgs.coreutils}/bin/chmod 0600 "$config_tmp"
-              ${pkgs.coreutils}/bin/mv -f "$config_tmp" "$config_file"
-              trap - EXIT
-              ${herdr} server reload-config >/dev/null 2>&1 || true
-            fi
-          '';
+          resource = herdrPlugins.${name};
+          realized = realizedPlugins.${name};
         in
-        pkgs.writeShellScript "dendritic-slop-herdr-plugin-${name}" ''
-          set -eu
+        ''
+          manage_plugin \
+            ${lib.escapeShellArg name} \
+            ${lib.escapeShellArg resource.pluginId} \
+            ${if pluginEnabled name then "1" else "0"} \
+            ${lib.escapeShellArg (lib.optionalString (pluginEnabled name) (toString realized.root))}
+        ''
+      ) pluginNames;
 
-          marker=${lib.escapeShellArg "${stateDir}/${name}"}
-          desired=${desired}
-          plugin_id=${lib.escapeShellArg resource.id}
-          new_root=${lib.escapeShellArg root}
+      managePlugins = pkgs.writeShellScript "dendritic-slop-herdr-plugins" ''
+        set -eu
 
-          ${manageKeybindings}
+        ${renderKeybindings}
+
+        manage_plugin() {
+          name="$1"
+          plugin_id="$2"
+          desired="$3"
+          new_root="$4"
+          marker=${lib.escapeShellArg stateDir}/"$name"
 
           if [ "$desired" = 0 ] && [ ! -e "$marker" ]; then
-            exit 0
+            return
           fi
 
           ${pkgs.coreutils}/bin/mkdir -p -m 0700 ${lib.escapeShellArg stateDir}
@@ -137,38 +171,50 @@ let
               ${pkgs.coreutils}/bin/rm -f "$marker"
             fi
           fi
-        '';
+        }
 
-      activationEntries = lib.mapAttrs' (
-        name: resource:
-        lib.nameValuePair "dendriticSlopHerdrPlugin-${name}" (
-          lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-            ${managePlugin name resource}
-          ''
-        )
-      ) herdrPlugins;
+        ${managePluginCalls}
+      '';
     in
     {
-      options.dendriticSlop = {
-        targets.herdr.enable = lib.mkOption {
-          type = lib.types.bool;
-          default = false;
-          description = "Install Herdr.";
+      options = {
+        dendriticSlop = {
+          targets.herdr.enable = lib.mkOption {
+            type = lib.types.bool;
+            default = false;
+            description = "Install Herdr.";
+          };
+          herdr.plugins = pluginOptions;
         };
-        herdr.plugins = pluginOptions;
+        dendriticSlopInternal.herdr.manageScript = lib.mkOption {
+          type = lib.types.path;
+          readOnly = true;
+          internal = true;
+        };
       };
 
       config = lib.mkMerge [
         {
-          home.activation = activationEntries;
+          dendriticSlopInternal.herdr.manageScript = managePlugins;
+          home.activation.dendriticSlopHerdrPlugins = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+            ${managePlugins}
+          '';
 
           assertions = [
+            {
+              assertion = herdrVersionsAgree;
+              message = "Herdr source version ${toString herdrSourceVersion} disagrees with package version ${toString herdrPackageVersion}";
+            }
             {
               assertion =
                 !cfg.enable
                 || cfg.targets.herdr.enable
-                || lib.all (name: !cfg.herdr.plugins.${name}.enable) (builtins.attrNames herdrPlugins);
+                || lib.all (name: !cfg.herdr.plugins.${name}.enable) pluginNames;
               message = "Herdr plugins require dendriticSlop.targets.herdr.enable = true";
+            }
+            {
+              assertion = pluginsMeetMinimumVersion;
+              message = "A selected Herdr plugin requires a newer Herdr package";
             }
           ];
         }

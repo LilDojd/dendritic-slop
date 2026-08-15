@@ -1,47 +1,27 @@
 # dendritic-slop
 
-Declarative Pi and LLM tooling for NixOS and nix-darwin.
+Declarative, reviewed Pi and LLM tooling for NixOS, nix-darwin, and Home Manager.
 
-Features are exported as `modules.<class>.<aspect>` flake-parts modules following the [Dendritic pattern](https://dendrix.denful.dev/Dendritic.html).
-
-## Resources
-
-Home Manager modules:
-
-- `pi` — Pi and the pinned MCP adapter
-- `context7` — the Context7 MCP server with an optional API-key file
-- `herdr` — Herdr and opt-in Herdr plugins
-- `resources` — individually selectable Pi skills and extensions, including the Herdr skill and Pi integration
-- `git` — adds `.mcp.json` and `mcp.json` to the global Git ignore list
-- `rules` — Pi instructions for declarative global tooling and Herdr agent selection
-- `slop` — the aggregate Home Manager module
-
-System modules:
-
-- `nixos.slop` — configures the Home Manager aggregate and persists Pi state
-- `darwin.slop` — configures the Home Manager aggregate
-- `nixos.persistence` — persists `.pi/agent`
-
-## Consumer
+## Flake input
 
 ```nix
 inputs.dendritic-slop = {
   url = "github:LilDojd/dendritic-slop";
   inputs = {
-    flake-parts.follows = "flake-parts";
-    herdr.follows = "herdr";
     home-manager.follows = "home-manager";
     impermanence.follows = "impermanence";
-    import-tree.follows = "import-tree";
     nix-darwin.follows = "nix-darwin";
     nixpkgs.follows = "nixpkgs";
-    pi.follows = "pi";
     systems.follows = "systems";
   };
 };
 ```
 
-Import the aggregate once and enable it:
+The flake configures the Numtide binary cache used by packages from `llm-agents.nix`. A consuming flake must allow that cache configuration.
+
+## NixOS
+
+Import Home Manager, impermanence, and the aggregate module:
 
 ```nix
 {
@@ -50,42 +30,73 @@ Import the aggregate once and enable it:
   dendriticSlop = {
     enable = true;
     username = "alice";
-    context7ApiKeyFile = "/run/agenix/context7ApiKey";
 
     profiles = {
       core.enable = true;
       rust.enable = true;
       python.enable = true;
+      web.enable = true;
+      superpowers.enable = false;
     };
-    migrations.globalSkills.takeOver = true;
 
-    # Explicit leaf exceptions and opt-ins override profile defaults.
-    herdr.plugins.jj-workspace.enable = true;
     skills.ty.enable = false;
-    extensions.web-access.enable = true;
+    herdr.plugins.jj-workspace.enable = true;
+    mcps.context7 = {
+      enable = true;
+      secrets.apiKeyFile = "/run/agenix/context7-api-key";
+    };
   };
 }
 ```
 
-Resources and targets are disabled unless selected by an explicit profile or leaf setting. Profile members use module defaults, so explicit `targets.<name>.enable`, `skills.<name>.enable`, `extensions.<name>.enable`, and `herdr.plugins.<name>.enable` values win.
+The NixOS aggregate persists `.pi/agent` and `.local/state/dendritic-slop`. Set `dendriticSlop.targets.persistence.enable = false` to disable this persistence policy.
 
-`web-access` is opt-in because it accesses the network and processes untrusted remote content. Its default configuration denies browser-cookie access and remote hosted extraction and keeps SSRF protection enabled. Herdr plugins are opt-in because they execute as the user. Enabling a plugin registers the pinned build with Herdr; disabling it removes the registration only while dendritic-slop still owns it. Manually managed registrations are left unchanged.
+## nix-darwin
 
-The NixOS aggregate persists `.pi/agent` and `.local/state/dendritic-slop` unless `dendriticSlop.targets.persistence.enable = false`.
+Import Home Manager and `inputs.dendritic-slop.modules.darwin.slop`. The selection options are the same as the NixOS example.
 
-The Jujutsu workspace plugin exposes `new` and `new-tab` actions for creating a Jujutsu workspace as a Herdr workspace or tab. Its wizard runs `jj git fetch` before creation; fetch failure is nonfatal. New workspaces are based on `trunk()` by default and receive a matching bookmark. Set `JJ_BASE_REV` or `JJ_WORKSPACE_ROOT` in the plugin config directory's `.env` file to override the base revision or checkout root. The `remove` action runs `jj workspace forget`, deletes the focused secondary workspace directory, and closes its Herdr workspace.
+## Home Manager
 
-Consumers of `nixos.slop` must import Home Manager and impermanence; consumers of `darwin.slop` must import Home Manager. Store credentials outside the Nix store and pass only absolute runtime paths to secret files.
+```nix
+{
+  imports = [ inputs.dendritic-slop.modules.homeManager.slop ];
 
-For standalone Home Manager, import `inputs.dendritic-slop.modules.homeManager.slop`, set `dendriticSlop.enable = true`, and configure `dendriticSlop.context7.apiKeyFile` if needed. Individual feature modules can be imported instead of `slop`; each exposes `dendriticSlop.enable` and its own feature options.
+  dendriticSlop = {
+    enable = true;
+    profiles.core.enable = true;
+    profiles.rust.enable = true;
+  };
+}
+```
+
+Profiles apply defaults. Explicit `targets.<name>.enable`, `skills.<name>.enable`, `mcps.<name>.enable`, `extensions.<name>.enable`, `tools.<name>.enable`, and `herdr.plugins.<name>.enable` values take precedence.
+
+Home Manager owns `~/.agents/skills` when dendritic-slop is enabled. If that path or `~/.agents/.skill-lock.json` already exists, set `dendriticSlop.migrations.globalSkills.takeOver = true` for the ownership transaction. Existing content is retained under `~/.local/state/dendritic-slop/global-skills/backups`; unmanaged replacements are never overwritten.
+
+## Security model
+
+Resources are selected from a closed typed catalog. External sources are pinned, projected through reviewed allowlists, and built with Nix. Activation does not fetch packages. Credentials remain outside the Nix store; MCP secret options accept only absolute runtime file paths.
+
+Networked and executable leaves expose capability metadata in the generated catalog. Herdr plugins are disabled by default and execute with the user's authority. Plugin activation changes only registrations and keybinding blocks still marked as owned by dendritic-slop.
+
+## Inspection outputs
+
+Per-system packages include:
+
+- `skill-<name>` for each skill leaf;
+- `extension-<name>` for package-backed Pi extensions;
+- `tool-<name>` for command-line tools;
+- `herdr-plugin-<name>` for Herdr plugin roots;
+- `all-<profile>` for each canonical profile;
+- `resource-catalog`, `option-reference`, and `docs`.
+
+Each `all-<profile>` package contains the profile manifest, links to its declared leaves, and a collision-checked `bin` directory for declared executables.
 
 ## Development
 
 ```console
 nix fmt
-nix flake check --no-eval-cache --no-build --all-systems
+nix flake check --accept-flake-config --no-eval-cache --no-build --all-systems
 ```
 
-The [resource catalog](https://lildojd.github.io/dendritic-slop/) lists each resource's option, activation default, version where applicable, definition, homepage, and target dependency.
-
-Third-party inputs and Pi packages are pinned. Renovate opens weekly grouped updates for GitHub Actions, Nix inputs, and pinned Pi npm packages; executable Herdr plugin inputs remain in a separate group. Review executable resource updates before merging because skills, extensions, and Herdr plugins run with the user or agent's authority. CI validates formatting, skills, generated documentation, opt-in defaults, Herdr plugin packaging and activation, all supported systems, and native Home Manager, NixOS, and nix-darwin modules. SemVer tags publish to FlakeHub using GitHub OIDC credentials.
+The generated [selection options](https://lildojd.github.io/dendritic-slop/options.html) and [resource catalog](https://lildojd.github.io/dendritic-slop/catalog.html) are the current public reference.

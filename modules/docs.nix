@@ -5,80 +5,168 @@
   ...
 }:
 let
-  inherit (config.dendriticSlopInternal) resources;
-  revision = self.rev or "main";
-  repository = "https://github.com/LilDojd/dendritic-slop/blob/${revision}";
+  catalog = config.dendriticSlopInternal.catalog;
 
-  renderKind = kind: catalog: ''
-    ## ${if kind == "skills" then "Skills" else "Extensions"}
+  optionFor =
+    kind: name:
+    if kind == "herdrPlugins" then
+      "dendriticSlop.herdr.plugins.${name}.enable"
+    else
+      "dendriticSlop.${kind}.${name}.enable";
+  kindTitle =
+    kind:
+    {
+      skills = "Skills";
+      mcps = "MCP servers";
+      extensions = "Pi extensions";
+      tools = "Tools";
+      herdrPlugins = "Herdr plugins";
+    }
+    .${kind};
+  resourceKinds = [
+    "skills"
+    "mcps"
+    "extensions"
+    "tools"
+    "herdrPlugins"
+  ];
+  listText = values: if values == [ ] then "None" else lib.concatStringsSep ", " values;
+  capabilityText =
+    capabilities: listText (builtins.attrNames (lib.filterAttrs (_: enabled: enabled) capabilities));
+  profilesFor =
+    resource: if resource.profiles == [ ] then "None" else lib.concatStringsSep ", " resource.profiles;
 
-    ${lib.concatMapStringsSep "\n" (
-      name:
-      let
-        resource = catalog.${name};
-      in
+  kindDetails =
+    kind: resource:
+    if kind == "skills" then
+      "- Exposed name: `${resource.exposedName}`"
+    else if kind == "mcps" then
       ''
-        ### ${resource.title}
-
-        ${resource.description}
-
-        - Option: `dendriticSlop.${kind}.${name}.enable`
-        - Default: `disabled` unless selected by a profile
-        - Definition: [`${kind}/${name}`](${repository}/resources/${kind}/${name})
-        ${lib.optionalString (
-          resource ? homepage
-        ) "- Homepage: [${resource.homepage}](${resource.homepage})"}
-        ${lib.optionalString (
-          resource.requiresTargets != [ ]
-        ) "- Required target: `${lib.concatStringsSep "`, `" resource.requiresTargets}`"}
+        - Server ID: `${resource.serverId}`
+        - Transport: `${resource.transport.type}`
       ''
-    ) (builtins.attrNames catalog)}
-  '';
-
-  renderHerdrPlugins = ''
-    ## Herdr plugins
-
-    Herdr plugins execute as the user, are disabled by default, and require `dendriticSlop.targets.herdr.enable = true`.
-
-    ${lib.concatMapStringsSep "\n" (
-      name:
-      let
-        resource = resources.herdrPlugins.${name};
-      in
+    else if kind == "extensions" then
+      "- Realization: `${resource.realization.type}`"
+    else if kind == "tools" then
+      "- Executable: `${resource.executable}`"
+    else
       ''
-        ### ${resource.title}
-
-        ${resource.description}
-
-        - Option: `dendriticSlop.herdr.plugins.${name}.enable`
-        - Default: `disabled`
-        - Required target: `herdr`
-        - Plugin ID: `${resource.id}`
+        - Plugin ID: `${resource.pluginId}`
         - Version: `${resource.version}`
-        - Actions: `${lib.concatStringsSep "`; `" resource.actions}`
-        - Definition: [`herdr-plugins/${name}`](${repository}/resources/herdr-plugins/${name})
-        ${lib.optionalString (
-          resource ? homepage
-        ) "- Homepage: [${resource.homepage}](${resource.homepage})"}
-      ''
-    ) (builtins.attrNames resources.herdrPlugins)}
-  '';
+        - Minimum Herdr version: `${resource.minimumHerdrVersion}`
+        - Executable: `${resource.executable}`
+        - Actions: ${listText (map (action: "`${action.id}`") resource.actions)}
+        - Keys: ${listText (map (binding: "`${binding.key}`") resource.keybindings)}
+      '';
 
-  catalog = ''
+  renderKind =
+    kind:
+    let
+      resources = catalog.${kind};
+    in
+    ''
+      ## ${kindTitle kind}
+
+      ${lib.concatMapStringsSep "\n" (
+        name:
+        let
+          resource = resources.${name};
+        in
+        ''
+          ### ${resource.title}
+
+          ${resource.description}
+
+          - Option: `${optionFor kind name}`
+          - Activation: disabled unless selected by a profile or explicit leaf setting
+          - Profiles: ${profilesFor resource}
+          - Required targets: ${listText resource.requiresTargets}
+          - Required resources: ${listText resource.requiresResources}
+          - Capabilities: ${capabilityText resource.capabilities}
+          ${kindDetails kind resource}
+          ${lib.optionalString (
+            resource.repository != null
+          ) "- Repository catalog ID: `${resource.repository}`"}
+          ${lib.optionalString (
+            resource.homepage != null
+          ) "- Homepage: [${resource.homepage}](${resource.homepage})"}
+        ''
+      ) (builtins.attrNames resources)}
+    '';
+
+  profileRows = lib.concatMapStringsSep "\n" (
+    name:
+    let
+      profile = catalog.profiles.${name};
+      memberCount = builtins.length (lib.concatMap (kind: profile.members.${kind}) resourceKinds);
+    in
+    "| `${name}` | ${profile.description} | ${toString memberCount} | ${listText profile.targets} |"
+  ) (builtins.attrNames catalog.profiles);
+
+  catalogMarkdown = ''
     # Resource catalog
 
-    Each resource can be enabled independently or through an explicit profile. Herdr plugins are always opt-in unless a selected profile names them.
+    The catalog is the current set of reviewed resources. Every leaf is disabled until an explicit profile or leaf setting selects it. Herdr plugins remain explicit opt-ins.
 
-    ${renderKind "skills" resources.skills}
-    ${renderKind "extensions" resources.extensions}
-    ${renderHerdrPlugins}
+    ## Profiles
+
+    | Profile | Description | Leaves | Targets |
+    | --- | --- | ---: | --- |
+    ${profileRows}
+
+    ${lib.concatMapStringsSep "\n" renderKind resourceKinds}
+  '';
+
+  optionRows = lib.concatMapStringsSep "\n" (
+    kind:
+    lib.concatMapStringsSep "\n" (
+      name:
+      let
+        resource = catalog.${kind}.${name};
+      in
+      "| `${optionFor kind name}` | Boolean | `false` | ${resource.title} |"
+    ) (builtins.attrNames catalog.${kind})
+  ) resourceKinds;
+  profileOptionRows = lib.concatMapStringsSep "\n" (
+    name:
+    "| `dendriticSlop.profiles.${name}.enable` | Boolean | `false` | ${catalog.profiles.${name}.title} |"
+  ) (builtins.attrNames catalog.profiles);
+
+  optionsMarkdown = ''
+    # Selection options
+
+    Set `dendriticSlop.enable = true`, select profiles, and apply explicit leaf settings where needed. Explicit leaf and target values take precedence over profile defaults.
+
+    | Option | Type | Default | Resource |
+    | --- | --- | --- | --- |
+    ${profileOptionRows}
+    ${optionRows}
+
+    MCP secret-file options are strings containing absolute runtime paths outside the Nix store. Their names are listed with each MCP leaf in the module option set.
   '';
 in
 {
-  perSystem =
+  options.dendriticSlopInternal.docs = lib.mkOption {
+    type = lib.types.submodule {
+      options = {
+        catalog = lib.mkOption { type = lib.types.str; };
+        options = lib.mkOption { type = lib.types.str; };
+      };
+    };
+    readOnly = true;
+    internal = true;
+  };
+
+  config.dendriticSlopInternal.docs = {
+    catalog = catalogMarkdown;
+    options = optionsMarkdown;
+  };
+
+  config.perSystem =
     { pkgs, ... }:
     let
-      catalogMarkdown = pkgs.writeText "catalog.md" catalog;
+      generatedCatalog = pkgs.writeText "catalog.md" catalogMarkdown;
+      generatedOptions = pkgs.writeText "options.md" optionsMarkdown;
       docs = pkgs.stdenvNoCC.mkDerivation {
         pname = "dendritic-slop-docs";
         version = self.shortRev or "dirty";
@@ -87,7 +175,8 @@ in
         patchPhase = ''
           runHook prePatch
           cp ${../README.md} src/index.md
-          cp ${catalogMarkdown} src/catalog.md
+          cp ${generatedCatalog} src/catalog.md
+          cp ${generatedOptions} src/options.md
           runHook postPatch
         '';
         buildPhase = ''
@@ -103,5 +192,7 @@ in
     {
       checks.docs = docs;
       packages.docs = docs;
+      packages.resource-catalog = generatedCatalog;
+      packages.option-reference = generatedOptions;
     };
 }

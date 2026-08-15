@@ -29,9 +29,48 @@
       "groupName": "GitHub Actions"
     },
     {
-      "description": "Group Nix flake input updates",
+      "description": "Group ordinary Nix flake input updates",
       "matchManagers": ["nix"],
+      "matchDepNames": [
+        "!actionbook-rust-skills",
+        "!astral-agent-skills",
+        "!herdr-plugin-jj-workspace",
+        "!leonardomso-rust-skills",
+        "!superpowers"
+      ],
       "groupName": "Nix flake inputs"
+    },
+    {
+      "description": "Review Actionbook Rust skills separately",
+      "matchManagers": ["nix"],
+      "matchDepNames": ["actionbook-rust-skills"],
+      "groupName": "Actionbook Rust skills",
+      "minimumReleaseAge": "3 days",
+      "automerge": false
+    },
+    {
+      "description": "Review Astral agent skills separately",
+      "matchManagers": ["nix"],
+      "matchDepNames": ["astral-agent-skills"],
+      "groupName": "Astral agent skills",
+      "minimumReleaseAge": "3 days",
+      "automerge": false
+    },
+    {
+      "description": "Review Leonardo Rust skills separately",
+      "matchManagers": ["nix"],
+      "matchDepNames": ["leonardomso-rust-skills"],
+      "groupName": "Leonardo Rust skills",
+      "minimumReleaseAge": "3 days",
+      "automerge": false
+    },
+    {
+      "description": "Review Superpowers skills separately",
+      "matchManagers": ["nix"],
+      "matchDepNames": ["superpowers"],
+      "groupName": "Superpowers skills",
+      "minimumReleaseAge": "3 days",
+      "automerge": false
     },
     {
       "description": "Separate Herdr plugin input updates",
@@ -47,7 +86,8 @@
       "matchDatasources": ["npm"],
       "groupName": "Pi npm packages",
       "minimumReleaseAge": "3 days",
-      "rangeStrategy": "pin"
+      "rangeStrategy": "pin",
+      "automerge": false
     }
   ]
 }

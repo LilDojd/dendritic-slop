@@ -10,14 +10,24 @@
     let
       testUser = "slop-test";
       catalog = config.dendriticSlopInternal.catalog;
-      legacyResources = config.dendriticSlopInternal.resources;
       realizedSkills = config.dendriticSlopInternal.realized.skills pkgs;
+      realizedHerdrPlugins = config.dendriticSlopInternal.realized.herdrPlugins pkgs;
+      profilePackages = config.dendriticSlopInternal.realized.profiles pkgs;
       catalogType = config.dendriticSlopInternal.resourceSchema.catalogType;
-      inherit (config.flake.lib) evalResourceSelection realizePiPackages resolveResources;
+      inherit (config.flake.lib)
+        evalResourceSelection
+        realizeHerdrPlugins
+        realizePiPackages
+        realizeProfile
+        resolveResources
+        ;
       flakeLock = builtins.fromJSON (builtins.readFile ../flake.lock);
       rootInputs = flakeLock.nodes.${flakeLock.root}.inputs;
       llmAgentsLockNode = flakeLock.nodes.${rootInputs.llm-agents};
       flakeSource = builtins.readFile ../flake.nix;
+      readmeText = builtins.readFile ../README.md;
+      currentDocs =
+        readmeText + config.dendriticSlopInternal.docs.catalog + config.dendriticSlopInternal.docs.options;
 
       resolve =
         catalog': requested:
@@ -150,6 +160,133 @@
           duplicate-context7 = true;
         };
       };
+      basePlugin = catalog.herdrPlugins.jj-workspace;
+      distinctPlugin =
+        overrides:
+        basePlugin
+        // {
+          name = "fixture-plugin";
+          profiles = [ ];
+          pluginId = "fixture.plugin";
+          executable = "fixture-plugin";
+          source = ./checks.nix;
+          keybindings = [
+            {
+              key = "prefix+fixture";
+              command = "fixture.plugin.run";
+              description = "Fixture";
+            }
+          ];
+        }
+        // overrides;
+      pluginCollision =
+        duplicate:
+        let
+          fixtureCatalog = catalog // {
+            herdrPlugins = catalog.herdrPlugins // {
+              fixture-plugin = duplicate;
+            };
+          };
+        in
+        tryResolve fixtureCatalog {
+          herdrPlugins = {
+            jj-workspace = true;
+            fixture-plugin = true;
+          };
+        };
+      duplicatePluginSource = pluginCollision (distinctPlugin {
+        source = basePlugin.source;
+      });
+      duplicatePluginId = pluginCollision (distinctPlugin {
+        pluginId = basePlugin.pluginId;
+      });
+      duplicatePluginExecutable = pluginCollision (distinctPlugin {
+        executable = basePlugin.executable;
+      });
+      duplicatePluginKey = pluginCollision (distinctPlugin {
+        keybindings = [
+          {
+            key = (builtins.head basePlugin.keybindings).key;
+            command = "fixture.plugin.run";
+            description = "Fixture";
+          }
+        ];
+      });
+      pluginVersionMismatch = builtins.tryEval (
+        let
+          plugins = {
+            fixture = basePlugin // {
+              package =
+                pkgs':
+                (basePlugin.package pkgs').overrideAttrs (_: {
+                  version = "999.0.0";
+                  __intentionallyOverridingVersion = true;
+                });
+            };
+          };
+          realized = realizeHerdrPlugins { inherit pkgs plugins; };
+        in
+        realized.fixture.root.drvPath
+      );
+      pluginPackageWithoutVersion = builtins.tryEval (
+        let
+          plugins = {
+            fixture = basePlugin // {
+              package =
+                pkgs':
+                pkgs'.runCommand "versionless-herdr-plugin-fixture" { } ''
+                  mkdir -p "$out/bin"
+                '';
+            };
+          };
+          realized = realizeHerdrPlugins { inherit pkgs plugins; };
+        in
+        realized.fixture.root.drvPath
+      );
+      executableCollisionCatalog = catalog // {
+        profiles = catalog.profiles // {
+          executable-collision = {
+            name = "executable-collision";
+            title = "Executable collision";
+            description = "Collision fixture.";
+            targets = [ ];
+            members = {
+              skills = [ ];
+              mcps = [ ];
+              extensions = [ ];
+              tools = [
+                "herdr"
+                "second-herdr"
+              ];
+              herdrPlugins = [ ];
+            };
+          };
+        };
+        tools = catalog.tools // {
+          second-herdr = catalog.tools.herdr // {
+            name = "second-herdr";
+            package = pkgs': pkgs'.writeShellScriptBin "herdr" "exit 0";
+            profiles = [ "executable-collision" ];
+            requiresTargets = [ ];
+            sourceVersion = null;
+          };
+        };
+      };
+      profileExecutableCollision = builtins.tryEval (
+        let
+          realized = realizeProfile {
+            catalog = executableCollisionCatalog;
+            inherit
+              pkgs
+              realizedHerdrPlugins
+              realizedSkills
+              ;
+            profileName = "executable-collision";
+            realizedExtensions = config.dendriticSlopInternal.realized.extensions pkgs;
+          };
+        in
+        builtins.deepSeq realized realized
+      );
       unsupportedSystem = if system == "x86_64-linux" then "aarch64-darwin" else "x86_64-linux";
       unsupportedCatalog = catalog // {
         skills = catalog.skills // {
@@ -311,13 +448,13 @@
           targets.herdr.enable = true;
         };
       };
-      jjWorkspaceResource = config.dendriticSlopInternal.resources.herdrPlugins.jj-workspace;
-      jjWorkspacePackage = jjWorkspaceResource.package pkgs;
-      jjWorkspaceRoot = jjWorkspaceResource.pluginRoot pkgs;
-      defaultJjWorkspaceActivation =
-        home.config.home.activation."dendriticSlopHerdrPlugin-jj-workspace".data;
-      jjWorkspaceActivation =
-        homeWithJjWorkspace.config.home.activation."dendriticSlopHerdrPlugin-jj-workspace".data;
+      jjWorkspaceResource = catalog.herdrPlugins.jj-workspace;
+      jjWorkspacePackage = realizedHerdrPlugins.jj-workspace.package;
+      jjWorkspaceRoot = realizedHerdrPlugins.jj-workspace.root;
+      defaultJjWorkspaceActivation = home.config.home.activation.dendriticSlopHerdrPlugins.data;
+      jjWorkspaceActivation = homeWithJjWorkspace.config.home.activation.dendriticSlopHerdrPlugins.data;
+      defaultHerdrManageScript = home.config.dendriticSlopInternal.herdr.manageScript;
+      enabledHerdrManageScript = homeWithJjWorkspace.config.dendriticSlopInternal.herdr.manageScript;
       jjWorkspaceManifest = pkgs.runCommand "herdr-plugin-jj-workspace-manifest-check" { } ''
         test -x ${jjWorkspaceRoot}/target/release/jj-workspace
         ${pkgs.gnugrep}/bin/grep -Fqx 'id = "nathanflurry.jj-workspace"' ${jjWorkspaceRoot}/herdr-plugin.toml
@@ -1569,8 +1706,15 @@
           assert !disabledRequirement.success;
           assert !duplicateExposedName.success;
           assert !duplicateMcpId.success;
+          assert !duplicatePluginSource.success;
+          assert !duplicatePluginId.success;
+          assert !duplicatePluginExecutable.success;
+          assert !duplicatePluginKey.success;
+          assert !pluginVersionMismatch.success;
+          assert pluginPackageWithoutVersion.success;
+          assert !profileExecutableCollision.success;
           assert !unsupportedPackage.success;
-          assert catalog.skills.bro.defaultEnable == legacyResources.skills.bro.defaultEnable;
+          assert catalog.skills.bro.defaultEnable;
           assert catalog.skills.coding-guidelines.defaultEnable;
           assert catalog.skills.ruff.defaultEnable;
           assert !catalog.skills.brainstorming.defaultEnable;
@@ -1593,6 +1737,82 @@
           assert catalog.extensions.pi-mcp-adapter.realization.packageId == "pi-mcp-adapter";
           assert catalog.extensions.superpowers-bootstrap.repository == "superpowers";
           pkgs.runCommand "registry-schema-check" { } ''
+            touch "$out"
+          '';
+        current-documentation =
+          let
+            forbiddenNarratives = [
+              "migration history"
+              "prompt transcript"
+              "deprecated"
+              "compatibility alias"
+              "design chronology"
+              "previous api"
+              "legacy api"
+            ];
+            lowerDocs = lib.toLower currentDocs;
+          in
+          assert lib.hasInfix "dendriticSlop.profiles.core.enable" currentDocs;
+          assert lib.hasInfix "dendriticSlop.skills.bro.enable" currentDocs;
+          assert lib.hasInfix "dendriticSlop.mcps.context7.enable" currentDocs;
+          assert lib.hasInfix "dendriticSlop.herdr.plugins.jj-workspace.enable" currentDocs;
+          assert lib.hasInfix "Required resources" config.dendriticSlopInternal.docs.catalog;
+          assert lib.hasInfix "Minimum Herdr version" config.dendriticSlopInternal.docs.catalog;
+          assert !lib.hasInfix "context7ApiKeyFile" currentDocs;
+          assert !lib.hasInfix "autoEnable" currentDocs;
+          assert lib.all (phrase: !lib.hasInfix phrase lowerDocs) forbiddenNarratives;
+          pkgs.runCommand "current-documentation-check"
+            {
+              nativeBuildInputs = [ pkgs.jq ];
+              passAsFile = [ "renovateConfig" ];
+              renovateConfig = builtins.readFile ../renovate.json;
+            }
+            ''
+              set -euo pipefail
+              jq -e '
+                [.packageRules[]
+                  | select(.matchDepNames == ["actionbook-rust-skills"]
+                    or .matchDepNames == ["astral-agent-skills"]
+                    or .matchDepNames == ["leonardomso-rust-skills"]
+                    or .matchDepNames == ["superpowers"])
+                  | select(.automerge == false and .minimumReleaseAge != null)]
+                | length == 4
+              ' "$renovateConfigPath" >/dev/null
+              touch "$out"
+            '';
+        herdr-plugin-registry =
+          let
+            plugins = builtins.attrValues catalog.herdrPlugins;
+            pluginIds = map (plugin: plugin.pluginId) plugins;
+            pluginSources = map (plugin: toString plugin.source) plugins;
+            pluginExecutables = map (plugin: plugin.executable) plugins;
+            pluginKeys = lib.concatMap (plugin: map (binding: binding.key) plugin.keybindings) plugins;
+            sourceManifest = builtins.fromTOML (
+              builtins.readFile (jjWorkspaceResource.source + "/herdr-plugin.toml")
+            );
+            packageVersion = jjWorkspacePackage.version or null;
+            herdrPackageVersion = herdrPackage.version or null;
+          in
+          assert lib.unique pluginIds == pluginIds;
+          assert lib.unique pluginSources == pluginSources;
+          assert lib.unique pluginExecutables == pluginExecutables;
+          assert lib.unique pluginKeys == pluginKeys;
+          assert lib.all (plugin: !plugin.defaultEnable) plugins;
+          assert sourceManifest.id == jjWorkspaceResource.pluginId;
+          assert sourceManifest.version == jjWorkspaceResource.version;
+          assert sourceManifest.min_herdr_version == jjWorkspaceResource.minimumHerdrVersion;
+          assert packageVersion == null || packageVersion == sourceManifest.version;
+          assert
+            herdrPackageVersion == null
+            || catalog.tools.herdr.sourceVersion == null
+            || herdrPackageVersion == catalog.tools.herdr.sourceVersion;
+          assert
+            builtins.attrNames (
+              lib.filterAttrs (name: _: lib.hasPrefix "dendriticSlopHerdrPlugin" name) home.config.home.activation
+            ) == [ "dendriticSlopHerdrPlugins" ];
+          pkgs.runCommand "herdr-plugin-registry-check" { } ''
+            ${pkgs.bash}/bin/bash -n ${defaultHerdrManageScript}
+            ${pkgs.bash}/bin/bash -n ${enabledHerdrManageScript}
             touch "$out"
           '';
         all-skills = allSkills;
@@ -1633,6 +1853,15 @@
           assert defaultJjWorkspaceActivation != jjWorkspaceActivation;
           homeWithJjWorkspace.activationPackage;
       }
+      // lib.mapAttrs' (
+        name: package:
+        lib.nameValuePair "all-${name}" (
+          assert package.manifest.profile == name;
+          assert package.manifest.targets == catalog.profiles.${name}.targets;
+          assert package.manifest.resources == catalog.profiles.${name}.members;
+          package
+        )
+      ) profilePackages
       // lib.optionalAttrs pkgs.stdenv.isLinux {
         nixos-module =
           assert builtins.elem ".pi/agent" (

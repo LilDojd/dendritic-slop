@@ -1,6 +1,7 @@
 { inputs }:
 let
   llmAgentPackage = name: pkgs: inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.${name};
+  herdrSourceManifest = builtins.fromTOML (builtins.readFile (inputs.herdr-src + "/Cargo.toml"));
 in
 {
   herdr = {
@@ -12,6 +13,7 @@ in
     capabilities.executesCode = true;
     package = llmAgentPackage "herdr";
     executable = "herdr";
+    sourceVersion = herdrSourceManifest.package.version;
   };
 
   pi = {

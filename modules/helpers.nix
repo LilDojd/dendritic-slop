@@ -201,10 +201,7 @@ let
         else if entry.kind == "tools" then
           [ (entry.resource.package pkgs) ]
         else if entry.kind == "herdrPlugins" then
-          [
-            (entry.resource.package pkgs)
-            (entry.resource.pluginRoot pkgs)
-          ]
+          [ (entry.resource.package pkgs) ]
         else
           [ ];
       packageAvailable =
@@ -277,7 +274,13 @@ let
             if entry.resource.realization.type == "path" then entry.resource.realization.destination else null
           ) extensionEntries
         ))
+        (collisionCheck "Herdr plugin source" (
+          occurrences (entry: toString entry.resource.source) pluginEntries
+        ))
         (collisionCheck "Herdr plugin ID" (occurrences (entry: entry.resource.pluginId) pluginEntries))
+        (collisionCheck "Herdr plugin executable" (
+          occurrences (entry: entry.resource.executable) pluginEntries
+        ))
         (collisionCheck "Herdr keybinding" (occurrences (entry: entry.binding.key) bindingEntries))
       ];
 
@@ -509,6 +512,62 @@ let
       settingsPackages = map (entry: entry.root) uniqueEntries;
     };
 
+  realizeHerdrPlugins =
+    {
+      plugins,
+      pkgs,
+    }:
+    lib.mapAttrs (
+      name: plugin:
+      let
+        package = plugin.package pkgs;
+        packageVersion = package.version or null;
+        versionMatches = packageVersion == null || packageVersion == plugin.version;
+        root =
+          assert lib.assertMsg versionMatches
+            "herdrPlugins.${name} source version ${plugin.version} disagrees with package version ${toString packageVersion}";
+          pkgs.runCommand "herdr-plugin-${name}-${plugin.version}"
+            {
+              passthru = {
+                inherit package;
+                inherit (plugin)
+                  executable
+                  executablePath
+                  minimumHerdrVersion
+                  pluginId
+                  source
+                  version
+                  ;
+              };
+            }
+            ''
+              set -euo pipefail
+              test -x ${lib.escapeShellArg "${package}/bin/${plugin.executable}"}
+              mkdir -p "$out/$(${pkgs.coreutils}/bin/dirname ${lib.escapeShellArg plugin.executablePath})"
+              cp ${lib.escapeShellArg "${plugin.source}/herdr-plugin.toml"} "$out/herdr-plugin.toml"
+              ln -s ${lib.escapeShellArg "${package}/bin/${plugin.executable}"} \
+                "$out/${plugin.executablePath}"
+              ${pkgs.gnugrep}/bin/grep -Fqx ${lib.escapeShellArg "id = \"${plugin.pluginId}\""} \
+                "$out/herdr-plugin.toml"
+              ${pkgs.gnugrep}/bin/grep -Fqx ${lib.escapeShellArg "version = \"${plugin.version}\""} \
+                "$out/herdr-plugin.toml"
+              ${pkgs.gnugrep}/bin/grep -Fqx \
+                ${lib.escapeShellArg "min_herdr_version = \"${plugin.minimumHerdrVersion}\""} \
+                "$out/herdr-plugin.toml"
+            '';
+      in
+      {
+        inherit package packageVersion root;
+        inherit (plugin)
+          executable
+          executablePath
+          pluginId
+          source
+          version
+          ;
+      }
+    ) plugins;
+
   realizeSkills =
     {
       catalog,
@@ -576,6 +635,142 @@ let
         inherit targets;
       };
     };
+
+  realizeProfile =
+    {
+      catalog,
+      pkgs,
+      profileName,
+      realizedExtensions,
+      realizedHerdrPlugins,
+      realizedSkills,
+    }:
+    let
+      profile = catalog.profiles.${profileName};
+      extensionPackages = builtins.listToAttrs (
+        map (entry: lib.nameValuePair entry.name entry.package) realizedExtensions.packageEntries
+      );
+      artifactFor =
+        kind: name:
+        let
+          resource = catalog.${kind}.${name};
+        in
+        if kind == "skills" then
+          realizedSkills.packages.${name}
+        else if kind == "mcps" then
+          if resource.transport.type == "local" then
+            resource.transport.package pkgs
+          else
+            pkgs.writeText "mcp-${name}.json" (
+              builtins.toJSON {
+                inherit (resource) lifecycle serverId;
+                inherit (resource) transport;
+              }
+            )
+        else if kind == "extensions" then
+          if resource.realization.type == "package" then
+            extensionPackages.${name}
+          else
+            resource.realization.source
+        else if kind == "tools" then
+          resource.package pkgs
+        else
+          realizedHerdrPlugins.${name}.root;
+      resourceEntries = lib.concatMap (
+        kind:
+        map (name: {
+          inherit kind name;
+          artifact = artifactFor kind name;
+        }) profile.members.${kind}
+      ) resourceKinds;
+      executableEntry = owner: package: executable: {
+        inherit executable owner package;
+        target = "${package}/bin/${executable}";
+      };
+      skillExecutables = lib.concatMap (
+        name:
+        map (
+          runtime: executableEntry "skills.${name}" runtime.package runtime.executable
+        ) realizedSkills.realizedLeaves.${name}.runtimeExecutables
+      ) profile.members.skills;
+      mcpExecutables = lib.concatMap (
+        name:
+        let
+          resource = catalog.mcps.${name};
+        in
+        lib.optional (resource.transport.type == "local") (
+          executableEntry "mcps.${name}" (resource.transport.package pkgs) resource.transport.executable
+        )
+      ) profile.members.mcps;
+      toolExecutables = map (
+        name:
+        let
+          resource = catalog.tools.${name};
+        in
+        executableEntry "tools.${name}" (resource.package pkgs) resource.executable
+      ) profile.members.tools;
+      pluginExecutables = map (
+        name:
+        let
+          plugin = realizedHerdrPlugins.${name};
+        in
+        executableEntry "herdrPlugins.${name}" plugin.package plugin.executable
+      ) profile.members.herdrPlugins;
+      executableEntries = skillExecutables ++ mcpExecutables ++ toolExecutables ++ pluginExecutables;
+      executableGroups = lib.groupBy (entry: entry.executable) executableEntries;
+      executableCollisions = lib.filterAttrs (
+        _: entries: builtins.length (lib.unique (map (entry: entry.target) entries)) > 1
+      ) executableGroups;
+      collisionNames = builtins.attrNames executableCollisions;
+      uniqueExecutables = map (entries: builtins.head (lib.unique (map (entry: entry.target) entries))) (
+        builtins.attrValues executableGroups
+      );
+      manifest = {
+        profile = profileName;
+        inherit (profile) targets;
+        resources = profile.members;
+        executables = builtins.attrNames executableGroups;
+      };
+    in
+    assert lib.assertMsg (collisionNames == [ ]) (
+      "Profile ${profileName} has executable collisions: "
+      + lib.concatStringsSep ", " (
+        map (
+          executable:
+          "${executable} from ${
+            lib.concatStringsSep ", " (map (entry: entry.owner) executableCollisions.${executable})
+          }"
+        ) collisionNames
+      )
+    );
+    pkgs.runCommand "all-${profileName}"
+      {
+        passthru = {
+          inherit executableEntries manifest resourceEntries;
+        };
+      }
+      ''
+        set -euo pipefail
+        mkdir -p "$out/bin" "$out/share/dendritic-slop/resources"
+        ${lib.concatMapStringsSep "\n" (kind: ''
+          mkdir -p "$out/share/dendritic-slop/resources/${kind}"
+        '') resourceKinds}
+        ${lib.concatMapStringsSep "\n" (entry: ''
+          ln -s ${lib.escapeShellArg entry.artifact} \
+            "$out/share/dendritic-slop/resources/${entry.kind}/${entry.name}"
+        '') resourceEntries}
+        ${lib.concatMapStringsSep "\n" (target: ''
+          test -x ${lib.escapeShellArg target}
+          ln -s ${lib.escapeShellArg target} "$out/bin/${builtins.baseNameOf target}"
+        '') uniqueExecutables}
+        cat > "$out/share/dendritic-slop/profile.json" <<'EOF'
+        ${builtins.toJSON manifest}
+        EOF
+        test "$(${pkgs.findutils}/bin/find "$out/share/dendritic-slop/resources" -type l | wc -l | tr -d ' ')" \
+          -eq ${toString (builtins.length resourceEntries)}
+        test "$(${pkgs.findutils}/bin/find "$out/bin" -type l | wc -l | tr -d ' ')" \
+          -eq ${toString (builtins.length uniqueExecutables)}
+      '';
 in
 {
   options.dendriticSlopInternal.homeManagerTargets = lib.mkOption {
@@ -592,7 +787,9 @@ in
       mkRepositoryProjection
       mkSkillLink
       mkSkillTree
+      realizeHerdrPlugins
       realizePiPackages
+      realizeProfile
       realizeSkills
       resolveResources
       resourceKinds
