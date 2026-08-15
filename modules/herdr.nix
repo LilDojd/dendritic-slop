@@ -127,7 +127,17 @@ let
           fi
 
           ${pkgs.coreutils}/bin/mkdir -p -m 0700 ${lib.escapeShellArg stateDir}
-          if ! current_json="$(${herdr} plugin list --json --plugin "$plugin_id" 2>/dev/null)"; then
+          inspect_error="$(${pkgs.coreutils}/bin/mktemp ${lib.escapeShellArg "${stateDir}/inspect.XXXXXX"})"
+          if current_json="$(${herdr} plugin list --json --plugin "$plugin_id" 2>"$inspect_error")"; then
+            ${pkgs.coreutils}/bin/rm -f "$inspect_error"
+          elif ${pkgs.gnugrep}/bin/grep -Fq '"code":"protocol_mismatch"' "$inspect_error"; then
+            ${pkgs.coreutils}/bin/cat "$inspect_error" >&2
+            echo "dendritic-slop: deferring Herdr plugin $plugin_id reconciliation until the Herdr server is restarted with the installed client version" >&2
+            ${pkgs.coreutils}/bin/rm -f "$inspect_error"
+            return
+          else
+            ${pkgs.coreutils}/bin/cat "$inspect_error" >&2
+            ${pkgs.coreutils}/bin/rm -f "$inspect_error"
             echo "dendritic-slop: failed to inspect Herdr plugin $plugin_id" >&2
             exit 1
           fi
