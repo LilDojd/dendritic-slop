@@ -314,7 +314,8 @@
               dendriticSlop.enable = true;
               home = {
                 username = testUser;
-                homeDirectory = if pkgs.stdenv.isDarwin then "/Users/${testUser}" else "/home/${testUser}";
+                homeDirectory =
+                  if pkgs.stdenv.hostPlatform.isDarwin then "/Users/${testUser}" else "/home/${testUser}";
                 stateVersion = "25.11";
               };
             }
@@ -1862,7 +1863,7 @@
           package
         )
       ) profilePackages
-      // lib.optionalAttrs pkgs.stdenv.isLinux {
+      // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
         nixos-module =
           assert builtins.elem ".pi/agent" (
             map (
@@ -1876,7 +1877,7 @@
           );
           nixos.config.system.build.toplevel;
       }
-      // lib.optionalAttrs pkgs.stdenv.isDarwin {
+      // lib.optionalAttrs pkgs.stdenv.hostPlatform.isDarwin {
         darwin-module = darwin.system;
       };
 
