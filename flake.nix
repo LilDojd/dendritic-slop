@@ -20,7 +20,7 @@
     };
 
     flake-parts = {
-      url = "https://flakehub.com/f/hercules-ci/flake-parts/0.1.*";
+      url = "github:hercules-ci/flake-parts";
       inputs.nixpkgs-lib.follows = "nixpkgs";
     };
 
@@ -39,7 +39,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    impermanence.url = "https://flakehub.com/f/nix-community/impermanence/0.1.*";
+    impermanence.url = "github:nix-community/impermanence";
 
     import-tree.url = "github:denful/import-tree";
 
