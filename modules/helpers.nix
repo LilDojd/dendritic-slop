@@ -384,7 +384,7 @@ let
           chmod -R u+w "$out"
 
           ${lib.concatMapStringsSep "\n" (patch: ''
-            patch -d "$out" -p1 < ${lib.escapeShellArg patch}
+            patch --no-backup-if-mismatch -d "$out" -p1 < ${lib.escapeShellArg patch}
           '') immutablePatches}
 
           ${lib.concatMapStringsSep "\n" (path: ''
@@ -480,8 +480,12 @@ let
         name: extension:
         let
           package = extension.realization.package pkgs;
+          packageVersion = package.version or null;
+          declaredVersion = extension.realization.version;
         in
         assert lib.assertMsg (lib.isDerivation package) "extensions.${name} must realize to a Nix package";
+        assert lib.assertMsg (packageVersion == null || packageVersion == declaredVersion)
+          "extensions.${name} declared version ${declaredVersion} disagrees with package version ${toString packageVersion}";
         {
           inherit name package;
           inherit (extension.realization) packageId version;

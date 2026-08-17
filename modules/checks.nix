@@ -24,6 +24,17 @@
       flakeLock = builtins.fromJSON (builtins.readFile ../flake.lock);
       rootInputs = flakeLock.nodes.${flakeLock.root}.inputs;
       llmAgentsLockNode = flakeLock.nodes.${rootInputs.llm-agents};
+      isPinnedGitHubInput =
+        inputName:
+        let
+          node = flakeLock.nodes.${rootInputs.${inputName}};
+        in
+        node.original.type == "github"
+        && node.locked.type == "github"
+        && node.original.owner == node.locked.owner
+        && node.original.repo == node.locked.repo
+        && node.original ? rev
+        && node.original.rev == node.locked.rev;
       flakeSource = builtins.readFile ../flake.nix;
       readmeText = builtins.readFile ../README.md;
       currentDocs =
@@ -1173,6 +1184,7 @@
             }
             ''
               set -euo pipefail
+              export LC_ALL=C
 
               test "$(${pkgs.findutils}/bin/find ${allSkills} -mindepth 1 -maxdepth 1 -type l | wc -l | tr -d ' ')" -eq ${toString (builtins.length (builtins.attrNames catalog.skills))}
               ${lib.concatMapStringsSep "\n" (name: ''
@@ -1276,14 +1288,11 @@
           assert llmAgentsLockNode.inputs.nixpkgs != rootInputs.nixpkgs;
           assert lib.hasInfix "https://cache.numtide.com" flakeSource;
           assert lib.hasInfix "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g=" flakeSource;
-          assert
-            flakeLock.nodes.${rootInputs.pi-ask-user}.locked.rev == "2de7e145227f7a527e995e323a50e7ee9bf88b0e";
-          assert
-            flakeLock.nodes.${rootInputs.pi-mcp-adapter}.locked.rev
-            == "852a12fa27b42c53d1d455c5937b9101d71af48a";
-          assert
-            flakeLock.nodes.${rootInputs.pi-web-access}.locked.rev
-            == "7e488620f32de239992d45eac83235d03c9c6bbd";
+          assert lib.all isPinnedGitHubInput [
+            "pi-ask-user"
+            "pi-mcp-adapter"
+            "pi-web-access"
+          ];
           assert builtins.length duplicatePiPackage.settingsPackages == 1;
           assert !conflictingPiPackage.success;
           assert !builtins.pathExists (toString ../packages + "/pi-ask-user-package.json");

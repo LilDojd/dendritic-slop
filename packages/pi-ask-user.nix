@@ -6,7 +6,7 @@
 }:
 stdenvNoCC.mkDerivation {
   pname = "pi-ask-user";
-  version = "0.14.0";
+  version = (builtins.fromJSON (builtins.readFile (source + "/package.json"))).version;
   src = source;
 
   nativeBuildInputs = [ jq ];

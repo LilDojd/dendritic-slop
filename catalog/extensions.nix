@@ -1,4 +1,7 @@
 { inputs, superpowersPackage }:
+let
+  packageVersion = source: (builtins.fromJSON (builtins.readFile (source + "/package.json"))).version;
+in
 {
   ask-user = {
     title = "Ask user";
@@ -12,7 +15,7 @@
       type = "package";
       package = pkgs: pkgs.callPackage ../packages/pi-ask-user.nix { source = inputs.pi-ask-user; };
       packageId = "pi-ask-user";
-      version = "0.14.0";
+      version = packageVersion inputs.pi-ask-user;
     };
   };
 
@@ -47,7 +50,7 @@
       type = "package";
       package = pkgs: pkgs.callPackage ../packages/pi-mcp-adapter.nix { source = inputs.pi-mcp-adapter; };
       packageId = "pi-mcp-adapter";
-      version = "2.22.0";
+      version = packageVersion inputs.pi-mcp-adapter;
     };
   };
 
@@ -63,7 +66,7 @@
       type = "package";
       package = superpowersPackage;
       packageId = "superpowers";
-      version = "6.3.0";
+      version = packageVersion inputs.superpowers;
     };
   };
 
@@ -82,7 +85,7 @@
       type = "package";
       package = pkgs: pkgs.callPackage ../packages/pi-web-access.nix { source = inputs.pi-web-access; };
       packageId = "pi-web-access";
-      version = "0.22.0";
+      version = packageVersion inputs.pi-web-access;
     };
   };
 }
