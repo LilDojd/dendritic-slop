@@ -431,34 +431,34 @@
     "pi-mcp-adapter": {
       "flake": false,
       "locked": {
-        "lastModified": 1786430288,
-        "narHash": "sha256-SlyMftKbFIKdVaKuPtwXHtcbaDaQoPPlFWJ7BnAtwcg=",
+        "lastModified": 1786823098,
+        "narHash": "sha256-meIyWlYVDVFZkbUiZA2aP5SUq34/JZxIeGHTV2/9tdg=",
         "owner": "nicobailon",
         "repo": "pi-mcp-adapter",
-        "rev": "852a12fa27b42c53d1d455c5937b9101d71af48a",
+        "rev": "1bf36719cec478a163bb52e3390182963aab9f85",
         "type": "github"
       },
       "original": {
         "owner": "nicobailon",
         "repo": "pi-mcp-adapter",
-        "rev": "852a12fa27b42c53d1d455c5937b9101d71af48a",
+        "rev": "1bf36719cec478a163bb52e3390182963aab9f85",
         "type": "github"
       }
     },
     "pi-web-access": {
       "flake": false,
       "locked": {
-        "lastModified": 1786482338,
-        "narHash": "sha256-LEkOQX4qsQwDtodP7qWCCrTptG1E6O6sJGVsL0+Eg8g=",
+        "lastModified": 1786888715,
+        "narHash": "sha256-zMuL0DFBfDS53lwh6lU1Ue6gImw4uqDlZZ5fncKJbjk=",
         "owner": "nicobailon",
         "repo": "pi-web-access",
-        "rev": "7e488620f32de239992d45eac83235d03c9c6bbd",
+        "rev": "81e18785fdf6e14f9dee28d8a805c74eca29b991",
         "type": "github"
       },
       "original": {
         "owner": "nicobailon",
         "repo": "pi-web-access",
-        "rev": "7e488620f32de239992d45eac83235d03c9c6bbd",
+        "rev": "81e18785fdf6e14f9dee28d8a805c74eca29b991",
         "type": "github"
       }
     },
