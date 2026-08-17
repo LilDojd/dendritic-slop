@@ -1,6 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
+  "automerge": true,
+  "platformAutomerge": false,
   "timezone": "Etc/UTC",
   "schedule": ["before 6am on Monday"],
   "nix": {
@@ -8,6 +10,7 @@
   },
   "lockFileMaintenance": {
     "enabled": true,
+    "automerge": true,
     "schedule": ["before 6am on Monday"]
   },
   "customManagers": [
