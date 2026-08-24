@@ -96,6 +96,24 @@
     ];
   };
 
+  ponytail = {
+    input = "ponytail";
+    source = inputs.ponytail;
+    homepage = "https://github.com/DietrichGebert/ponytail";
+    license = "MIT";
+    licenseEvidence = [ (inputs.ponytail + "/LICENSE") ];
+    reviewedRevision = "2ed6c52c9d7e5e56942508591085fd45dea277d3";
+    exportedLeaves = [
+      "ponytail"
+      "ponytail-audit"
+      "ponytail-debt"
+      "ponytail-gain"
+      "ponytail-help"
+      "ponytail-review"
+    ];
+    supportPaths = [ "LICENSE" ];
+  };
+
   superpowers = {
     input = "superpowers";
     source = inputs.superpowers;

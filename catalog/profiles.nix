@@ -13,6 +13,12 @@
         "bro"
         "herdr"
         "jujutsu"
+        "ponytail"
+        "ponytail-audit"
+        "ponytail-debt"
+        "ponytail-gain"
+        "ponytail-help"
+        "ponytail-review"
       ];
       extensions = [
         "ask-user"

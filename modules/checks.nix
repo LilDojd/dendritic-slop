@@ -1108,6 +1108,7 @@
             actionbookRepository = catalog.repositories.actionbook-rust;
             astralRepository = catalog.repositories.astral-python;
             leonardoRepository = catalog.repositories.leonardomso-rust-skills;
+            ponytailRepository = catalog.repositories.ponytail;
             superpowersRepository = catalog.repositories.superpowers;
             actionbookUpstreamLeaves = builtins.attrNames (
               lib.filterAttrs (_: type: type == "directory") (
@@ -1117,6 +1118,11 @@
             astralUpstreamLeaves = builtins.attrNames (
               lib.filterAttrs (_: type: type == "directory") (
                 builtins.readDir (astralRepository.source + "/plugins/astral/skills")
+              )
+            );
+            ponytailUpstreamLeaves = builtins.attrNames (
+              lib.filterAttrs (_: type: type == "directory") (
+                builtins.readDir (ponytailRepository.source + "/skills")
               )
             );
             superpowersUpstreamLeaves = builtins.attrNames (
@@ -1144,6 +1150,7 @@
             actionbookProjection = realizedSkills.repositories.actionbook-rust;
             astralProjection = realizedSkills.repositories.astral-python;
             leonardoProjection = realizedSkills.repositories.leonardomso-rust-skills;
+            ponytailProjection = realizedSkills.repositories.ponytail;
             superpowersProjection = realizedSkills.repositories.superpowers;
           in
           assert
@@ -1162,6 +1169,8 @@
           assert lib.sort builtins.lessThan superpowersRepository.exportedLeaves == superpowersUpstreamLeaves;
           assert superpowersRepository.ignoredLeaves == [ ];
           assert leonardoRepository.exportedLeaves == [ "rust-skills" ];
+          assert lib.sort builtins.lessThan ponytailRepository.exportedLeaves == ponytailUpstreamLeaves;
+          assert ponytailRepository.ignoredLeaves == [ ];
           assert map (entrypoint: entrypoint.path) superpowersRepository.entrypoints == reviewedEntrypoints;
           assert superpowersRepository.ignoredEntrypoints == intentionallyOmittedEntrypoints;
           assert lib.all (
@@ -1176,6 +1185,7 @@
             actionbookRepository.licenseEvidence
             ++ astralRepository.licenseEvidence
             ++ leonardoRepository.licenseEvidence
+            ++ ponytailRepository.licenseEvidence
             ++ superpowersRepository.licenseEvidence
           );
           pkgs.runCommand "skill-projections-check"
@@ -1228,6 +1238,7 @@
               test -f ${astralProjection}/LICENSE-APACHE
               test -f ${astralProjection}/LICENSE-MIT
               test -f ${leonardoProjection}/LICENSE
+              test -f ${ponytailProjection}/LICENSE
               test -f ${superpowersProjection}/LICENSE
 
               ${lib.concatMapStringsSep "\n" (path: ''

@@ -284,6 +284,66 @@ actionbook
     runtimeExecutables = [ (runtime (pkgs: pkgs.jujutsu) "jj") ];
   };
 
+  ponytail = {
+    title = "Ponytail";
+    description = "Choose the simplest safe solution that satisfies the coding task.";
+    homepage = "https://github.com/DietrichGebert/ponytail";
+    repository = "ponytail";
+    repositoryPath = "skills/ponytail";
+    profiles = [ "core" ];
+    defaultEnable = true;
+  };
+
+  ponytail-audit = {
+    title = "Ponytail audit";
+    description = "Identify over-engineering across a repository without changing it.";
+    homepage = "https://github.com/DietrichGebert/ponytail";
+    repository = "ponytail";
+    repositoryPath = "skills/ponytail-audit";
+    profiles = [ "core" ];
+    defaultEnable = true;
+  };
+
+  ponytail-debt = {
+    title = "Ponytail debt";
+    description = "Report deliberate Ponytail shortcuts and their upgrade triggers.";
+    homepage = "https://github.com/DietrichGebert/ponytail";
+    repository = "ponytail";
+    repositoryPath = "skills/ponytail-debt";
+    profiles = [ "core" ];
+    defaultEnable = true;
+  };
+
+  ponytail-gain = {
+    title = "Ponytail gain";
+    description = "Display Ponytail's published benchmark impact summary.";
+    homepage = "https://github.com/DietrichGebert/ponytail";
+    repository = "ponytail";
+    repositoryPath = "skills/ponytail-gain";
+    profiles = [ "core" ];
+    defaultEnable = true;
+  };
+
+  ponytail-help = {
+    title = "Ponytail help";
+    description = "Display a quick reference for Ponytail modes and skills.";
+    homepage = "https://github.com/DietrichGebert/ponytail";
+    repository = "ponytail";
+    repositoryPath = "skills/ponytail-help";
+    profiles = [ "core" ];
+    defaultEnable = true;
+  };
+
+  ponytail-review = {
+    title = "Ponytail review";
+    description = "Review a diff for unnecessary complexity without applying changes.";
+    homepage = "https://github.com/DietrichGebert/ponytail";
+    repository = "ponytail";
+    repositoryPath = "skills/ponytail-review";
+    profiles = [ "core" ];
+    defaultEnable = true;
+  };
+
   rust-skills = {
     title = "Rust skills";
     description = "Comprehensive, source-linked Rust coding guidelines and best practices.";
