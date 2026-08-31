@@ -445,6 +445,19 @@
         "type": "github"
       }
     },
+    "pi-playwright": {
+      "flake": false,
+      "locked": {
+        "lastModified": 499162500,
+        "narHash": "sha256-DjR9bHFjsdxB0WyDFa5HOHYTEf03gWJgt4gfuYbvOHE=",
+        "type": "tarball",
+        "url": "https://registry.npmjs.org/@lebronj/pi-playwright/-/pi-playwright-0.0.1.tgz"
+      },
+      "original": {
+        "type": "tarball",
+        "url": "https://registry.npmjs.org/@lebronj/pi-playwright/-/pi-playwright-0.0.1.tgz"
+      }
+    },
     "pi-web-access": {
       "flake": false,
       "locked": {
@@ -496,6 +509,7 @@
         "pi": "pi",
         "pi-ask-user": "pi-ask-user",
         "pi-mcp-adapter": "pi-mcp-adapter",
+        "pi-playwright": "pi-playwright",
         "pi-web-access": "pi-web-access",
         "ponytail": "ponytail",
         "superpowers": "superpowers",

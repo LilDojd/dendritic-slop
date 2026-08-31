@@ -24,6 +24,7 @@
       flakeLock = builtins.fromJSON (builtins.readFile ../flake.lock);
       rootInputs = flakeLock.nodes.${flakeLock.root}.inputs;
       llmAgentsLockNode = flakeLock.nodes.${rootInputs.llm-agents};
+      piPlaywrightLockNode = flakeLock.nodes.${rootInputs.pi-playwright};
       isPinnedGitHubInput =
         inputName:
         let
@@ -1286,7 +1287,7 @@
           assert builtins.length corePackages == 2;
           assert builtins.elem (toString extensionPackages.ask-user) corePackages;
           assert builtins.elem (toString extensionPackages.pi-mcp-adapter) corePackages;
-          assert builtins.length allExtensionPackages == 4;
+          assert builtins.length allExtensionPackages == 5;
           assert lib.all (lib.hasPrefix builtins.storeDir) allExtensionPackages;
           assert !lib.any (lib.hasPrefix "npm:") allExtensionPackages;
           assert homeWithProfiles.config.programs.pi.coding-agent.package == piPackage;
@@ -1304,6 +1305,11 @@
             "pi-mcp-adapter"
             "pi-web-access"
           ];
+          assert piPlaywrightLockNode.locked.type == "tarball";
+          assert
+            piPlaywrightLockNode.locked.url
+            == "https://registry.npmjs.org/@lebronj/pi-playwright/-/pi-playwright-0.0.1.tgz";
+          assert piPlaywrightLockNode.locked.narHash == "sha256-DjR9bHFjsdxB0WyDFa5HOHYTEf03gWJgt4gfuYbvOHE=";
           assert builtins.length duplicatePiPackage.settingsPackages == 1;
           assert !conflictingPiPackage.success;
           assert !builtins.pathExists (toString ../packages + "/pi-ask-user-package.json");
@@ -1419,6 +1425,9 @@
                   }
                 )
               }
+              playwright_peers=$(
+                ${pkgs.jq}/bin/jq -c '.peerDependencies' ${inputs.pi-playwright}/package.json
+              )
               web_access_peers="$mcp_adapter_peers"
 
               check_upstream_projection \
@@ -1428,8 +1437,20 @@
 
               check_package ${extensionPackages.ask-user} ./index.ts "$ask_user_peers"
               check_package ${extensionPackages.pi-mcp-adapter} ./index.ts "$mcp_adapter_peers"
+              check_package ${extensionPackages.pi-playwright} ./dist/index.js "$playwright_peers"
               check_package ${extensionPackages.web-access} ./index.ts "$web_access_peers"
 
+              test -d ${extensionPackages.pi-playwright}/node_modules/playwright
+              test -d ${extensionPackages.pi-playwright}/node_modules/playwright-core
+              ${pkgs.gnugrep}/bin/grep -Fq \
+                ${lib.escapeShellArg (toString pkgs.playwright-driver.browsers)} \
+                ${extensionPackages.pi-playwright}/dist/index.js
+              ! ${pkgs.gnugrep}/bin/grep -Fq 'params?.executablePath' \
+                ${extensionPackages.pi-playwright}/dist/index.js
+              ${pkgs.gnugrep}/bin/grep -Fq 'Only HTTP(S) URLs are allowed' \
+                ${extensionPackages.pi-playwright}/dist/index.js
+              ${pkgs.gnugrep}/bin/grep -Fq 'basename(params.filename' \
+                ${extensionPackages.pi-playwright}/dist/index.js
               test ! -e ${inputs.pi-ask-user}/package-lock.json
               test ! -e ${extensionPackages.ask-user}/package-lock.json
               test ! -e ${extensionPackages.ask-user}/node_modules
@@ -1611,6 +1632,7 @@
           assert catalog.extensions.ask-user.secretCapable;
           assert catalog.extensions.herdr-agent-state.secretCapable;
           assert catalog.extensions.pi-mcp-adapter.secretCapable;
+          assert catalog.extensions.pi-playwright.secretCapable;
           assert catalog.extensions.web-access.secretCapable;
           assert !catalog.extensions.superpowers-bootstrap.secretCapable;
           pkgs.runCommand "mcp-registry-check"
@@ -1722,6 +1744,7 @@
           assert profileWithDisable.value.selection.overrides.skills.bro == false;
           assert !(profileWithDisable.value.skills ? bro);
           assert profileUnion.success;
+          assert profileUnion.value.extensions ? pi-playwright;
           assert profileUnion.value.extensions ? web-access;
           assert profileUnion.value.mcps ? browser;
           assert !disabledRequirement.success;
@@ -1745,6 +1768,7 @@
               "ask-user"
               "herdr-agent-state"
               "pi-mcp-adapter"
+              "pi-playwright"
               "superpowers-bootstrap"
               "web-access"
             ];

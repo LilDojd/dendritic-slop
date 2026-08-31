@@ -112,7 +112,10 @@
     title = "Web";
     description = "Reviewed web access and local browser automation for Pi.";
     members = {
-      extensions = [ "web-access" ];
+      extensions = [
+        "pi-playwright"
+        "web-access"
+      ];
       mcps = [ "browser" ];
     };
   };

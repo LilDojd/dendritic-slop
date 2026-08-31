@@ -54,6 +54,26 @@ in
     };
   };
 
+  pi-playwright = {
+    title = "Pi Playwright";
+    description = "Drive a persistent Chromium browser with Playwright tools.";
+    homepage = "https://pi.dev/packages/@lebronj/pi-playwright";
+    profiles = [ "web" ];
+    requiresTargets = [ "pi" ];
+    capabilities = {
+      executesCode = true;
+      network = true;
+      readsSecrets = true;
+    };
+    secretCapable = true;
+    realization = {
+      type = "package";
+      package = pkgs: pkgs.callPackage ../packages/pi-playwright.nix { source = inputs.pi-playwright; };
+      packageId = "@lebronj/pi-playwright";
+      version = packageVersion inputs.pi-playwright;
+    };
+  };
+
   superpowers-bootstrap = {
     title = "Superpowers Pi bootstrap";
     description = "Inject the reviewed Superpowers bootstrap and Pi tool mapping without duplicate skill discovery.";
