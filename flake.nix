@@ -76,7 +76,7 @@
     };
 
     pi-mcp-adapter = {
-      url = "github:nicobailon/pi-mcp-adapter/6c08147f7a3c6eba670fa8fb73e1fe68a7ab471f";
+      url = "github:nicobailon/pi-mcp-adapter/ff234b862359e722bf4dc1c99cde62278d4b8eb3";
       flake = false;
     };
 
@@ -86,7 +86,7 @@
     };
 
     pi-web-access = {
-      url = "github:nicobailon/pi-web-access/846949c645efadd6314f25eef60b390b0669704a";
+      url = "github:nicobailon/pi-web-access/5741f303a4f5b89fed18e02ec3fed038844e0e98";
       flake = false;
     };
 
