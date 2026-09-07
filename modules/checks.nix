@@ -1451,6 +1451,12 @@
                 ${extensionPackages.pi-playwright}/dist/index.js
               ${pkgs.gnugrep}/bin/grep -Fq 'basename(params.filename' \
                 ${extensionPackages.pi-playwright}/dist/index.js
+              ${pkgs.gnugrep}/bin/grep -Fq 'JSON.stringify(value, null, 2) ?? String(value)' \
+                ${extensionPackages.pi-playwright}/dist/index.js
+              ${pkgs.gnugrep}/bin/grep -Fq 'browser_evaluate requires a JavaScript function' \
+                ${extensionPackages.pi-playwright}/dist/index.js
+              ! ${pkgs.gnugrep}/bin/grep -Fq 'evaluate(params.function)' \
+                ${extensionPackages.pi-playwright}/dist/index.js
               test ! -e ${inputs.pi-ask-user}/package-lock.json
               test ! -e ${extensionPackages.ask-user}/package-lock.json
               test ! -e ${extensionPackages.ask-user}/node_modules

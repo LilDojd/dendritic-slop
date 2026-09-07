@@ -41,6 +41,9 @@ stdenvNoCC.mkDerivation {
         '    executablePath: Type.Optional(Type.String({ description: "Optional path to a local Chrome/Chromium executable" })),' \
         '    // executablePath removed: launching model-selected binaries is unsafe.' \
       --replace-fail \
+        '    return JSON.stringify(value, null, 2);' \
+        '    return JSON.stringify(value, null, 2) ?? String(value);' \
+      --replace-fail \
         '    const executablePath = params?.executablePath;' \
         "    const executablePath = \"$browser_executable\";" \
       --replace-fail \
@@ -49,6 +52,12 @@ stdenvNoCC.mkDerivation {
       --replace-fail \
         '            await page.goto(params.url, {' \
         '            await page.goto(url.href, {' \
+      --replace-fail \
+        'page.locator(params.selector).first().evaluate(params.function)' \
+        'page.locator(params.selector).first().evaluate((element, source) => { const fn = globalThis.eval("(" + source + ")"); if (typeof fn !== "function") throw new Error("browser_evaluate requires a JavaScript function"); return fn(element); }, params.function)' \
+      --replace-fail \
+        'page.evaluate(params.function)' \
+        'page.evaluate((source) => { const fn = globalThis.eval("(" + source + ")"); if (typeof fn !== "function") throw new Error("browser_evaluate requires a JavaScript function"); return fn(); }, params.function)' \
       --replace-fail \
         '    const filename = params.filename ?? `screenshot-''${Date.now()}.png`;' \
         '    const filename = basename(params.filename ?? `screenshot-''${Date.now()}.png`);'
