@@ -7,7 +7,16 @@
 let
   profileDeclarations = import ../catalog/profiles.nix;
   repositories = import ../catalog/repositories.nix { inherit inputs; };
-  skills = import ../catalog/skills.nix { inherit inputs; };
+  # Herdr's source is platform-independent. Fetch its package's pinned archive
+  # directly so reading skill metadata does not require import-from-derivation.
+  herdrPackageSource = inputs.llm-agents.packages.aarch64-linux.herdr.src;
+  herdrSource =
+    (builtins.fetchTree {
+      type = "tarball";
+      url = herdrPackageSource.url;
+      narHash = herdrPackageSource.outputHash;
+    }).outPath;
+  skills = import ../catalog/skills.nix { inherit inputs herdrSource; };
   projectionSkills = lib.mapAttrs (
     _: skill:
     skill
@@ -28,9 +37,9 @@ let
         lib.filter (skill: (skill.repository or null) == "superpowers") (builtins.attrValues skills)
       );
     };
-  extensions = import ../catalog/extensions.nix { inherit inputs superpowersPackage; };
+  extensions = import ../catalog/extensions.nix { inherit inputs superpowersPackage herdrSource; };
   mcps = import ../catalog/mcps.nix { inherit inputs; };
-  tools = import ../catalog/tools.nix { inherit inputs; };
+  tools = import ../catalog/tools.nix { inherit inputs herdrSource; };
   herdrPlugins = import ../catalog/herdr-plugins.nix { inherit inputs; };
   resourceKinds = [
     "skills"

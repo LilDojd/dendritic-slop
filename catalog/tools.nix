@@ -1,7 +1,7 @@
-{ inputs }:
+{ inputs, herdrSource }:
 let
   llmAgentPackage = name: pkgs: inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.${name};
-  herdrSourceManifest = builtins.fromTOML (builtins.readFile (inputs.herdr-src + "/Cargo.toml"));
+  herdrSourceManifest = builtins.fromTOML (builtins.readFile (herdrSource + "/Cargo.toml"));
 in
 {
   herdr = {

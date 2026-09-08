@@ -24,11 +24,6 @@
       inputs.nixpkgs-lib.follows = "nixpkgs";
     };
 
-    herdr-src = {
-      url = "github:herdrdev/herdr";
-      flake = false;
-    };
-
     herdr-plugin-jj-workspace = {
       url = "github:NathanFlurry/herdr-plugin-jj-workspace/a9f1d3bcdaa2354e336a5173da85cbe4970c0f2e";
       flake = false;

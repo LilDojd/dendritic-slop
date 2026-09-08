@@ -1,4 +1,8 @@
-{ inputs, superpowersPackage }:
+{
+  inputs,
+  superpowersPackage,
+  herdrSource,
+}:
 let
   packageVersion = source: (builtins.fromJSON (builtins.readFile (source + "/package.json"))).version;
 in
@@ -29,7 +33,7 @@ in
     secretCapable = true;
     realization = {
       type = "path";
-      source = inputs.herdr-src + "/src/integration/assets/pi/herdr-agent-state.ts";
+      source = herdrSource + "/src/integration/assets/pi/herdr-agent-state.ts";
       destination = ".pi/agent/extensions/herdr-agent-state.ts";
     };
   };

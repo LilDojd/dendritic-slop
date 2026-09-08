@@ -123,11 +123,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1788306937,
-        "narHash": "sha256-lbrI1UYVpFgKSsyrU9oeF7FHfnu8nLD9ja0ou9f2rxk=",
+        "lastModified": 1788450739,
+        "narHash": "sha256-glZLQlzIn1fXH6PazR2iUmTo7kzzyYSshrWhLS9TqCU=",
         "owner": "hercules-ci",
         "repo": "flake-parts",
-        "rev": "f16b25b8c3d2809b87925d0b76652d7821a75c68",
+        "rev": "31729ca8cbdb4fa927b34e5f4353e6a83f39e993",
         "type": "github"
       },
       "original": {
@@ -172,22 +172,6 @@
         "owner": "NathanFlurry",
         "repo": "herdr-plugin-jj-workspace",
         "rev": "a9f1d3bcdaa2354e336a5173da85cbe4970c0f2e",
-        "type": "github"
-      }
-    },
-    "herdr-src": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1788392868,
-        "narHash": "sha256-Sp4H0E/QnQJoCVKgYg588QxNwFfUfV4AeU1HLuoBI7U=",
-        "owner": "herdrdev",
-        "repo": "herdr",
-        "rev": "94f6d9c0d9bb9cf9ffae99d8bbfb09e9bf2fc9e0",
-        "type": "github"
-      },
-      "original": {
-        "owner": "herdrdev",
-        "repo": "herdr",
         "type": "github"
       }
     },
@@ -306,11 +290,11 @@
         "treefmt-nix": "treefmt-nix"
       },
       "locked": {
-        "lastModified": 1788423648,
-        "narHash": "sha256-lfixqU8zNRZIfUSCpQMUUcmikPgmPmvpdk8A6er9vfQ=",
+        "lastModified": 1788840929,
+        "narHash": "sha256-8wZHO3gePzZR4QpORDB4QpD/8jdNAFel7kHixn1A/gc=",
         "owner": "numtide",
         "repo": "llm-agents.nix",
-        "rev": "39d6cb55aec80e6b8ad309b7b620d920fa246c97",
+        "rev": "296b980f3a95823d2b2f9d5822d10eb99ea8443e",
         "type": "github"
       },
       "original": {
@@ -357,11 +341,11 @@
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1787964612,
-        "narHash": "sha256-0N9nghg3nwzX6b6qc77EzjR9cu/Z+UR66FlfsCqiURs=",
+        "lastModified": 1788746152,
+        "narHash": "sha256-RaKngusl5I8pNi8RfrVvsHq3NZe7eFWzDlb01+hEVqY=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "e8be7818e19ada32105a8af937a6a473b38167ca",
+        "rev": "42f17a57f4f6e33b3de3dca0a2a5ea5233169d02",
         "type": "github"
       },
       "original": {
@@ -499,7 +483,6 @@
         "astral-agent-skills": "astral-agent-skills",
         "flake-parts": "flake-parts",
         "herdr-plugin-jj-workspace": "herdr-plugin-jj-workspace",
-        "herdr-src": "herdr-src",
         "home-manager": "home-manager",
         "impermanence": "impermanence",
         "import-tree": "import-tree",
