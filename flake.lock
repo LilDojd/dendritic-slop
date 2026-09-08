@@ -415,34 +415,34 @@
     "pi-ask-user": {
       "flake": false,
       "locked": {
-        "lastModified": 1785755534,
-        "narHash": "sha256-AnA1QGmGj5J9gYYoITTN0G1IS8gkLa1Hq7w+luOyNa0=",
+        "lastModified": 1788369622,
+        "narHash": "sha256-0wW2VBn2rreeLEOTAnezwabmLNzr8VakGXGso+X4MxU=",
         "owner": "edlsh",
         "repo": "pi-ask-user",
-        "rev": "2de7e145227f7a527e995e323a50e7ee9bf88b0e",
+        "rev": "705fdc60eaea5b9588f3aa6a6cb6a577516b17af",
         "type": "github"
       },
       "original": {
         "owner": "edlsh",
         "repo": "pi-ask-user",
-        "rev": "2de7e145227f7a527e995e323a50e7ee9bf88b0e",
+        "rev": "705fdc60eaea5b9588f3aa6a6cb6a577516b17af",
         "type": "github"
       }
     },
     "pi-mcp-adapter": {
       "flake": false,
       "locked": {
-        "lastModified": 1788101991,
-        "narHash": "sha256-rK0mdEIiaqd9H9hCMeIUH1WAwc+yT87SrCEVuvB5+EE=",
+        "lastModified": 1788635559,
+        "narHash": "sha256-Z+Nc7aQJFnZKYAe6yQN0CFwYuekNahAcFRg+dDBpRVU=",
         "owner": "nicobailon",
         "repo": "pi-mcp-adapter",
-        "rev": "ff234b862359e722bf4dc1c99cde62278d4b8eb3",
+        "rev": "8243eba3421e301c88c047444f34ab7d5d57163e",
         "type": "github"
       },
       "original": {
         "owner": "nicobailon",
         "repo": "pi-mcp-adapter",
-        "rev": "ff234b862359e722bf4dc1c99cde62278d4b8eb3",
+        "rev": "8243eba3421e301c88c047444f34ab7d5d57163e",
         "type": "github"
       }
     },
@@ -462,34 +462,34 @@
     "pi-web-access": {
       "flake": false,
       "locked": {
-        "lastModified": 1788102226,
-        "narHash": "sha256-V8KmLgfKpasnJNBCmjhe6VLeaUCW2RaUYqD24RR0XdU=",
+        "lastModified": 1788681784,
+        "narHash": "sha256-pRAya3k3gFSZ9dOqUq5aBf3UaNbpeD2Q0LB+c0J8mvE=",
         "owner": "nicobailon",
         "repo": "pi-web-access",
-        "rev": "5741f303a4f5b89fed18e02ec3fed038844e0e98",
+        "rev": "811ef82a6dd04fe4abd73fa40b079aa39ee1870d",
         "type": "github"
       },
       "original": {
         "owner": "nicobailon",
         "repo": "pi-web-access",
-        "rev": "5741f303a4f5b89fed18e02ec3fed038844e0e98",
+        "rev": "811ef82a6dd04fe4abd73fa40b079aa39ee1870d",
         "type": "github"
       }
     },
     "ponytail": {
       "flake": false,
       "locked": {
-        "lastModified": 1786139041,
-        "narHash": "sha256-bGdXvzhWPwGdz3T2Yh2h6lf+3PBRFAfdBxP5pESmCHI=",
+        "lastModified": 1788798420,
+        "narHash": "sha256-LPNMyHsri3+eeDmphEAKL1JgoRE4dLIPfZ4XZ+xu5UY=",
         "owner": "DietrichGebert",
         "repo": "ponytail",
-        "rev": "2ed6c52c9d7e5e56942508591085fd45dea277d3",
+        "rev": "356918eba965ee1eac64bd3a7f0dd02108350de5",
         "type": "github"
       },
       "original": {
         "owner": "DietrichGebert",
         "repo": "ponytail",
-        "rev": "2ed6c52c9d7e5e56942508591085fd45dea277d3",
+        "rev": "356918eba965ee1eac64bd3a7f0dd02108350de5",
         "type": "github"
       }
     },

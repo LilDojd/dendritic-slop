@@ -58,7 +58,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
     ponytail = {
-      url = "github:DietrichGebert/ponytail/2ed6c52c9d7e5e56942508591085fd45dea277d3";
+      url = "github:DietrichGebert/ponytail/356918eba965ee1eac64bd3a7f0dd02108350de5";
       flake = false;
     };
 
@@ -71,12 +71,12 @@
     };
 
     pi-ask-user = {
-      url = "github:edlsh/pi-ask-user/2de7e145227f7a527e995e323a50e7ee9bf88b0e";
+      url = "github:edlsh/pi-ask-user/705fdc60eaea5b9588f3aa6a6cb6a577516b17af";
       flake = false;
     };
 
     pi-mcp-adapter = {
-      url = "github:nicobailon/pi-mcp-adapter/ff234b862359e722bf4dc1c99cde62278d4b8eb3";
+      url = "github:nicobailon/pi-mcp-adapter/8243eba3421e301c88c047444f34ab7d5d57163e";
       flake = false;
     };
 
@@ -86,7 +86,7 @@
     };
 
     pi-web-access = {
-      url = "github:nicobailon/pi-web-access/5741f303a4f5b89fed18e02ec3fed038844e0e98";
+      url = "github:nicobailon/pi-web-access/811ef82a6dd04fe4abd73fa40b079aa39ee1870d";
       flake = false;
     };
 
