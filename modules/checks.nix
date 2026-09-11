@@ -358,6 +358,13 @@
 
       context7SecretPath = "/run/agenix/context7-api-key";
       home = mkHome { };
+      homeWithOnlyLinear = mkHome {
+        dendriticSlop = {
+          mcps.linear.enable = true;
+          extensions.pi-mcp-adapter.enable = true;
+        };
+      };
+      linearMcpJson = builtins.fromJSON homeWithOnlyLinear.config.xdg.configFile."mcp/mcp.json".text;
       homeWithContext7 = mkHome {
         dendriticSlop = {
           profiles.core.enable = true;
@@ -379,6 +386,7 @@
             core.enable = true;
             web.enable = true;
           };
+          mcps.linear.enable = true;
           mcps.context7 = {
             enable = true;
             secrets.apiKeyFile = context7SecretPath;
@@ -504,6 +512,11 @@
             headers.Authorization = "Bearer \${CONTEXT7_API_KEY}";
             lifecycle = "lazy";
             url = "https://mcp.context7.com/mcp";
+          };
+          linear = {
+            auth = "oauth";
+            lifecycle = "lazy";
+            url = "https://mcp.linear.app/mcp";
           };
         };
       };
@@ -1602,6 +1615,7 @@
             builtins.attrNames catalog.mcps == [
               "browser"
               "context7"
+              "linear"
             ];
           assert catalog.mcps.browser.transport.type == "local";
           assert catalog.mcps.context7.transport.type == "remote";
@@ -1655,7 +1669,7 @@
               set -euo pipefail
 
               test "$(jq -r '.mcpServers | keys | join(" ")' "$mcpConfig")" = \
-                'agent-browser context7'
+                'agent-browser context7 linear'
               test "$(jq -r '.mcpServers["agent-browser"].command' "$mcpConfig")" = \
                 ${lib.escapeShellArg agentBrowserCommand}
               test "$(jq -r '.mcpServers["agent-browser"].args | join(" ")' "$mcpConfig")" = mcp
@@ -1867,6 +1881,24 @@
             touch "$out"
           '';
         all-skills = allSkills;
+        linear-mcp =
+          assert !home.config.dendriticSlop.mcps.linear.enable;
+          assert !(home.options.dendriticSlop.targets ? linear);
+          assert catalog.mcps.linear.transport.auth == "oauth";
+          assert catalog.mcps.linear.secretFiles == { };
+          assert homeWithOnlyLinear.config.programs.pi.coding-agent.enable;
+          assert linearMcpJson == { mcpServers.linear = expectedMergedMcpJson.mcpServers.linear; };
+          pkgs.runCommand "linear-mcp-config-check" { nativeBuildInputs = [ pkgs.jq ]; } ''
+            jq -e '
+              .mcpServers.linear.url == "https://mcp.linear.app/mcp" and
+              .mcpServers.linear.auth == "oauth" and
+              .mcpServers.linear.lifecycle == "lazy" and
+              .mcpServers.context7.url == "https://mcp.context7.com/mcp"
+            ' ${homeWithMergedMcps.config.xdg.configFile."mcp/mcp.json".source}
+            jq -e '.mcpServers | keys == ["linear"]' \
+              ${homeWithOnlyLinear.config.xdg.configFile."mcp/mcp.json".source}
+            touch "$out"
+          '';
         home-manager-module =
           assert home.config.programs.pi.coding-agent.extensions == [ ];
           assert home.config.programs.pi.coding-agent.skills == [ ];

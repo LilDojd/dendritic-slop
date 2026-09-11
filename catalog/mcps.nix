@@ -21,6 +21,25 @@
     serverId = "agent-browser";
   };
 
+  linear = {
+    title = "Linear";
+    description = "Find, create, and update Linear issues, projects, and comments with browser OAuth.";
+    homepage = "https://linear.app/docs/mcp";
+    profiles = [ ];
+    requiresTargets = [ "pi" ];
+    requiresResources = [ "extensions.pi-mcp-adapter" ];
+    capabilities = {
+      network = true;
+      readsSecrets = true;
+    };
+    transport = {
+      type = "remote";
+      url = "https://mcp.linear.app/mcp";
+      auth = "oauth";
+    };
+    lifecycle = "lazy";
+  };
+
   context7 = {
     title = "Context7";
     description = "Look up current library documentation and examples.";

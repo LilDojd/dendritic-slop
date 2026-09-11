@@ -43,6 +43,10 @@ let
     options = {
       type = lib.mkOption { type = lib.types.enum [ "remote" ]; };
       url = lib.mkOption { type = lib.types.str; };
+      auth = lib.mkOption {
+        type = lib.types.nullOr (lib.types.enum [ "oauth" ]);
+        default = null;
+      };
       headers = lib.mkOption {
         type = lib.types.attrsOf lib.types.str;
         default = { };
@@ -110,7 +114,7 @@ let
             else
               {
                 type = "remote";
-                inherit (resource.transport) url;
+                inherit (resource.transport) url auth;
                 headers = resource.transport.headers // secretHeaders;
               };
         in
@@ -177,6 +181,9 @@ let
           else
             {
               url = contribution.transport.url;
+            }
+            // lib.optionalAttrs (contribution.transport.auth != null) {
+              inherit (contribution.transport) auth;
             }
             // lib.optionalAttrs (contribution.transport.headers != { }) {
               inherit (contribution.transport) headers;

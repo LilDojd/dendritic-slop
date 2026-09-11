@@ -141,6 +141,11 @@ let
     options = {
       type = mkOption { type = types.enum [ "remote" ]; };
       url = mkOption { type = nonEmptyString; };
+      auth = mkOption {
+        type = types.nullOr (types.enum [ "oauth" ]);
+        default = null;
+        description = "Use browser OAuth; credentials are managed by the MCP client at runtime.";
+      };
       headers = mkOption {
         type = types.attrsOf types.str;
         default = { };
