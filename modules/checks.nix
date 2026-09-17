@@ -464,6 +464,48 @@
           extensions.pi-typesafe.enable = true;
         };
       };
+      typesafeSecretPath = "/run/agenix/typesafe-api-key";
+      homeWithTypeSafeSecret = mkHome {
+        dendriticSlop.extensions.pi-typesafe = {
+          enable = true;
+          secrets.apiKeyFile = typesafeSecretPath;
+        };
+      };
+      homeWithDisabledTypeSafeSecret = mkHome {
+        dendriticSlop.extensions.pi-typesafe.secrets.apiKeyFile = typesafeSecretPath;
+      };
+      homeWithUnsafeTypeSafeSecret = tryHome {
+        dendriticSlop.extensions = {
+          pi-typesafe = {
+            enable = true;
+            secrets.apiKeyFile = typesafeSecretPath;
+          };
+          superpowers-bootstrap.enable = true;
+        };
+      };
+      tryTypeSafeSecret =
+        value:
+        builtins.tryEval (
+          let
+            evaluated = mkHome {
+              dendriticSlop.extensions.pi-typesafe.secrets.apiKeyFile = value;
+            };
+            secret = evaluated.config.dendriticSlop.extensions.pi-typesafe.secrets.apiKeyFile;
+          in
+          builtins.deepSeq secret secret
+        );
+      typesafeBridge = mkBridgeSystem {
+        extensions.pi-typesafe = {
+          enable = true;
+          secrets.apiKeyFile = typesafeSecretPath;
+        };
+      } { };
+      typesafeBridgeDefault = mkBridgeSystem { } {
+        extensions.pi-typesafe = {
+          enable = true;
+          secrets.apiKeyFile = typesafeSecretPath;
+        };
+      };
       homeWithAllExtensions = mkHome {
         dendriticSlop.extensions = lib.genAttrs (builtins.attrNames catalog.extensions) (_: {
           enable = true;
@@ -1633,6 +1675,40 @@
 
               touch "$out"
             '';
+        typesafe-secret =
+          assert home.config.dendriticSlop.extensions.pi-typesafe.secrets.apiKeyFile == null;
+          assert !(homeWithTypeSafe.config.programs.pi.coding-agent.environment ? TYPESAFE_API_KEY);
+          assert
+            !(homeWithDisabledTypeSafeSecret.config.programs.pi.coding-agent.environment ? TYPESAFE_API_KEY);
+          assert
+            homeWithTypeSafeSecret.config.programs.pi.coding-agent.environment.TYPESAFE_API_KEY.file
+            == typesafeSecretPath;
+          assert !(homeWithTypeSafeSecret.config.programs.pi.coding-agent.environment ? PI_TYPESAFE_ENABLED);
+          assert !homeWithUnsafeTypeSafeSecret.success;
+          assert lib.all (value: !(tryTypeSafeSecret value).success) [
+            "relative/typesafe-key"
+            "literal-secret-value"
+            ./checks.nix
+            builtins.storeDir
+            "${builtins.storeDir}/typesafe-key"
+          ];
+          assert lib.all
+            (
+              host:
+              host.config.home-manager.users.${testUser}.programs.pi.coding-agent.environment.TYPESAFE_API_KEY.file
+              == typesafeSecretPath
+            )
+            [
+              typesafeBridge
+              typesafeBridgeDefault
+            ];
+          assert (bridgeHome typesafeBridge).extensions.pi-typesafe.enable;
+          pkgs.runCommand "typesafe-secret-check" { } ''
+            wrapper=${homeWithTypeSafeSecret.config.programs.pi.coding-agent.finalPackage}/bin/pi
+            ${pkgs.gnugrep}/bin/grep -F 'export TYPESAFE_API_KEY="$(cat ${typesafeSecretPath})"' "$wrapper"
+            ! ${pkgs.gnugrep}/bin/grep -F 'PI_TYPESAFE_ENABLED' "$wrapper"
+            touch "$out"
+          '';
         mcp-registry =
           assert
             builtins.attrNames catalog.mcps == [

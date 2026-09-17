@@ -1,7 +1,8 @@
 { config, inputs, ... }:
 let
   coreModule = config.flake.modules.homeManager.core;
-  piTool = config.dendriticSlopInternal.catalog.tools.pi;
+  catalog = config.dendriticSlopInternal.catalog;
+  piTool = catalog.tools.pi;
   targetModule =
     {
       config,
@@ -9,6 +10,17 @@ let
       pkgs,
       ...
     }:
+    let
+      environment = config.programs.pi.coding-agent.environment;
+      hasProcessSecrets =
+        lib.isAttrs environment
+        && lib.any (value: lib.isAttrs value && value ? file) (builtins.attrValues environment);
+      unsafeExtensionNames = builtins.attrNames (
+        lib.filterAttrs (name: selection: selection.enable && !catalog.extensions.${name}.secretCapable) (
+          config.dendriticSlop.extensions or { }
+        )
+      );
+    in
     {
       imports = [ inputs.pi.homeModules.default ];
 
@@ -19,6 +31,14 @@ let
       };
 
       config = lib.mkIf (config.dendriticSlop.enable && config.dendriticSlop.targets.pi.enable) {
+        assertions = [
+          {
+            assertion = !hasProcessSecrets || unsafeExtensionNames == [ ];
+            message = ''
+              Runtime secrets are exposed to the Pi process, but these selected extensions are not reviewed as secret-capable: ${lib.concatStringsSep ", " unsafeExtensionNames}
+            '';
+          }
+        ];
         programs.pi.coding-agent = {
           enable = true;
           package = piTool.package pkgs;

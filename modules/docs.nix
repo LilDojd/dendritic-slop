@@ -141,8 +141,9 @@ let
     | --- | --- | --- | --- |
     ${profileOptionRows}
     ${optionRows}
+    | `dendriticSlop.extensions.pi-typesafe.secrets.apiKeyFile` | String or null | `null` | Decrypted runtime TypeSafe API key file |
 
-    MCP secret-file options are strings containing absolute runtime paths outside the Nix store. Their names are listed with each MCP leaf in the module option set.
+    MCP and TypeSafe secret-file options are strings containing absolute runtime paths outside the Nix store. MCP secret names are listed with each MCP leaf in the module option set.
   '';
 in
 {

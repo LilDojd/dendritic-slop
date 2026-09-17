@@ -145,14 +145,6 @@ let
         file = (builtins.head entries).path;
       }) environmentGroups;
 
-      enabledExtensions = lib.filterAttrs (name: _: config.dendriticSlop.extensions.${name}.enable) (
-        config.dendriticSlop.extensions or { }
-      );
-      unsafeExtensionNames = builtins.attrNames (
-        lib.filterAttrs (name: _: !(catalog.extensions.${name}.secretCapable or false)) enabledExtensions
-      );
-      hasPiProcessSecrets = environmentEntries != [ ];
-
       invalidSecretHeaderMcps = builtins.attrNames (
         lib.filterAttrs (
           _name: resource:
@@ -230,12 +222,6 @@ let
           {
             assertion = invalidSecretHeaderMcps == [ ];
             message = "MCP secret-backed headers must be unique and are valid only for remote transports: ${lib.concatStringsSep ", " invalidSecretHeaderMcps}";
-          }
-          {
-            assertion = !hasPiProcessSecrets || unsafeExtensionNames == [ ];
-            message = ''
-              MCP runtime secrets are exposed to the Pi process, but these selected extensions are not reviewed as secret-capable: ${lib.concatStringsSep ", " unsafeExtensionNames}
-            '';
           }
         ];
 
