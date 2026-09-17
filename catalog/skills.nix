@@ -344,6 +344,16 @@ actionbook
     defaultEnable = true;
   };
 
+  typesafe-ai = {
+    title = "TypeSafe AI";
+    description = "Build AI-powered software with typed TypeSafe judgments and probabilities.";
+    homepage = "https://github.com/typesafe-ai/skills";
+    repository = "typesafe";
+    repositoryPath = "skills/typesafe-ai";
+    profiles = [ ];
+    capabilities.network = true;
+  };
+
   rust-skills = {
     title = "Rust skills";
     description = "Comprehensive, source-linked Rust coding guidelines and best practices.";

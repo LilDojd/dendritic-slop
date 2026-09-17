@@ -78,6 +78,27 @@ in
     };
   };
 
+  pi-typesafe = {
+    title = "Pi TypeSafe";
+    description = "Ask batched Choice, Score, and Noul questions with explicit per-session consent.";
+    homepage = "https://github.com/DevMortimer/pi-typesafe";
+    profiles = [ ];
+    requiresTargets = [ "pi" ];
+    capabilities = {
+      executesCode = true;
+      network = true;
+      readsSecrets = true;
+      mutatesUserConfig = true;
+    };
+    secretCapable = true;
+    realization = {
+      type = "package";
+      package = pkgs: pkgs.callPackage ../packages/pi-typesafe.nix { source = inputs.pi-typesafe; };
+      packageId = "pi-typesafe";
+      version = packageVersion inputs.pi-typesafe;
+    };
+  };
+
   superpowers-bootstrap = {
     title = "Superpowers Pi bootstrap";
     description = "Inject the reviewed Superpowers bootstrap and Pi tool mapping without duplicate skill discovery.";

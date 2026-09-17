@@ -73,6 +73,24 @@ Profiles apply defaults. Explicit `targets.<name>.enable`, `skills.<name>.enable
 
 Home Manager owns `~/.agents/skills` when dendritic-slop is enabled. If that path or `~/.agents/.skill-lock.json` already exists, set `dendriticSlop.migrations.globalSkills.takeOver = true` for the ownership transaction. Existing content is retained under `~/.local/state/dendritic-slop/global-skills/backups`; unmanaged replacements are never overwritten.
 
+## TypeSafe
+
+The official skill and independent Pi extension are opt-in, outside the default profiles:
+
+```nix
+dendriticSlop = {
+  skills.typesafe-ai.enable = true;
+  extensions.pi-typesafe.enable = true;
+};
+```
+
+After rebuilding, restart Pi and use `/skill:typesafe-ai` for TypeSafe development guidance.
+Run `/typesafe login` to verify and save your API key outside the Nix store, then
+`/typesafe test` for a sample request. `/typesafe enable` permits agent calls for
+that session only; submitted state and questions go to `api.typesafe.ai` and may
+incur charges. No automatic opt-in is configured. The extension also accepts
+`TYPESAFE_API_KEY` from the runtime environment; never put its value in Nix configuration.
+
 ## Security model
 
 Resources are selected from a closed typed catalog. External sources are pinned, projected through reviewed allowlists, and built with Nix. Activation does not fetch packages. Credentials remain outside the Nix store; MCP secret options accept only absolute runtime file paths.

@@ -443,6 +443,23 @@
         "url": "https://registry.npmjs.org/@lebronj/pi-playwright/-/pi-playwright-0.0.1.tgz"
       }
     },
+    "pi-typesafe": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1789630467,
+        "narHash": "sha256-5vewiAmVhsgCn1WcBtqwX+FlJ8eFi6d/gA+p81x9mA0=",
+        "owner": "DevMortimer",
+        "repo": "pi-typesafe",
+        "rev": "1ff8efe34ef4aee253de0b572881863a57cffb99",
+        "type": "github"
+      },
+      "original": {
+        "owner": "DevMortimer",
+        "repo": "pi-typesafe",
+        "rev": "1ff8efe34ef4aee253de0b572881863a57cffb99",
+        "type": "github"
+      }
+    },
     "pi-web-access": {
       "flake": false,
       "locked": {
@@ -494,10 +511,12 @@
         "pi-ask-user": "pi-ask-user",
         "pi-mcp-adapter": "pi-mcp-adapter",
         "pi-playwright": "pi-playwright",
+        "pi-typesafe": "pi-typesafe",
         "pi-web-access": "pi-web-access",
         "ponytail": "ponytail",
         "superpowers": "superpowers",
-        "systems": "systems_2"
+        "systems": "systems_2",
+        "typesafe-skills": "typesafe-skills"
       }
     },
     "superpowers": {
@@ -586,6 +605,23 @@
       "original": {
         "owner": "numtide",
         "repo": "treefmt-nix",
+        "type": "github"
+      }
+    },
+    "typesafe-skills": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1789191725,
+        "narHash": "sha256-Lh2Y90TFv+njKqo/g5WXEHw0Rk1jQSH5POqKtrvy5kM=",
+        "owner": "typesafe-ai",
+        "repo": "skills",
+        "rev": "65a39f393687675ce170e6094757de20370365b9",
+        "type": "github"
+      },
+      "original": {
+        "owner": "typesafe-ai",
+        "repo": "skills",
+        "rev": "65a39f393687675ce170e6094757de20370365b9",
         "type": "github"
       }
     }
