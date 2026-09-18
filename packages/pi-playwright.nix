@@ -11,14 +11,17 @@ let
     builtins.toJSON (
       package
       // {
+        # Nix supplies the JS client and matching browsers, not upstream's npm pin.
+        dependencies = package.dependencies // {
+          playwright = playwright-test.version;
+        };
         peerDependenciesMeta = lib.mapAttrs (_: _: { optional = true; }) package.peerDependencies;
       }
     )
   );
-  playwrightVersion = package.dependencies.playwright;
 in
-assert lib.assertMsg (playwright-test.version == playwrightVersion)
-  "pi-playwright requires Playwright ${playwrightVersion}, but nixpkgs provides ${playwright-test.version}";
+assert lib.assertMsg (playwright-test.version == playwright-driver.version)
+  "pi-playwright client ${playwright-test.version} does not match browser driver ${playwright-driver.version}";
 stdenvNoCC.mkDerivation {
   pname = "pi-playwright";
   inherit (package) version;

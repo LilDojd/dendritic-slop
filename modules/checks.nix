@@ -1344,6 +1344,43 @@
               done
               touch "$out"
             '';
+        pi-playwright-runtime =
+          pkgs.runCommand "pi-playwright-runtime-check"
+            {
+              nativeBuildInputs = [ pkgs.nodejs_24 ];
+              PLAYWRIGHT_BROWSERS_PATH = pkgs.playwright-driver.browsers;
+              FONTCONFIG_FILE = pkgs.makeFontsConf { fontDirectories = [ pkgs.dejavu_fonts ]; };
+            }
+            ''
+              export HOME="$TMPDIR"
+              node --input-type=module <<'EOF'
+              import assert from "node:assert/strict";
+              import { createRequire } from "node:module";
+
+              const require = createRequire("${extensionPackages.pi-playwright}/package.json");
+              const manifest = require("./package.json");
+              const version = require("playwright/package.json").version;
+              assert.equal(manifest.dependencies.playwright, version);
+              assert.equal(require("playwright-core/package.json").version, version);
+              assert.equal(version, "${pkgs.playwright-driver.version}");
+
+              const { chromium } = require("playwright");
+              const browser = await chromium.launch({ headless: true });
+              try {
+                const page = await browser.newPage();
+                await page.setContent('<title>Pi Playwright</title><input id="value"><button>Submit</button>');
+                assert.equal(await page.title(), "Pi Playwright");
+                await page.locator("#value").fill("compatible");
+                await page.getByText("Submit").click();
+                assert.equal(await page.locator("#value").evaluate(el => el.value), "compatible");
+                assert.ok((await page.screenshot()).length > 0);
+              } finally {
+                await browser.close();
+              }
+              EOF
+              touch "$out"
+            '';
+
         declarative-pi-packages =
           assert defaultPackages == [ ];
           assert builtins.length corePackages == 2;
