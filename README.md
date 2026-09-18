@@ -1,5 +1,7 @@
 # dendritic-slop
 
+![100% slop](https://img.shields.io/badge/%F0%9F%A4%96%20100%25-slop-a3e635?style=plastic&labelColor=4c1d95 "100% LLM-generated")
+
 Declarative, reviewed Pi and LLM tooling for NixOS, nix-darwin, and Home Manager.
 
 ## Flake input
