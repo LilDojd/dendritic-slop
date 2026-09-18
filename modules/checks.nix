@@ -458,54 +458,6 @@
       homeWithWebAccess = mkHome {
         dendriticSlop.extensions.web-access.enable = true;
       };
-      homeWithTypeSafe = mkHome {
-        dendriticSlop = {
-          skills.typesafe-ai.enable = true;
-          extensions.pi-typesafe.enable = true;
-        };
-      };
-      typesafeSecretPath = "/run/agenix/typesafe-api-key";
-      homeWithTypeSafeSecret = mkHome {
-        dendriticSlop.extensions.pi-typesafe = {
-          enable = true;
-          secrets.apiKeyFile = typesafeSecretPath;
-        };
-      };
-      homeWithDisabledTypeSafeSecret = mkHome {
-        dendriticSlop.extensions.pi-typesafe.secrets.apiKeyFile = typesafeSecretPath;
-      };
-      homeWithUnsafeTypeSafeSecret = tryHome {
-        dendriticSlop.extensions = {
-          pi-typesafe = {
-            enable = true;
-            secrets.apiKeyFile = typesafeSecretPath;
-          };
-          superpowers-bootstrap.enable = true;
-        };
-      };
-      tryTypeSafeSecret =
-        value:
-        builtins.tryEval (
-          let
-            evaluated = mkHome {
-              dendriticSlop.extensions.pi-typesafe.secrets.apiKeyFile = value;
-            };
-            secret = evaluated.config.dendriticSlop.extensions.pi-typesafe.secrets.apiKeyFile;
-          in
-          builtins.deepSeq secret secret
-        );
-      typesafeBridge = mkBridgeSystem {
-        extensions.pi-typesafe = {
-          enable = true;
-          secrets.apiKeyFile = typesafeSecretPath;
-        };
-      } { };
-      typesafeBridgeDefault = mkBridgeSystem { } {
-        extensions.pi-typesafe = {
-          enable = true;
-          secrets.apiKeyFile = typesafeSecretPath;
-        };
-      };
       homeWithAllExtensions = mkHome {
         dendriticSlop.extensions = lib.genAttrs (builtins.attrNames catalog.extensions) (_: {
           enable = true;
@@ -686,7 +638,6 @@
                   get_search_content = toString extensionPackages.web-access;
                   mcp = toString extensionPackages.pi-mcp-adapter;
                   mcpScript = toString extensionPackages.pi-mcp-adapter;
-                  typesafe_evaluate = toString extensionPackages.pi-typesafe;
                   source_check = toString extensionPackages.web-access;
                   web_search = toString extensionPackages.web-access;
                 }
@@ -1386,18 +1337,7 @@
           assert builtins.length corePackages == 2;
           assert builtins.elem (toString extensionPackages.ask-user) corePackages;
           assert builtins.elem (toString extensionPackages.pi-mcp-adapter) corePackages;
-          assert builtins.length allExtensionPackages == 6;
-          assert !homeWithProfiles.config.dendriticSlop.skills.typesafe-ai.enable;
-          assert !homeWithProfiles.config.dendriticSlop.extensions.pi-typesafe.enable;
-          assert homeWithTypeSafe.config.dendriticSlop.targets.pi.enable;
-          assert homeWithTypeSafe.config.dendriticSlop.skills.typesafe-ai.enable;
-          assert
-            homeWithTypeSafe.config.programs.pi.coding-agent.settings.packages == [
-              (toString extensionPackages.pi-typesafe)
-            ];
-          assert catalog.extensions.pi-typesafe.environment == { };
-          assert catalog.extensions.pi-typesafe.secretCapable;
-          assert catalog.repositories.typesafe.reviewedRevision == inputs.typesafe-skills.rev;
+          assert builtins.length allExtensionPackages == 5;
           assert lib.all (lib.hasPrefix builtins.storeDir) allExtensionPackages;
           assert !lib.any (lib.hasPrefix "npm:") allExtensionPackages;
           assert homeWithProfiles.config.programs.pi.coding-agent.package == piPackage;
@@ -1413,9 +1353,7 @@
           assert lib.all isPinnedGitHubInput [
             "pi-ask-user"
             "pi-mcp-adapter"
-            "pi-typesafe"
             "pi-web-access"
-            "typesafe-skills"
           ];
           assert piPlaywrightLockNode.locked.type == "tarball";
           assert
@@ -1551,9 +1489,6 @@
               check_package ${extensionPackages.pi-mcp-adapter} ./index.ts "$mcp_adapter_peers"
               check_package ${extensionPackages.pi-playwright} ./dist/index.js "$playwright_peers"
               check_package ${extensionPackages.web-access} ./index.ts "$web_access_peers"
-              check_package ${extensionPackages.pi-typesafe} ./extensions/index.js \
-                '{"@earendil-works/pi-coding-agent":"*","@earendil-works/pi-tui":"*"}'
-              test -f ${realizedSkills.packages.typesafe-ai}/typesafe-ai/SKILL.md
 
               test -d ${extensionPackages.pi-playwright}/node_modules/playwright
               test -d ${extensionPackages.pi-playwright}/node_modules/playwright-core
@@ -1712,40 +1647,6 @@
 
               touch "$out"
             '';
-        typesafe-secret =
-          assert home.config.dendriticSlop.extensions.pi-typesafe.secrets.apiKeyFile == null;
-          assert !(homeWithTypeSafe.config.programs.pi.coding-agent.environment ? TYPESAFE_API_KEY);
-          assert
-            !(homeWithDisabledTypeSafeSecret.config.programs.pi.coding-agent.environment ? TYPESAFE_API_KEY);
-          assert
-            homeWithTypeSafeSecret.config.programs.pi.coding-agent.environment.TYPESAFE_API_KEY.file
-            == typesafeSecretPath;
-          assert !(homeWithTypeSafeSecret.config.programs.pi.coding-agent.environment ? PI_TYPESAFE_ENABLED);
-          assert !homeWithUnsafeTypeSafeSecret.success;
-          assert lib.all (value: !(tryTypeSafeSecret value).success) [
-            "relative/typesafe-key"
-            "literal-secret-value"
-            ./checks.nix
-            builtins.storeDir
-            "${builtins.storeDir}/typesafe-key"
-          ];
-          assert lib.all
-            (
-              host:
-              host.config.home-manager.users.${testUser}.programs.pi.coding-agent.environment.TYPESAFE_API_KEY.file
-              == typesafeSecretPath
-            )
-            [
-              typesafeBridge
-              typesafeBridgeDefault
-            ];
-          assert (bridgeHome typesafeBridge).extensions.pi-typesafe.enable;
-          pkgs.runCommand "typesafe-secret-check" { } ''
-            wrapper=${homeWithTypeSafeSecret.config.programs.pi.coding-agent.finalPackage}/bin/pi
-            ${pkgs.gnugrep}/bin/grep -F 'export TYPESAFE_API_KEY="$(cat ${typesafeSecretPath})"' "$wrapper"
-            ! ${pkgs.gnugrep}/bin/grep -F 'PI_TYPESAFE_ENABLED' "$wrapper"
-            touch "$out"
-          '';
         mcp-registry =
           assert
             builtins.attrNames catalog.mcps == [
@@ -1925,7 +1826,6 @@
               "herdr-agent-state"
               "pi-mcp-adapter"
               "pi-playwright"
-              "pi-typesafe"
               "superpowers-bootstrap"
               "web-access"
             ];

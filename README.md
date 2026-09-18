@@ -75,56 +75,9 @@ Profiles apply defaults. Explicit `targets.<name>.enable`, `skills.<name>.enable
 
 Home Manager owns `~/.agents/skills` when dendritic-slop is enabled. If that path or `~/.agents/.skill-lock.json` already exists, set `dendriticSlop.migrations.globalSkills.takeOver = true` for the ownership transaction. Existing content is retained under `~/.local/state/dendritic-slop/global-skills/backups`; unmanaged replacements are never overwritten.
 
-## TypeSafe
-
-The official skill and independent Pi extension are opt-in, outside the default profiles:
-
-```nix
-dendriticSlop = {
-  skills.typesafe-ai.enable = true;
-  extensions.pi-typesafe.enable = true;
-};
-```
-
-After rebuilding, restart Pi and use `/skill:typesafe-ai` for TypeSafe development guidance.
-Run `/typesafe login` to verify and save your API key outside the Nix store, then
-`/typesafe test` for a sample request. `/typesafe enable` permits agent calls for
-that session only; submitted state and questions go to `api.typesafe.ai` and may
-incur charges. No automatic opt-in is configured. The extension also accepts
-`TYPESAFE_API_KEY` from the runtime environment; never put its value in Nix configuration.
-
-To use agenix-rekey on NixOS or nix-darwin, declare the encrypted secret in your
-host flake and pass its decrypted path, just like an MCP key:
-
-```nix
-{ config, ... }:
-{
-  age.secrets.typesafeApiKey = {
-    rekeyFile = ./typesafeApiKey.age;
-    owner = config.dendriticSlop.username;
-    mode = "0400";
-  };
-
-  dendriticSlop.extensions.pi-typesafe = {
-    enable = true;
-    secrets.apiKeyFile = config.age.secrets.typesafeApiKey.path;
-  };
-}
-```
-
-With plain agenix, use `file` instead of `rekeyFile`. The consuming flake must
-already configure agenix and its identities. Home Manager exposes the same
-`secrets.apiKeyFile` option for an existing user-readable decrypted file.
-
-Pi reads the file into `TYPESAFE_API_KEY` at launch; the plaintext never enters
-the Nix store or generated settings. Restart Pi after rotating the key. No
-`/typesafe login` is needed, but `/typesafe enable` is still required each session.
-The key is available to Pi extensions and child processes, so selected extensions
-must be reviewed as secret-capable. Leaving the option unset preserves manual login.
-
 ## Security model
 
-Resources are selected from a closed typed catalog. External sources are pinned, projected through reviewed allowlists, and built with Nix. Activation does not fetch packages. Credentials remain outside the Nix store; MCP and TypeSafe secret options accept only absolute runtime file paths.
+Resources are selected from a closed typed catalog. External sources are pinned, projected through reviewed allowlists, and built with Nix. Activation does not fetch packages. Credentials remain outside the Nix store; MCP secret options accept only absolute runtime file paths.
 
 Networked and executable leaves expose capability metadata in the generated catalog. Herdr plugins are disabled by default and execute with the user's authority. Plugin activation changes only registrations and keybinding blocks still marked as owned by dendritic-slop.
 

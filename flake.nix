@@ -80,11 +80,6 @@
       flake = false;
     };
 
-    pi-typesafe = {
-      url = "github:DevMortimer/pi-typesafe/1ff8efe34ef4aee253de0b572881863a57cffb99";
-      flake = false;
-    };
-
     pi-web-access = {
       url = "github:nicobailon/pi-web-access/192ac1875e3b8f88c78953dbc314949ec9fcaa27";
       flake = false;
@@ -96,11 +91,6 @@
     };
 
     systems.url = "github:nix-systems/default";
-
-    typesafe-skills = {
-      url = "github:typesafe-ai/skills/65a39f393687675ce170e6094757de20370365b9";
-      flake = false;
-    };
   };
 
   outputs =

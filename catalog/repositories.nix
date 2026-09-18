@@ -114,17 +114,6 @@
     supportPaths = [ "LICENSE" ];
   };
 
-  typesafe = {
-    input = "typesafe-skills";
-    source = inputs.typesafe-skills;
-    homepage = "https://github.com/typesafe-ai/skills";
-    license = "MIT";
-    licenseEvidence = [ (inputs.typesafe-skills + "/LICENSE") ];
-    reviewedRevision = "65a39f393687675ce170e6094757de20370365b9";
-    exportedLeaves = [ "typesafe-ai" ];
-    supportPaths = [ "LICENSE" ];
-  };
-
   superpowers = {
     input = "superpowers";
     source = inputs.superpowers;
