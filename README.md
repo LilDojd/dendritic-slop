@@ -81,6 +81,14 @@ Resources are selected from a closed typed catalog. External sources are pinned,
 
 Networked and executable leaves expose capability metadata in the generated catalog. Herdr plugins are disabled by default and execute with the user's authority. Plugin activation changes only registrations and keybinding blocks still marked as owned by dendritic-slop.
 
+## Jevons (explicit opt-in)
+
+Set `dendriticSlop.extensions.jevons.enable = true;` in the consuming host or Home Manager configuration. No profile enables it by default. The pinned package supplies its two runtime dependencies; Pi and TypeBox remain host peers. Activation performs no package installation.
+
+Installing Jevons opts into sending bounded task text, skill metadata, diagnostics and selected source to TypeSafe in trusted projects; no `--jevons` flag is required. Recovery defaults to shadow mode, tool feedback and investigation are disabled, and usage reporting does not enforce spending limits. Use `/jevons pause` to stop requests. Git/Jujutsu and optional GitHub review commands use the host's executables.
+
+Supply `TYPESAFE_API_KEY` through the Pi process environment or the consuming Home Manager configuration's `programs.pi.coding-agent.environment.TYPESAFE_API_KEY.file`, pointing to an absolute runtime secret path. Never put the key, an `.env` file or transient session state in this flake or the Nix store.
+
 ## Inspection outputs
 
 Per-system packages include:

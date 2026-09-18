@@ -636,6 +636,8 @@
                   ask_user = toString extensionPackages.ask-user;
                   fetch_content = toString extensionPackages.web-access;
                   get_search_content = toString extensionPackages.web-access;
+                  jevons_decide = toString extensionPackages.jevons;
+                  jevons_review = toString extensionPackages.jevons;
                   mcp = toString extensionPackages.pi-mcp-adapter;
                   mcpScript = toString extensionPackages.pi-mcp-adapter;
                   source_check = toString extensionPackages.web-access;
@@ -1337,7 +1339,12 @@
           assert builtins.length corePackages == 2;
           assert builtins.elem (toString extensionPackages.ask-user) corePackages;
           assert builtins.elem (toString extensionPackages.pi-mcp-adapter) corePackages;
-          assert builtins.length allExtensionPackages == 5;
+          assert builtins.length allExtensionPackages == 6;
+          assert !home.config.dendriticSlop.extensions.jevons.enable;
+          assert catalog.extensions.jevons.profiles == [ ];
+          assert catalog.extensions.jevons.capabilities.network;
+          assert catalog.extensions.jevons.capabilities.executesCode;
+          assert catalog.extensions.jevons.capabilities.readsSecrets;
           assert lib.all (lib.hasPrefix builtins.storeDir) allExtensionPackages;
           assert !lib.any (lib.hasPrefix "npm:") allExtensionPackages;
           assert homeWithProfiles.config.programs.pi.coding-agent.package == piPackage;
@@ -1351,6 +1358,7 @@
           assert lib.hasInfix "https://cache.numtide.com" flakeSource;
           assert lib.hasInfix "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g=" flakeSource;
           assert lib.all isPinnedGitHubInput [
+            "jevons"
             "pi-ask-user"
             "pi-mcp-adapter"
             "pi-web-access"
@@ -1484,6 +1492,18 @@
                 ${inputs.pi-mcp-adapter} ${extensionPackages.pi-mcp-adapter} false
               check_upstream_projection \
                 ${inputs.pi-web-access} ${extensionPackages.web-access} true
+
+              check_package ${extensionPackages.jevons} ./pi/extension.ts "$mcp_adapter_peers"
+              test ! -e ${extensionPackages.jevons}/.env
+              test ! -e ${extensionPackages.jevons}/.jevons
+              (cd ${extensionPackages.jevons} && ${pkgs.nodejs_24}/bin/node --input-type=module <<'EOF'
+              const sdk = await import("@typesafe-ai/sdk");
+              const diff = await import("diff");
+              if (typeof sdk.TypeSafeClient !== "function" || typeof diff.parsePatch !== "function") {
+                throw new Error("Jevons runtime dependencies are unavailable");
+              }
+              EOF
+              )
 
               check_package ${extensionPackages.ask-user} ./index.ts "$ask_user_peers"
               check_package ${extensionPackages.pi-mcp-adapter} ./index.ts "$mcp_adapter_peers"
@@ -1688,6 +1708,7 @@
           assert !bridgeFalse.mcps.context7.enable;
           assert catalog.extensions.ask-user.secretCapable;
           assert catalog.extensions.herdr-agent-state.secretCapable;
+          assert catalog.extensions.jevons.secretCapable;
           assert catalog.extensions.pi-mcp-adapter.secretCapable;
           assert catalog.extensions.pi-playwright.secretCapable;
           assert catalog.extensions.web-access.secretCapable;
@@ -1824,6 +1845,7 @@
             builtins.attrNames catalog.extensions == [
               "ask-user"
               "herdr-agent-state"
+              "jevons"
               "pi-mcp-adapter"
               "pi-playwright"
               "superpowers-bootstrap"

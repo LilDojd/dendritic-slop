@@ -265,6 +265,23 @@
         "type": "sourcehut"
       }
     },
+    "jevons": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1789771968,
+        "narHash": "sha256-4YBCARIvOVJcCCbZE/kY7m5/ZG0w0xe1IrQ8Q1D3Wxk=",
+        "owner": "LilDojd",
+        "repo": "jevons",
+        "rev": "38465854ce75f653d83e520a6f4ef9fb7d6486fc",
+        "type": "github"
+      },
+      "original": {
+        "owner": "LilDojd",
+        "repo": "jevons",
+        "rev": "38465854ce75f653d83e520a6f4ef9fb7d6486fc",
+        "type": "github"
+      }
+    },
     "leonardomso-rust-skills": {
       "flake": false,
       "locked": {
@@ -486,6 +503,7 @@
         "home-manager": "home-manager",
         "impermanence": "impermanence",
         "import-tree": "import-tree",
+        "jevons": "jevons",
         "leonardomso-rust-skills": "leonardomso-rust-skills",
         "llm-agents": "llm-agents",
         "nix-darwin": "nix-darwin",

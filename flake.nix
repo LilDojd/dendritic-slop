@@ -36,6 +36,11 @@
 
     impermanence.url = "github:nix-community/impermanence";
 
+    jevons = {
+      url = "github:LilDojd/jevons/38465854ce75f653d83e520a6f4ef9fb7d6486fc";
+      flake = false;
+    };
+
     import-tree.url = "github:denful/import-tree";
 
     nix-darwin = {

@@ -38,6 +38,26 @@ in
     };
   };
 
+  jevons = {
+    title = "Jevons";
+    description = "Share task evidence with TypeSafe for semantic skill ranking, review and shadow recovery in trusted projects.";
+    homepage = "https://github.com/LilDojd/jevons";
+    profiles = [ ];
+    requiresTargets = [ "pi" ];
+    capabilities = {
+      executesCode = true;
+      network = true;
+      readsSecrets = true;
+    };
+    secretCapable = true;
+    realization = {
+      type = "package";
+      package = pkgs: pkgs.callPackage ../packages/jevons.nix { source = inputs.jevons; };
+      packageId = "jevons";
+      version = packageVersion inputs.jevons;
+    };
+  };
+
   pi-mcp-adapter = {
     title = "Pi MCP adapter";
     description = "Connect Pi to local and remote Model Context Protocol servers.";
