@@ -37,7 +37,7 @@
     impermanence.url = "github:nix-community/impermanence";
 
     jevons = {
-      url = "github:LilDojd/jevons/38465854ce75f653d83e520a6f4ef9fb7d6486fc";
+      url = "github:LilDojd/jevons/0e7a9d59618b2ca884082cd31270497b6126b78d";
       flake = false;
     };
 
