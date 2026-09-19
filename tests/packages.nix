@@ -95,7 +95,7 @@
           )
         }
         playwright_peers=$(
-          ${pkgs.jq}/bin/jq -c '.peerDependencies' ${inputs.pi-playwright}/package.json
+          ${pkgs.jq}/bin/jq -c '.peerDependencies' ${extensionPackages.pi-playwright.src}/package.json
         )
         web_access_peers="$mcp_adapter_peers"
 

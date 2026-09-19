@@ -201,7 +201,11 @@ let
       type = mkOption { type = types.enum [ "package" ]; };
       package = mkOption { type = packageFunction; };
       packageId = mkOption { type = nonEmptyString; };
-      version = mkOption { type = nonEmptyString; };
+      version = mkOption {
+        type = types.nullOr nonEmptyString;
+        default = null;
+        description = "Expected version, or null to use the package version.";
+      };
     };
   };
 

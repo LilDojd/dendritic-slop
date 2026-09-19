@@ -80,11 +80,6 @@
       flake = false;
     };
 
-    pi-playwright = {
-      url = "https://registry.npmjs.org/@lebronj/pi-playwright/-/pi-playwright-0.0.1.tgz";
-      flake = false;
-    };
-
     pi-web-access = {
       url = "github:nicobailon/pi-web-access/192ac1875e3b8f88c78953dbc314949ec9fcaa27";
       flake = false;

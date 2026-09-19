@@ -92,9 +92,8 @@ in
     secretCapable = true;
     realization = {
       type = "package";
-      package = pkgs: pkgs.callPackage ../packages/pi-playwright.nix { source = inputs.pi-playwright; };
+      package = pkgs: pkgs.callPackage ../packages/pi-playwright.nix { };
       packageId = "@lebronj/pi-playwright";
-      version = packageVersion inputs.pi-playwright;
     };
   };
 

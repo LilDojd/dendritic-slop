@@ -363,13 +363,18 @@ let
           package = extension.realization.package pkgs;
           packageVersion = package.version or null;
           declaredVersion = extension.realization.version;
+          version = if declaredVersion == null then packageVersion else declaredVersion;
         in
         assert lib.assertMsg (lib.isDerivation package) "extensions.${name} must realize to a Nix package";
-        assert lib.assertMsg (packageVersion == null || packageVersion == declaredVersion)
-          "extensions.${name} declared version ${declaredVersion} disagrees with package version ${toString packageVersion}";
+        assert lib.assertMsg (
+          version != null
+        ) "extensions.${name} must supply a package or catalog version";
+        assert lib.assertMsg
+          (declaredVersion == null || packageVersion == null || packageVersion == declaredVersion)
+          "extensions.${name} declared version ${toString declaredVersion} disagrees with package version ${toString packageVersion}";
         {
-          inherit name package;
-          inherit (extension.realization) packageId version;
+          inherit name package version;
+          inherit (extension.realization) packageId;
           reference = "extensions.${name}";
           root = toString package;
         }
