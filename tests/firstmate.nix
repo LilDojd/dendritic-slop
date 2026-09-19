@@ -3,6 +3,8 @@
   pkgs,
   lib,
   mkHome,
+  mkBridgeSystem,
+  testUser,
   piPackage,
   herdrPackage,
   ...
@@ -17,6 +19,11 @@ let
     };
   };
   workspace = "${home.config.xdg.dataHome}/firstmate";
+  host = mkBridgeSystem {
+    targets.pi.enable = true;
+    targets.herdr.enable = true;
+    tools.firstmate.enable = true;
+  } { };
 in
 {
   firstmate-home =
@@ -91,4 +98,16 @@ in
         test ! -e "$PI_CODING_AGENT_DIR/git"
         touch "$out"
       '';
+}
+// lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
+  firstmate-mount-ordering =
+    let
+      homeDirectory = host.config.users.users.${testUser}.home;
+      required =
+        lib.toList
+          host.config.systemd.services."home-manager-${testUser}".unitConfig.RequiresMountsFor;
+      persisted = host.config.environment.persistence."/persistent".users.${testUser}.directories;
+    in
+    assert lib.all (entry: builtins.elem "${homeDirectory}/${entry.directory}" required) persisted;
+    pkgs.runCommand "firstmate-mount-ordering-check" { } ''touch "$out"'';
 }
