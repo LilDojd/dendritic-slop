@@ -5,6 +5,7 @@
   defaultPackages,
   herdrAgentStateResource,
   home,
+  homeWithStandaloneMcp,
   lib,
   managedHerdrAgentState,
   managedSkills,
@@ -17,6 +18,7 @@
   ...
 }:
 {
+  home-manager-mcp-module = homeWithStandaloneMcp.activationPackage;
   home-manager-module =
     assert home.config.programs.pi.coding-agent.extensions == [ ];
     assert home.config.programs.pi.coding-agent.skills == [ ];

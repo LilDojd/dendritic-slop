@@ -67,7 +67,7 @@ let
         skills = enabledSkills;
         tools = enabledTools;
         herdrPlugins = lib.filterAttrs (
-          name: _: config.dendriticSlop.herdr.plugins.${name}.enable
+          name: _: config.dendriticSlop.herdr.plugins.${name}.enable or false
         ) catalog.herdrPlugins;
       };
       allEnabled = lib.concatMap builtins.attrValues (
@@ -100,12 +100,16 @@ let
             extensions = lib.genAttrs profile.members.extensions (_: {
               enable = lib.mkDefault true;
             });
-            mcps = lib.genAttrs profile.members.mcps (_: {
-              enable = lib.mkDefault true;
-            });
             tools = lib.genAttrs profile.members.tools (_: {
               enable = lib.mkDefault true;
             });
+          }
+          // lib.optionalAttrs (options.dendriticSlop ? mcps) {
+            mcps = lib.genAttrs profile.members.mcps (_: {
+              enable = lib.mkDefault true;
+            });
+          }
+          // lib.optionalAttrs (options.dendriticSlop ? herdr) {
             herdr.plugins = lib.genAttrs profile.members.herdrPlugins (_: {
               enable = lib.mkDefault true;
             });

@@ -257,12 +257,11 @@ rec {
   };
   unsupportedPackage = validSelection unsupportedCatalog { skills.unsupported-runtime = true; };
 
-  mkHome =
-    extraModule:
+  mkHomeModules =
+    modules:
     inputs.home-manager.lib.homeManagerConfiguration {
       inherit pkgs;
       modules = [
-        config.flake.modules.homeManager.slop
         {
           dendriticSlop.enable = true;
           home = {
@@ -272,9 +271,24 @@ rec {
             stateVersion = "25.11";
           };
         }
-        extraModule
-      ];
+      ]
+      ++ modules;
     };
+  mkHome =
+    extraModule:
+    mkHomeModules [
+      config.flake.modules.homeManager.slop
+      extraModule
+    ];
+  homeWithStandaloneMcp = mkHomeModules [
+    config.flake.modules.homeManager.mcp
+    {
+      dendriticSlop = {
+        mcps.linear.enable = true;
+        extensions.pi-mcp-adapter.enable = true;
+      };
+    }
+  ];
 
   tryHome =
     extraModule:
