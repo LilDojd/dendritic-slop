@@ -269,6 +269,11 @@ let
       package = mkOption { type = packageFunction; };
       executable = mkOption { type = nonEmptyString; };
       executablePath = mkOption { type = nonEmptyString; };
+      supportPaths = mkOption {
+        type = types.listOf nonEmptyString;
+        default = [ ];
+        description = "Source-relative files needed by plugin actions.";
+      };
       pluginId = mkOption { type = nonEmptyString; };
       version = mkOption { type = nonEmptyString; };
       minimumHerdrVersion = mkOption { type = nonEmptyString; };

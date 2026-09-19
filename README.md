@@ -75,6 +75,18 @@ Profiles apply defaults. Explicit `targets.<name>.enable`, `skills.<name>.enable
 
 Home Manager owns `~/.agents/skills` when enabled and refuses to overwrite unmanaged content. Move conflicting files aside manually before activation.
 
+## tsk (explicit opt-in)
+
+Enable `dendriticSlop.tools.tsk.enable` for the CLI/TUI and
+`dendriticSlop.skills.tsk-cli.enable` for the agent skill. With Herdr enabled,
+`dendriticSlop.herdr.plugins.tsk.enable` adds the board on `prefix+t` and a
+quick-capture action. Quick capture has no default shortcut, preserving the
+Jujutsu plugin's `prefix+a` binding.
+
+The NixOS persistence policy also retains `~/.tsk` when any tsk resource is
+selected. Update through the flake, not `tsk update`; skill and plugin setup are
+managed declaratively, so do not run `tsk setup`.
+
 ## Security model
 
 Resources are selected from a closed typed catalog. External sources are pinned, projected through reviewed allowlists, and built with Nix. Source updates must be reviewed in their commit or pull request; `flake.lock` records the installed revisions, not proof of review. Activation does not fetch packages. Credentials remain outside the Nix store; MCP secret options accept only absolute runtime file paths.

@@ -16,6 +16,19 @@ in
     sourceVersion = herdrSourceManifest.package.version;
   };
 
+  tsk = {
+    title = "tsk";
+    description = "Manage a shared task board from the terminal.";
+    homepage = "https://github.com/smarzban/tsk";
+    capabilities = {
+      executesCode = true;
+      network = true;
+      mutatesUserConfig = true;
+    };
+    package = pkgs: pkgs.callPackage ../packages/tsk.nix { inherit (inputs) tsk; };
+    executable = "tsk";
+  };
+
   pi = {
     title = "Pi";
     description = "Run the extensible Pi terminal coding harness.";

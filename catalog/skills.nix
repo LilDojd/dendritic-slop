@@ -235,6 +235,17 @@ actionbook
 
   };
 
+  tsk-cli = {
+    title = "tsk CLI";
+    description = "Read and update the shared tsk task board.";
+    homepage = "https://github.com/smarzban/tsk";
+    source = inputs.tsk + "/skills/tsk-cli/SKILL.md";
+    capabilities.executesCode = true;
+    runtimeExecutables = [
+      (runtime (pkgs: pkgs.callPackage ../packages/tsk.nix { inherit (inputs) tsk; }) "tsk")
+    ];
+  };
+
   herdr = {
     title = "Herdr";
     description = "Inspect and control Herdr workspaces, tabs, panes, commands, and agents.";

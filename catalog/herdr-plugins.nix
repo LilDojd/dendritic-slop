@@ -5,6 +5,40 @@ let
   packageManifest = builtins.fromTOML (builtins.readFile (source + "/Cargo.toml"));
 in
 {
+  tsk =
+    let
+      manifest = builtins.fromTOML (builtins.readFile (inputs.tsk + "/herdr-plugin.toml"));
+    in
+    {
+      title = "tsk";
+      description = "Open the shared task board and quick capture in Herdr.";
+      homepage = "https://github.com/smarzban/tsk";
+      requiresTargets = [ "herdr" ];
+      capabilities = {
+        executesCode = true;
+        network = true;
+      };
+      source = inputs.tsk;
+      pluginId = manifest.id;
+      inherit (manifest) version;
+      minimumHerdrVersion = manifest.min_herdr_version;
+      executable = "tsk";
+      executablePath = "target/release/tsk";
+      supportPaths = [
+        "scripts/open-board.sh"
+        "scripts/open-capture.sh"
+      ];
+      actions = map (action: { inherit (action) id title; }) manifest.actions;
+      keybindings = [
+        {
+          key = "prefix+t";
+          command = "${manifest.id}.open-board";
+          description = "Open tsk board";
+        }
+      ];
+      package = pkgs: pkgs.callPackage ../packages/tsk.nix { inherit (inputs) tsk; };
+    };
+
   jj-workspace = {
     title = "Jujutsu workspace";
     description = "Create, open, and remove Jujutsu workspaces from Herdr.";

@@ -4,10 +4,14 @@
     let
       cfg = config.dendriticSlop;
       enabled = cfg.enable && (cfg.targets.persistence.enable or null) != false;
+      homeCfg = config.home-manager.users.${cfg.username}.dendriticSlop;
       directories = [
         ".local/state/dendritic-slop"
         ".pi/agent"
-      ];
+      ]
+      ++ lib.optional (
+        homeCfg.tools.tsk.enable || homeCfg.skills.tsk-cli.enable || homeCfg.herdr.plugins.tsk.enable
+      ) ".tsk";
     in
     {
       config = lib.mkIf enabled {

@@ -96,6 +96,11 @@
     };
 
     systems.url = "github:nix-systems/default";
+
+    tsk = {
+      url = "github:smarzban/tsk";
+      flake = false;
+    };
   };
 
   outputs =

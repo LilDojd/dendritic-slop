@@ -571,7 +571,8 @@
         "pi-web-access": "pi-web-access",
         "ponytail": "ponytail",
         "superpowers": "superpowers",
-        "systems": "systems_3"
+        "systems": "systems_3",
+        "tsk": "tsk"
       }
     },
     "superpowers": {
@@ -697,6 +698,22 @@
       "original": {
         "owner": "numtide",
         "repo": "treefmt-nix",
+        "type": "github"
+      }
+    },
+    "tsk": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1789639588,
+        "narHash": "sha256-e2yNZ5U/7FezbPwQOYZLnXxGuxw898gkHkTbTvWghOE=",
+        "owner": "smarzban",
+        "repo": "tsk",
+        "rev": "7daa68ba0b8044548fe4daa6734a0b4342a091cb",
+        "type": "github"
+      },
+      "original": {
+        "owner": "smarzban",
+        "repo": "tsk",
         "type": "github"
       }
     }

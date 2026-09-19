@@ -152,7 +152,12 @@ let
               file = pathExtensionFiles // {
                 ".agents/skills".source = managedSkills;
               };
-              packages = skillRuntimePackages;
+              # Target modules own target-bound tools (including Pi's wrapper).
+              packages =
+                skillRuntimePackages
+                ++ map (tool: tool.package pkgs) (
+                  lib.filter (tool: tool.requiresTargets == [ ]) (builtins.attrValues enabledTools)
+                );
             };
 
             programs.pi.coding-agent = {

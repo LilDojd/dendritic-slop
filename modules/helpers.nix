@@ -435,6 +435,9 @@ let
               test -x ${lib.escapeShellArg "${package}/bin/${plugin.executable}"}
               mkdir -p "$out/$(${pkgs.coreutils}/bin/dirname ${lib.escapeShellArg plugin.executablePath})"
               cp ${lib.escapeShellArg "${plugin.source}/herdr-plugin.toml"} "$out/herdr-plugin.toml"
+              ${lib.concatMapStringsSep "\n" (path: ''
+                install -D ${lib.escapeShellArg "${plugin.source}/${path}"} "$out/"${lib.escapeShellArg path}
+              '') plugin.supportPaths}
               ln -s ${lib.escapeShellArg "${package}/bin/${plugin.executable}"} \
                 "$out/${plugin.executablePath}"
               ${pkgs.gnugrep}/bin/grep -Fqx ${lib.escapeShellArg "id = \"${plugin.pluginId}\""} \
