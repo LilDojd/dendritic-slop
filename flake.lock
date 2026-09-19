@@ -29,7 +29,6 @@
       "original": {
         "owner": "astral-sh",
         "repo": "claude-code-plugins",
-        "rev": "f3ce88a7ba830f53afd6d944c1d0278ed318e142",
         "type": "github"
       }
     },
@@ -171,7 +170,6 @@
       "original": {
         "owner": "NathanFlurry",
         "repo": "herdr-plugin-jj-workspace",
-        "rev": "a9f1d3bcdaa2354e336a5173da85cbe4970c0f2e",
         "type": "github"
       }
     },
@@ -277,7 +275,6 @@
       },
       "original": {
         "owner": "LilDojd",
-        "ref": "v0.2.0",
         "repo": "jevons",
         "type": "github"
       }
@@ -426,7 +423,6 @@
       "original": {
         "owner": "edlsh",
         "repo": "pi-ask-user",
-        "rev": "705fdc60eaea5b9588f3aa6a6cb6a577516b17af",
         "type": "github"
       }
     },
@@ -443,7 +439,6 @@
       "original": {
         "owner": "nicobailon",
         "repo": "pi-mcp-adapter",
-        "rev": "23c28529083a369f704d036fb8231c590f41ea80",
         "type": "github"
       }
     },
@@ -460,7 +455,6 @@
       "original": {
         "owner": "nicobailon",
         "repo": "pi-web-access",
-        "rev": "192ac1875e3b8f88c78953dbc314949ec9fcaa27",
         "type": "github"
       }
     },
@@ -477,7 +471,6 @@
       "original": {
         "owner": "DietrichGebert",
         "repo": "ponytail",
-        "rev": "356918eba965ee1eac64bd3a7f0dd02108350de5",
         "type": "github"
       }
     },

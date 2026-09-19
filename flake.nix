@@ -10,7 +10,7 @@
 
   inputs = {
     astral-agent-skills = {
-      url = "github:astral-sh/claude-code-plugins/f3ce88a7ba830f53afd6d944c1d0278ed318e142";
+      url = "github:astral-sh/claude-code-plugins";
       flake = false;
     };
 
@@ -25,7 +25,7 @@
     };
 
     herdr-plugin-jj-workspace = {
-      url = "github:NathanFlurry/herdr-plugin-jj-workspace/a9f1d3bcdaa2354e336a5173da85cbe4970c0f2e";
+      url = "github:NathanFlurry/herdr-plugin-jj-workspace";
       flake = false;
     };
 
@@ -37,7 +37,7 @@
     impermanence.url = "github:nix-community/impermanence";
 
     jevons = {
-      url = "github:LilDojd/jevons/v0.2.0";
+      url = "github:LilDojd/jevons";
       flake = false;
     };
 
@@ -58,7 +58,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
     ponytail = {
-      url = "github:DietrichGebert/ponytail/356918eba965ee1eac64bd3a7f0dd02108350de5";
+      url = "github:DietrichGebert/ponytail";
       flake = false;
     };
 
@@ -71,17 +71,17 @@
     };
 
     pi-ask-user = {
-      url = "github:edlsh/pi-ask-user/705fdc60eaea5b9588f3aa6a6cb6a577516b17af";
+      url = "github:edlsh/pi-ask-user";
       flake = false;
     };
 
     pi-mcp-adapter = {
-      url = "github:nicobailon/pi-mcp-adapter/23c28529083a369f704d036fb8231c590f41ea80";
+      url = "github:nicobailon/pi-mcp-adapter";
       flake = false;
     };
 
     pi-web-access = {
-      url = "github:nicobailon/pi-web-access/192ac1875e3b8f88c78953dbc314949ec9fcaa27";
+      url = "github:nicobailon/pi-web-access";
       flake = false;
     };
 
