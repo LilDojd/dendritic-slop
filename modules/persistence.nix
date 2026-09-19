@@ -10,6 +10,10 @@
         environment.persistence."/persistent".users.${cfg.username}.directories = [
           ".local/state/dendritic-slop"
           ".pi/agent"
+        ]
+        ++ lib.optionals (cfg.tools.firstmate.enable == true) [
+          ".local/share/firstmate"
+          ".treehouse"
         ];
       };
     };

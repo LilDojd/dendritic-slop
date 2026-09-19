@@ -19,6 +19,11 @@
       flake = false;
     };
 
+    firstmate = {
+      url = "github:kunchenguid/firstmate";
+      flake = false;
+    };
+
     flake-parts = {
       url = "github:hercules-ci/flake-parts";
       inputs.nixpkgs-lib.follows = "nixpkgs";
@@ -88,6 +93,11 @@
     superpowers = {
       url = "github:obra/superpowers";
       flake = false;
+    };
+
+    treehouse = {
+      url = "github:kunchenguid/treehouse";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
 
     systems.url = "github:nix-systems/default";
