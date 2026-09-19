@@ -298,11 +298,11 @@
     "jevons": {
       "flake": false,
       "locked": {
-        "lastModified": 1789780372,
-        "narHash": "sha256-v7vOckYoVmUkDYHs28FSgeS3yFTi6z4ywxI7SgsIdT8=",
+        "lastModified": 1789787219,
+        "narHash": "sha256-sQHJMSoonIxAyyw2S+yIxQov+e+Zuris2f0x0TDC6Bs=",
         "owner": "LilDojd",
         "repo": "jevons",
-        "rev": "ea5a11faddf552fe76562eee6667fc8146f74f10",
+        "rev": "0fd530a7bcf12a0337a900abf5b94981078862c3",
         "type": "github"
       },
       "original": {
