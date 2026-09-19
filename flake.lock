@@ -126,38 +126,6 @@
         "type": "github"
       }
     },
-    "firstmate": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1789773152,
-        "narHash": "sha256-15jmEgrU8J86ywhZdY7YQygTxdr13/WSP1/rDJpb3N8=",
-        "owner": "kunchenguid",
-        "repo": "firstmate",
-        "rev": "1bb72cc5f88014c86e3d03244efa0bb26c22d001",
-        "type": "github"
-      },
-      "original": {
-        "owner": "kunchenguid",
-        "repo": "firstmate",
-        "type": "github"
-      }
-    },
-    "flake-compat": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1767039857,
-        "narHash": "sha256-vNpUSpF5Nuw8xvDLj2KCwwksIbjua2LZCqhV1LNRDns=",
-        "owner": "edolstra",
-        "repo": "flake-compat",
-        "rev": "5edf11c44bc78a0d334f6334cdaf7d60d732daab",
-        "type": "github"
-      },
-      "original": {
-        "owner": "edolstra",
-        "repo": "flake-compat",
-        "type": "github"
-      }
-    },
     "flake-parts": {
       "inputs": {
         "nixpkgs-lib": [
@@ -569,7 +537,6 @@
       "inputs": {
         "actionbook-rust-skills": "actionbook-rust-skills",
         "astral-agent-skills": "astral-agent-skills",
-        "firstmate": "firstmate",
         "flake-parts": "flake-parts",
         "herdr-plugin-jj-workspace": "herdr-plugin-jj-workspace",
         "home-manager": "home-manager",
@@ -586,8 +553,7 @@
         "pi-web-access": "pi-web-access",
         "ponytail": "ponytail",
         "superpowers": "superpowers",
-        "systems": "systems_3",
-        "treehouse": "treehouse"
+        "systems": "systems_3"
       }
     },
     "superpowers": {
@@ -713,27 +679,6 @@
       "original": {
         "owner": "numtide",
         "repo": "treefmt-nix",
-        "type": "github"
-      }
-    },
-    "treehouse": {
-      "inputs": {
-        "flake-compat": "flake-compat",
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1789732701,
-        "narHash": "sha256-n0QTxyUs90h+OjzpyWfnpPB5WhGtB+l6DXLnc1onOtc=",
-        "owner": "kunchenguid",
-        "repo": "treehouse",
-        "rev": "99f4db2bbeececc1e6f136a88f79002e5a707174",
-        "type": "github"
-      },
-      "original": {
-        "owner": "kunchenguid",
-        "repo": "treehouse",
         "type": "github"
       }
     }

@@ -4,29 +4,6 @@ let
   herdrSourceManifest = builtins.fromTOML (builtins.readFile (herdrSource + "/Cargo.toml"));
 in
 {
-  firstmate = {
-    title = "Firstmate";
-    description = "Run an isolated Pi and Herdr orchestration workspace.";
-    homepage = "https://github.com/kunchenguid/firstmate";
-    requiresTargets = [
-      "pi"
-      "herdr"
-    ];
-    capabilities = {
-      executesCode = true;
-      network = true;
-      readsSecrets = true;
-      mutatesUserConfig = true;
-    };
-    package =
-      pkgs:
-      pkgs.callPackage ../packages/firstmate.nix {
-        source = inputs.firstmate;
-        treehouse = inputs.treehouse.packages.${pkgs.stdenv.hostPlatform.system}.default;
-      };
-    executable = "firstmate";
-  };
-
   herdr = {
     title = "Herdr";
     description = "Coordinate terminal coding-agent sessions.";

@@ -42,6 +42,12 @@
 ) profilePackages
 // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
   nixos-module =
+    assert lib.all (
+      entry:
+      builtins.elem "${nixos.config.users.users.${testUser}.home}/${entry.directory}" (
+        lib.toList nixos.config.systemd.services."home-manager-${testUser}".unitConfig.RequiresMountsFor
+      )
+    ) nixos.config.environment.persistence."/persistent".users.${testUser}.directories;
     assert builtins.elem ".pi/agent" (
       map (
         entry: entry.directory
