@@ -8,7 +8,7 @@ in
     title = "Herdr";
     description = "Coordinate terminal coding-agent sessions.";
     homepage = "https://github.com/herdrdev/herdr";
-    profiles = [ "core" ];
+
     requiresTargets = [ "herdr" ];
     capabilities.executesCode = true;
     package = llmAgentPackage "herdr";
@@ -20,7 +20,7 @@ in
     title = "Pi";
     description = "Run the extensible Pi terminal coding harness.";
     homepage = "https://github.com/earendil-works/pi";
-    profiles = [ "core" ];
+
     requiresTargets = [ "pi" ];
     capabilities = {
       executesCode = true;

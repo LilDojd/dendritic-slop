@@ -41,13 +41,7 @@ let
   mcps = import ../catalog/mcps.nix { inherit inputs; };
   tools = import ../catalog/tools.nix { inherit inputs herdrSource; };
   herdrPlugins = import ../catalog/herdr-plugins.nix { inherit inputs; };
-  resourceKinds = [
-    "skills"
-    "mcps"
-    "extensions"
-    "tools"
-    "herdrPlugins"
-  ];
+  inherit (config.flake.lib) resourceKinds;
 
   emptyMembers = lib.genAttrs resourceKinds (_: [ ]);
   profiles = lib.mapAttrs (
@@ -97,20 +91,17 @@ let
     && lib.unique profile.targets == profile.targets
   ) (builtins.attrValues profiles);
 
-  profileMetadataAgrees = lib.all (
-    kind:
-    lib.all (name: declarations.${kind}.${name}.profiles == profilesFor kind name) (
-      builtins.attrNames declarations.${kind}
-    )
-  ) resourceKinds;
-
   catalog =
     assert lib.assertMsg referencesExist "A profile refers to an unknown typed resource leaf";
     assert lib.assertMsg repositoriesExist "A typed resource refers to an unknown repository";
     assert lib.assertMsg listsAreUnique "Profile target and resource memberships must be unique";
-    assert lib.assertMsg profileMetadataAgrees
-      "Resource profile metadata must match canonical profiles";
-    declarations;
+    declarations
+    // lib.genAttrs resourceKinds (
+      kind:
+      lib.mapAttrs (
+        name: resource: resource // { profiles = profilesFor kind name; }
+      ) declarations.${kind}
+    );
 in
 {
   options.dendriticSlopInternal.catalog = lib.mkOption {

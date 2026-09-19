@@ -9,7 +9,7 @@
       (inputs.actionbook-rust-skills + "/metadata.json")
       (inputs.actionbook-rust-skills + "/README.md")
     ];
-    reviewedRevision = "fa60f7931223646fb71c4586b4a6c8545016076a";
+
     exportedLeaves = [
       "coding-guidelines"
       "domain-cli"
@@ -69,7 +69,7 @@
       (inputs.astral-agent-skills + "/LICENSE-APACHE")
       (inputs.astral-agent-skills + "/LICENSE-MIT")
     ];
-    reviewedRevision = "f3ce88a7ba830f53afd6d944c1d0278ed318e142";
+
     exportedLeaves = [
       "ruff"
       "ty"
@@ -87,7 +87,7 @@
     homepage = "https://github.com/leonardomso/rust-skills";
     license = "MIT";
     licenseEvidence = [ (inputs.leonardomso-rust-skills + "/LICENSE") ];
-    reviewedRevision = "fd2a861ab0406a4ac536a55274d14ea6fd1ca9c9";
+
     exportedLeaves = [ "rust-skills" ];
     supportPaths = [
       "LICENSE"
@@ -102,7 +102,7 @@
     homepage = "https://github.com/DietrichGebert/ponytail";
     license = "MIT";
     licenseEvidence = [ (inputs.ponytail + "/LICENSE") ];
-    reviewedRevision = "2ed6c52c9d7e5e56942508591085fd45dea277d3";
+
     exportedLeaves = [
       "ponytail"
       "ponytail-audit"
@@ -120,7 +120,7 @@
     homepage = "https://github.com/obra/superpowers";
     license = "MIT";
     licenseEvidence = [ (inputs.superpowers + "/LICENSE") ];
-    reviewedRevision = "b36e0829c6d0140e93cfef2ca599b1b07d4a7797";
+
     exportedLeaves = [
       "brainstorming"
       "dispatching-parallel-agents"

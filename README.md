@@ -77,7 +77,7 @@ Home Manager owns `~/.agents/skills` when dendritic-slop is enabled. If that pat
 
 ## Security model
 
-Resources are selected from a closed typed catalog. External sources are pinned, projected through reviewed allowlists, and built with Nix. Activation does not fetch packages. Credentials remain outside the Nix store; MCP secret options accept only absolute runtime file paths.
+Resources are selected from a closed typed catalog. External sources are pinned, projected through reviewed allowlists, and built with Nix. Source updates must be reviewed in their commit or pull request; `flake.lock` records the installed revisions, not proof of review. Activation does not fetch packages. Credentials remain outside the Nix store; MCP secret options accept only absolute runtime file paths.
 
 Networked and executable leaves expose capability metadata in the generated catalog. Herdr plugins are disabled by default and execute with the user's authority. Plugin activation changes only registrations and keybinding blocks still marked as owned by dendritic-slop.
 

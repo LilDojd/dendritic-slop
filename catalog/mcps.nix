@@ -4,7 +4,7 @@
     title = "Agent browser";
     description = "Expose the pinned agent-browser automation server over local MCP stdio.";
     homepage = "https://github.com/vercel-labs/agent-browser";
-    profiles = [ "web" ];
+
     requiresTargets = [ "pi" ];
     requiresResources = [ "extensions.pi-mcp-adapter" ];
     capabilities = {
@@ -25,7 +25,7 @@
     title = "Linear";
     description = "Find, create, and update Linear issues, projects, and comments with browser OAuth.";
     homepage = "https://linear.app/docs/mcp";
-    profiles = [ ];
+
     requiresTargets = [ "pi" ];
     requiresResources = [ "extensions.pi-mcp-adapter" ];
     capabilities = {
@@ -44,7 +44,7 @@
     title = "Context7";
     description = "Look up current library documentation and examples.";
     homepage = "https://context7.com";
-    profiles = [ ];
+
     requiresTargets = [ "pi" ];
     requiresResources = [ "extensions.pi-mcp-adapter" ];
     capabilities = {

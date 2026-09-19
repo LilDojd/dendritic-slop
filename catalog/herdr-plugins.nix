@@ -9,7 +9,7 @@ in
     title = "Jujutsu workspace";
     description = "Create, open, and remove Jujutsu workspaces from Herdr.";
     homepage = "https://github.com/NathanFlurry/herdr-plugin-jj-workspace";
-    profiles = [ ];
+
     requiresTargets = [ "herdr" ];
     capabilities = {
       executesCode = true;

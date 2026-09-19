@@ -1623,10 +1623,6 @@
           assert pluginPackageWithoutVersion.success;
           assert !profileExecutableCollision.success;
           assert !unsupportedPackage.success;
-          assert catalog.skills.bro.defaultEnable;
-          assert catalog.skills.coding-guidelines.defaultEnable;
-          assert catalog.skills.ruff.defaultEnable;
-          assert !catalog.skills.brainstorming.defaultEnable;
           assert (builtins.head catalog.skills.jujutsu.runtimeExecutables).package pkgs == pkgs.jujutsu;
           assert profileOnly.value.extensions ? pi-mcp-adapter;
           assert profileOnly.value.tools ? pi;
@@ -1652,7 +1648,6 @@
           assert lib.unique pluginSources == pluginSources;
           assert lib.unique pluginExecutables == pluginExecutables;
           assert lib.unique pluginKeys == pluginKeys;
-          assert lib.all (plugin: !plugin.defaultEnable) plugins;
           assert sourceManifest.id == jjWorkspaceResource.pluginId;
           assert sourceManifest.version == jjWorkspaceResource.version;
           assert sourceManifest.min_herdr_version == jjWorkspaceResource.minimumHerdrVersion;

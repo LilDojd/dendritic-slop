@@ -120,27 +120,12 @@ let
         homepage = "https://github.com/actionbook/rust-skills";
         repository = "actionbook-rust";
         repositoryPath = "skills/${name}";
-        profiles = [ "rust" ];
-        defaultEnable = true;
+
         runtimeExecutables = actionbookRuntime name;
         capabilities = {
           executesCode = actionbookRuntime name != [ ];
           network = builtins.elem name browserLeaves;
         };
-        requiresHarnessCapabilities =
-          (
-            if
-              builtins.elem name [
-                "meta-cognition-parallel"
-                "rust-daily"
-                "rust-learner"
-              ]
-            then
-              [ "subagents" ]
-            else
-              [ ]
-          )
-          ++ (if builtins.elem name lspLeaves then [ "lsp" ] else [ ]);
       }
     ) actionbookLeaves
   );
@@ -155,8 +140,7 @@ let
           homepage = "https://github.com/astral-sh/claude-code-plugins";
           repository = "astral-python";
           repositoryPath = "plugins/astral/skills/${name}";
-          profiles = [ "python" ];
-          defaultEnable = true;
+
           capabilities.executesCode = true;
           runtimeExecutables = [ (runtime (pkgs: pkgs.${name}) name) ];
         }
@@ -228,26 +212,14 @@ let
         homepage = "https://github.com/obra/superpowers";
         repository = "superpowers";
         repositoryPath = "skills/${name}";
-        profiles = [ "superpowers" ];
-        defaultEnable = false;
+
         runtimeExecutables = superpowersRuntime name;
         capabilities = {
           executesCode = superpowersRuntime name != [ ];
           network = name == "brainstorming";
           mutatesUserConfig = name == "subagent-driven-development";
         };
-        requiresHarnessCapabilities =
-          if
-            builtins.elem name [
-              "dispatching-parallel-agents"
-              "requesting-code-review"
-              "subagent-driven-development"
-            ]
-          then
-            [ "subagents" ]
-          else
-            [ ];
-        compatibilityTargets = [ "pi" ];
+
       }
     ) superpowersLeaves
   );
@@ -260,8 +232,7 @@ actionbook
     title = "Bro";
     description = "Restate the previous response in plain human language.";
     source = ../resources/skills/bro/SKILL.md;
-    profiles = [ "core" ];
-    defaultEnable = true;
+
   };
 
   herdr = {
@@ -269,8 +240,7 @@ actionbook
     description = "Inspect and control Herdr workspaces, tabs, panes, commands, and agents.";
     homepage = "https://github.com/herdrdev/herdr";
     source = herdrSource + "/skills/herdr/SKILL.md";
-    profiles = [ "core" ];
-    defaultEnable = true;
+
     requiresTargets = [ "herdr" ];
   };
 
@@ -278,8 +248,7 @@ actionbook
     title = "Jujutsu";
     description = "Manage Jujutsu repositories and colocated Git state with non-interactive workflows.";
     source = ../resources/skills/jujutsu/SKILL.md;
-    profiles = [ "core" ];
-    defaultEnable = true;
+
     capabilities.executesCode = true;
     runtimeExecutables = [ (runtime (pkgs: pkgs.jujutsu) "jj") ];
   };
@@ -290,8 +259,7 @@ actionbook
     homepage = "https://github.com/DietrichGebert/ponytail";
     repository = "ponytail";
     repositoryPath = "skills/ponytail";
-    profiles = [ "core" ];
-    defaultEnable = true;
+
   };
 
   ponytail-audit = {
@@ -300,8 +268,7 @@ actionbook
     homepage = "https://github.com/DietrichGebert/ponytail";
     repository = "ponytail";
     repositoryPath = "skills/ponytail-audit";
-    profiles = [ "core" ];
-    defaultEnable = true;
+
   };
 
   ponytail-debt = {
@@ -310,8 +277,7 @@ actionbook
     homepage = "https://github.com/DietrichGebert/ponytail";
     repository = "ponytail";
     repositoryPath = "skills/ponytail-debt";
-    profiles = [ "core" ];
-    defaultEnable = true;
+
   };
 
   ponytail-gain = {
@@ -320,8 +286,7 @@ actionbook
     homepage = "https://github.com/DietrichGebert/ponytail";
     repository = "ponytail";
     repositoryPath = "skills/ponytail-gain";
-    profiles = [ "core" ];
-    defaultEnable = true;
+
   };
 
   ponytail-help = {
@@ -330,8 +295,7 @@ actionbook
     homepage = "https://github.com/DietrichGebert/ponytail";
     repository = "ponytail";
     repositoryPath = "skills/ponytail-help";
-    profiles = [ "core" ];
-    defaultEnable = true;
+
   };
 
   ponytail-review = {
@@ -340,8 +304,7 @@ actionbook
     homepage = "https://github.com/DietrichGebert/ponytail";
     repository = "ponytail";
     repositoryPath = "skills/ponytail-review";
-    profiles = [ "core" ];
-    defaultEnable = true;
+
   };
 
   rust-skills = {
@@ -350,7 +313,6 @@ actionbook
     homepage = "https://github.com/leonardomso/rust-skills";
     repository = "leonardomso-rust-skills";
     repositoryPath = ".";
-    profiles = [ "rust" ];
-    defaultEnable = true;
+
   };
 }

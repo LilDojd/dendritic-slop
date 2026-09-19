@@ -23,13 +23,7 @@ let
       herdrPlugins = "Herdr plugins";
     }
     .${kind};
-  resourceKinds = [
-    "skills"
-    "mcps"
-    "extensions"
-    "tools"
-    "herdrPlugins"
-  ];
+  inherit (config.flake.lib) resourceKinds;
   listText = values: if values == [ ] then "None" else lib.concatStringsSep ", " values;
   capabilityText =
     capabilities: listText (builtins.attrNames (lib.filterAttrs (_: enabled: enabled) capabilities));

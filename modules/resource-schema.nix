@@ -63,10 +63,6 @@ let
           type = types.nullOr (types.listOf systemName);
           default = null;
         };
-        defaultEnable = mkOption {
-          type = types.bool;
-          default = false;
-        };
         capabilities = mkOption {
           type = types.submodule capabilityModule;
           default = { };
@@ -112,14 +108,6 @@ let
         };
         runtimeExecutables = mkOption {
           type = types.listOf (types.submodule runtimeExecutableModule);
-          default = [ ];
-        };
-        requiresHarnessCapabilities = mkOption {
-          type = types.listOf nonEmptyString;
-          default = [ ];
-        };
-        compatibilityTargets = mkOption {
-          type = types.listOf resourceName;
           default = [ ];
         };
       };
@@ -225,10 +213,6 @@ let
   environmentModule = {
     options = {
       value = mkOption { type = types.str; };
-      sensitive = mkOption {
-        type = types.bool;
-        default = false;
-      };
     };
   };
 
@@ -356,10 +340,6 @@ let
         buildInputs = mkOption {
           type = types.listOf packageFunction;
           default = [ ];
-        };
-        reviewedRevision = mkOption {
-          type = types.nullOr nonEmptyString;
-          default = null;
         };
       };
     };

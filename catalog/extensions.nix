@@ -11,7 +11,7 @@ in
     title = "Ask user";
     description = "Collect structured choices and freeform answers from the user.";
     homepage = "https://github.com/edlsh/pi-ask-user";
-    profiles = [ "core" ];
+
     environment.PI_ASK_USER_DISPLAY_MODE.value = "inline";
     capabilities.executesCode = true;
     secretCapable = true;
@@ -27,7 +27,7 @@ in
     title = "Herdr Pi integration";
     description = "Report Pi session identity and working, blocked, and idle states to Herdr.";
     homepage = "https://github.com/herdrdev/herdr";
-    profiles = [ "core" ];
+
     requiresTargets = [ "herdr" ];
     capabilities.executesCode = true;
     secretCapable = true;
@@ -42,7 +42,7 @@ in
     title = "Jevons";
     description = "Share task evidence with TypeSafe for semantic skill ranking, review and shadow recovery in trusted projects.";
     homepage = "https://github.com/LilDojd/jevons";
-    profiles = [ ];
+
     requiresTargets = [ "pi" ];
     capabilities = {
       executesCode = true;
@@ -62,7 +62,7 @@ in
     title = "Pi MCP adapter";
     description = "Connect Pi to local and remote Model Context Protocol servers.";
     homepage = "https://github.com/nicobailon/pi-mcp-adapter";
-    profiles = [ "core" ];
+
     requiresTargets = [ "pi" ];
     capabilities = {
       executesCode = true;
@@ -82,7 +82,7 @@ in
     title = "Pi Playwright";
     description = "Drive a persistent Chromium browser with Playwright tools.";
     homepage = "https://pi.dev/packages/@lebronj/pi-playwright";
-    profiles = [ "web" ];
+
     requiresTargets = [ "pi" ];
     capabilities = {
       executesCode = true;
@@ -103,7 +103,7 @@ in
     description = "Inject the reviewed Superpowers bootstrap and Pi tool mapping without duplicate skill discovery.";
     homepage = "https://github.com/obra/superpowers";
     repository = "superpowers";
-    profiles = [ "superpowers" ];
+
     requiresTargets = [ "pi" ];
     capabilities.executesCode = true;
     realization = {
@@ -118,7 +118,7 @@ in
     title = "Web access";
     description = "Add web search, URL fetching, source checking, and local document extraction.";
     homepage = "https://github.com/nicobailon/pi-web-access";
-    profiles = [ "web" ];
+
     capabilities = {
       executesCode = true;
       network = true;
