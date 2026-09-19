@@ -73,7 +73,7 @@ Import Home Manager and `inputs.dendritic-slop.modules.darwin.slop`. The selecti
 
 Profiles apply defaults. Explicit `targets.<name>.enable`, `skills.<name>.enable`, `mcps.<name>.enable`, `extensions.<name>.enable`, `tools.<name>.enable`, and `herdr.plugins.<name>.enable` values take precedence.
 
-Home Manager owns `~/.agents/skills` when dendritic-slop is enabled. If that path or `~/.agents/.skill-lock.json` already exists, set `dendriticSlop.migrations.globalSkills.takeOver = true` for the ownership transaction. Existing content is retained under `~/.local/state/dendritic-slop/global-skills/backups`; unmanaged replacements are never overwritten.
+Home Manager owns `~/.agents/skills` when enabled and refuses to overwrite unmanaged content. Move conflicting files aside manually before activation.
 
 ## Security model
 
