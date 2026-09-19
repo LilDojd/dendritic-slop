@@ -268,17 +268,17 @@
     "jevons": {
       "flake": false,
       "locked": {
-        "lastModified": 1789772490,
-        "narHash": "sha256-PML29T8Tta5fDSSLywM2UCKNQiESYr4Lr8kF9fdQpDU=",
+        "lastModified": 1789778282,
+        "narHash": "sha256-sKYsmq1KwqzChbzn5rG7IOWAOoIOgsC9Ig2/rTE9oaw=",
         "owner": "LilDojd",
         "repo": "jevons",
-        "rev": "0e7a9d59618b2ca884082cd31270497b6126b78d",
+        "rev": "bdf5f3ee25389b40681591aee06faf227fced4b3",
         "type": "github"
       },
       "original": {
         "owner": "LilDojd",
         "repo": "jevons",
-        "rev": "0e7a9d59618b2ca884082cd31270497b6126b78d",
+        "rev": "bdf5f3ee25389b40681591aee06faf227fced4b3",
         "type": "github"
       }
     },
