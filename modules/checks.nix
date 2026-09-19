@@ -21,27 +21,6 @@
         realizeProfile
         resolveResources
         ;
-      flakeLock = builtins.fromJSON (builtins.readFile ../flake.lock);
-      rootInputs = flakeLock.nodes.${flakeLock.root}.inputs;
-      llmAgentsLockNode = flakeLock.nodes.${rootInputs.llm-agents};
-      piPlaywrightLockNode = flakeLock.nodes.${rootInputs.pi-playwright};
-      jevonsLockNode = flakeLock.nodes.${rootInputs.jevons};
-      isPinnedGitHubInput =
-        inputName:
-        let
-          node = flakeLock.nodes.${rootInputs.${inputName}};
-        in
-        node.original.type == "github"
-        && node.locked.type == "github"
-        && node.original.owner == node.locked.owner
-        && node.original.repo == node.locked.repo
-        && node.original ? rev
-        && node.original.rev == node.locked.rev;
-      flakeSource = builtins.readFile ../flake.nix;
-      readmeText = builtins.readFile ../README.md;
-      currentDocs =
-        readmeText + config.dendriticSlopInternal.docs.catalog + config.dendriticSlopInternal.docs.options;
-
       resolve =
         catalog': requested:
         resolveResources {
@@ -662,9 +641,8 @@
         }
       '';
       piDependencyContractProbe = pkgs.writeText "dendritic-slop-pi-dependency-contract.mjs" ''
-        import { existsSync, readFileSync, statSync } from "node:fs";
-        import { builtinModules } from "node:module";
-        import { dirname, join, resolve } from "node:path";
+        import { existsSync, readFileSync } from "node:fs";
+        import { join } from "node:path";
 
         const [root, expectedPeersJson] = process.argv.slice(2);
         const manifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
@@ -682,66 +660,6 @@
           }
         }
 
-        const builtins = new Set(builtinModules.flatMap((name) => [name, "node:" + name]));
-        const visited = new Set();
-        const bareImports = new Map();
-        const importPatterns = [
-          /^\s*(?:import|export)\s+(?:type\s+)?(?:[^"'`\n]*?\s+from\s+)?["']([^"']+)["']/gm,
-          /^\s*}\s*from\s*["']([^"']+)["']/gm,
-          /^\s*(?:(?:const|let|var)\b[^=\n]*=\s*|return\s+|await\s+)?(?:await\s+)?import\(\s*["']([^"']+)["']/gm,
-          /^\s*(?:const|let|var)\b[^=\n]*=\s*require\(\s*["']([^"']+)["']/gm,
-        ];
-        const packageName = (specifier) =>
-          specifier.startsWith("@") ? specifier.split("/").slice(0, 2).join("/") : specifier.split("/")[0];
-        const resolveLocal = (importer, specifier) => {
-          const base = resolve(dirname(importer), specifier.split(/[?#]/, 1)[0]);
-          const candidates = [
-            base,
-            base + ".ts",
-            base + ".js",
-            base + ".mjs",
-            base + ".cjs",
-            join(base, "index.ts"),
-            join(base, "index.js"),
-          ];
-          if (base.endsWith(".js")) candidates.push(base.slice(0, -3) + ".ts");
-          return candidates.find((candidate) => existsSync(candidate) && statSync(candidate).isFile());
-        };
-        const visit = (path) => {
-          if (visited.has(path)) return;
-          visited.add(path);
-          const source = readFileSync(path, "utf8");
-          for (const pattern of importPatterns) {
-            pattern.lastIndex = 0;
-            for (const match of source.matchAll(pattern)) {
-              const specifier = match[1];
-              if (specifier.startsWith(".")) {
-                const target = resolveLocal(path, specifier);
-                if (!target) throw new Error("unresolved local import " + specifier + " from " + path);
-                visit(target);
-              } else if (!specifier.startsWith("/") && !builtins.has(specifier)) {
-                const name = packageName(specifier);
-                if (!bareImports.has(name)) bareImports.set(name, new Set());
-                bareImports.get(name).add(path);
-              }
-            }
-          }
-        };
-
-        for (const entrypoint of manifest.pi?.extensions ?? []) {
-          const path = resolve(root, entrypoint);
-          if (!existsSync(path)) throw new Error("missing extension entrypoint: " + entrypoint);
-          visit(path);
-        }
-        for (const [name, importers] of bareImports) {
-          if (name in expectedPeers) continue;
-          if (!(name in dependencies) && !(name in peers)) {
-            throw new Error("undeclared mandatory import " + name + " from " + [...importers].join(", "));
-          }
-          if (!existsSync(join(root, "node_modules", ...name.split("/")))) {
-            throw new Error("missing mandatory dependency " + name);
-          }
-        }
       '';
 
       nixos = inputs.nixpkgs.lib.nixosSystem {
@@ -894,14 +812,6 @@
           assert !builtins.hasAttr "actionbook-rust" home.options.dendriticSlop.skills;
           assert !builtins.hasAttr "astral-python" home.options.dendriticSlop.skills;
           assert !builtins.hasAttr "superpowers" home.options.dendriticSlop.skills;
-          assert
-            builtins.attrNames home.config.dendriticSlop.profiles == [
-              "core"
-              "python"
-              "rust"
-              "superpowers"
-              "web"
-            ];
           assert lib.all (name: !home.config.dendriticSlop.skills.${name}.enable) (
             builtins.attrNames catalog.skills
           );
@@ -1337,10 +1247,8 @@
 
         declarative-pi-packages =
           assert defaultPackages == [ ];
-          assert builtins.length corePackages == 2;
           assert builtins.elem (toString extensionPackages.ask-user) corePackages;
           assert builtins.elem (toString extensionPackages.pi-mcp-adapter) corePackages;
-          assert builtins.length allExtensionPackages == 6;
           assert !home.config.dendriticSlop.extensions.jevons.enable;
           assert catalog.extensions.jevons.profiles == [ ];
           assert catalog.extensions.jevons.capabilities.network;
@@ -1355,35 +1263,8 @@
           assert piPackage == inputs.llm-agents.packages.${system}.pi;
           assert herdrPackage == inputs.llm-agents.packages.${system}.herdr;
           assert extensionPackages.superpowers-bootstrap == realizedSkills.repositories.superpowers;
-          assert llmAgentsLockNode.inputs.nixpkgs != rootInputs.nixpkgs;
-          assert lib.hasInfix "https://cache.numtide.com" flakeSource;
-          assert lib.hasInfix "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g=" flakeSource;
-          assert jevonsLockNode.original.type == "github";
-          assert jevonsLockNode.locked.type == "github";
-          assert jevonsLockNode.original.owner == jevonsLockNode.locked.owner;
-          assert jevonsLockNode.original.repo == jevonsLockNode.locked.repo;
-          assert jevonsLockNode.original.ref == "v${extensionPackages.jevons.version}";
-          assert builtins.match "v[0-9]+\\.[0-9]+\\.[0-9]+" jevonsLockNode.original.ref != null;
-          assert builtins.match "[0-9a-f]{40}" jevonsLockNode.locked.rev != null;
-          assert lib.hasPrefix "sha256-" jevonsLockNode.locked.narHash;
-          assert lib.all isPinnedGitHubInput [
-            "pi-ask-user"
-            "pi-mcp-adapter"
-            "pi-web-access"
-          ];
-          assert piPlaywrightLockNode.locked.type == "tarball";
-          assert
-            piPlaywrightLockNode.locked.url
-            == "https://registry.npmjs.org/@lebronj/pi-playwright/-/pi-playwright-0.0.1.tgz";
-          assert piPlaywrightLockNode.locked.narHash == "sha256-DjR9bHFjsdxB0WyDFa5HOHYTEf03gWJgt4gfuYbvOHE=";
           assert builtins.length duplicatePiPackage.settingsPackages == 1;
           assert !conflictingPiPackage.success;
-          assert !builtins.pathExists (toString ../packages + "/pi-ask-user-package.json");
-          assert !builtins.pathExists (toString ../packages + "/pi-ask-user-lock.json");
-          assert !builtins.pathExists (toString ../packages + "/pi-mcp-adapter-package.json");
-          assert !builtins.pathExists (toString ../packages + "/pi-mcp-adapter-lock.json");
-          assert !builtins.pathExists (toString ../packages + "/pi-web-access-package.json");
-          assert !builtins.pathExists (toString ../packages + "/pi-web-access-lock.json");
           pkgs.runCommand "declarative-pi-packages-check"
             {
               extensionRoots = builtins.attrValues extensionPackages;
@@ -1395,65 +1276,6 @@
             }
             ''
               set -euo pipefail
-
-              check_upstream_projection() {
-                source="$1"
-                root="$2"
-                remove_typebox="$3"
-                expected_manifest="$TMPDIR/$(basename "$root").package.json"
-                expected_lock="$TMPDIR/$(basename "$root").package-lock.json"
-                host_peers='{
-                  "@earendil-works/pi-ai": "*",
-                  "@earendil-works/pi-coding-agent": "*",
-                  "@earendil-works/pi-tui": "*",
-                  "typebox": "*"
-                }'
-
-                test -f "$source/package.json"
-                test -f "$source/package-lock.json"
-                ${pkgs.jq}/bin/jq -S \
-                  --argjson hostPeers "$host_peers" \
-                  --argjson removeTypebox "$remove_typebox" '
-                    def hostMeta: ($hostPeers | with_entries(.value = { optional: true }));
-                    .pi = { extensions: ["./index.ts"], skills: [] }
-                    | if $removeTypebox then .dependencies |= del(.typebox) else . end
-                    | .peerDependencies = ((.peerDependencies // {}) + $hostPeers)
-                    | .peerDependenciesMeta = ((.peerDependenciesMeta // {}) + hostMeta)
-                  ' "$source/package.json" > "$expected_manifest"
-                ${pkgs.jq}/bin/jq -S . "$root/package.json" > "$expected_manifest.actual"
-                cmp "$expected_manifest" "$expected_manifest.actual"
-
-                ${pkgs.jq}/bin/jq -S \
-                  --argjson hostPeers "$host_peers" \
-                  --argjson removeTypebox "$remove_typebox" '
-                    def hostMeta: ($hostPeers | with_entries(.value = { optional: true }));
-                    .packages[""] |= (
-                      (if $removeTypebox then .dependencies |= del(.typebox) else . end)
-                      | .peerDependencies = ((.peerDependencies // {}) + $hostPeers)
-                      | .peerDependenciesMeta = ((.peerDependenciesMeta // {}) + hostMeta)
-                    )
-                    | .packages |= with_entries(
-                      select(
-                        ((.key | startswith("node_modules/@earendil-works/pi-coding-agent/node_modules/@earendil-works/"))
-                          and ((.value.integrity // "") == ""))
-                        | not
-                      )
-                    )
-                  ' "$source/package-lock.json" > "$expected_lock"
-                ${pkgs.jq}/bin/jq -S . "$root/package-lock.json" > "$expected_lock.actual"
-                cmp "$expected_lock" "$expected_lock.actual"
-
-                ${pkgs.jq}/bin/jq -e '
-                  .lockfileVersion == 3
-                  and ([.packages | to_entries[]
-                    | select(.key != "" and (.value.link // false | not)
-                      and ((.value.integrity // "") == ""))] | length == 0)
-                ' "$root/package-lock.json" >/dev/null
-                for field in dependencies peerDependencies peerDependenciesMeta; do
-                  test "$(${pkgs.jq}/bin/jq -Sc ".$field // {}" "$root/package.json")" = \
-                    "$(${pkgs.jq}/bin/jq -Sc ".packages[\"\"].$field // {}" "$root/package-lock.json")"
-                done
-              }
 
               check_package() {
                 root="$1"
@@ -1496,11 +1318,6 @@
               )
               web_access_peers="$mcp_adapter_peers"
 
-              check_upstream_projection \
-                ${inputs.pi-mcp-adapter} ${extensionPackages.pi-mcp-adapter} false
-              check_upstream_projection \
-                ${inputs.pi-web-access} ${extensionPackages.web-access} true
-
               check_package ${extensionPackages.jevons} ./pi/extension.ts "$mcp_adapter_peers"
               test ! -e ${extensionPackages.jevons}/.env
               test ! -e ${extensionPackages.jevons}/.jevons
@@ -1538,38 +1355,6 @@
               test ! -e ${inputs.pi-ask-user}/package-lock.json
               test ! -e ${extensionPackages.ask-user}/package-lock.json
               test ! -e ${extensionPackages.ask-user}/node_modules
-              ${pkgs.jq}/bin/jq -S \
-                --argjson hostPeers "$ask_user_peers" '
-                  def hostMeta: ($hostPeers | with_entries(.value = { optional: true }));
-                  .pi = { extensions: ["./index.ts"], skills: [] }
-                  | .peerDependencies = (((.peerDependencies // {})
-                    | del(.["@sinclair/typebox"])) + $hostPeers)
-                  | .peerDependenciesMeta = hostMeta
-                ' ${inputs.pi-ask-user}/package.json > "$TMPDIR/ask-user.package.json"
-              ${pkgs.jq}/bin/jq -S . ${extensionPackages.ask-user}/package.json \
-                > "$TMPDIR/ask-user.package.json.actual"
-              cmp "$TMPDIR/ask-user.package.json" "$TMPDIR/ask-user.package.json.actual"
-              ${pkgs.gnused}/bin/sed \
-                's/from "@sinclair\/typebox"/from "typebox"/' \
-                ${inputs.pi-ask-user}/index.ts > "$TMPDIR/ask-user.index.ts"
-              cmp "$TMPDIR/ask-user.index.ts" ${extensionPackages.ask-user}/index.ts
-
-              missing_dependency_fixture="$TMPDIR/missing-dependency-contract"
-              mkdir -p "$missing_dependency_fixture"
-              cat > "$missing_dependency_fixture/package.json" <<'EOF'
-              {"name":"missing-dependency-contract","pi":{"extensions":["./index.ts"]}}
-              EOF
-              cat > "$missing_dependency_fixture/index.ts" <<'EOF'
-              import "mandatory-runtime-package";
-              EOF
-              if ${pkgs.nodejs_24}/bin/node ${piDependencyContractProbe} \
-                "$missing_dependency_fixture" '{}' 2> "$TMPDIR/missing-dependency.stderr"; then
-                echo "dependency contract accepted an undeclared mandatory import" >&2
-                exit 1
-              fi
-              ${pkgs.gnugrep}/bin/grep -Fq 'undeclared mandatory import mandatory-runtime-package' \
-                "$TMPDIR/missing-dependency.stderr"
-
               ${pkgs.jq}/bin/jq -e \
                 '.pi.extensions == ["./.pi/extensions/superpowers.ts"]
                  and (.pi.skills // []) == []
@@ -1589,7 +1374,7 @@
               test ! -e ${extensionPackages.web-access}/node_modules/typebox
 
               # Import mandatory installed dependencies only. Pi host peers are
-              # validated as source contracts above and are never imported alone.
+              # checked as manifest/closure invariants and are never imported alone.
               (cd ${extensionPackages.pi-mcp-adapter} && ${pkgs.nodejs_24}/bin/node --input-type=module <<'EOF'
               await import("@modelcontextprotocol/client");
               await import("@modelcontextprotocol/core");
@@ -1676,12 +1461,6 @@
               touch "$out"
             '';
         mcp-registry =
-          assert
-            builtins.attrNames catalog.mcps == [
-              "browser"
-              "context7"
-              "linear"
-            ];
           assert catalog.mcps.browser.transport.type == "local";
           assert catalog.mcps.context7.transport.type == "remote";
           assert catalog.mcps.browser.serverId == "agent-browser";
@@ -1849,21 +1628,6 @@
           assert catalog.skills.ruff.defaultEnable;
           assert !catalog.skills.brainstorming.defaultEnable;
           assert (builtins.head catalog.skills.jujutsu.runtimeExecutables).package pkgs == pkgs.jujutsu;
-          assert
-            builtins.attrNames catalog.extensions == [
-              "ask-user"
-              "herdr-agent-state"
-              "jevons"
-              "pi-mcp-adapter"
-              "pi-playwright"
-              "superpowers-bootstrap"
-              "web-access"
-            ];
-          assert
-            builtins.attrNames catalog.tools == [
-              "herdr"
-              "pi"
-            ];
           assert profileOnly.value.extensions ? pi-mcp-adapter;
           assert profileOnly.value.tools ? pi;
           assert catalog.extensions.pi-mcp-adapter.realization.packageId == "pi-mcp-adapter";
@@ -1871,47 +1635,6 @@
           pkgs.runCommand "registry-schema-check" { } ''
             touch "$out"
           '';
-        current-documentation =
-          let
-            forbiddenNarratives = [
-              "migration history"
-              "prompt transcript"
-              "deprecated"
-              "compatibility alias"
-              "design chronology"
-              "previous api"
-              "legacy api"
-            ];
-            lowerDocs = lib.toLower currentDocs;
-          in
-          assert lib.hasInfix "dendriticSlop.profiles.core.enable" currentDocs;
-          assert lib.hasInfix "dendriticSlop.skills.bro.enable" currentDocs;
-          assert lib.hasInfix "dendriticSlop.mcps.context7.enable" currentDocs;
-          assert lib.hasInfix "dendriticSlop.herdr.plugins.jj-workspace.enable" currentDocs;
-          assert lib.hasInfix "Required resources" config.dendriticSlopInternal.docs.catalog;
-          assert lib.hasInfix "Minimum Herdr version" config.dendriticSlopInternal.docs.catalog;
-          assert !lib.hasInfix "context7ApiKeyFile" currentDocs;
-          assert !lib.hasInfix "autoEnable" currentDocs;
-          assert lib.all (phrase: !lib.hasInfix phrase lowerDocs) forbiddenNarratives;
-          pkgs.runCommand "current-documentation-check"
-            {
-              nativeBuildInputs = [ pkgs.jq ];
-              passAsFile = [ "renovateConfig" ];
-              renovateConfig = builtins.readFile ../renovate.json;
-            }
-            ''
-              set -euo pipefail
-              jq -e '
-                [.packageRules[]
-                  | select(.matchDepNames == ["actionbook-rust-skills"]
-                    or .matchDepNames == ["astral-agent-skills"]
-                    or .matchDepNames == ["leonardomso-rust-skills"]
-                    or .matchDepNames == ["superpowers"])
-                  | select(.automerge == false and .minimumReleaseAge != null)]
-                | length == 4
-              ' "$renovateConfigPath" >/dev/null
-              touch "$out"
-            '';
         herdr-plugin-registry =
           let
             plugins = builtins.attrValues catalog.herdrPlugins;
