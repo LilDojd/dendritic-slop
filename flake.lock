@@ -277,8 +277,8 @@
       },
       "original": {
         "owner": "LilDojd",
+        "ref": "v0.2.0",
         "repo": "jevons",
-        "rev": "ea5a11faddf552fe76562eee6667fc8146f74f10",
         "type": "github"
       }
     },

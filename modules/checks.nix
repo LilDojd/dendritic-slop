@@ -25,6 +25,7 @@
       rootInputs = flakeLock.nodes.${flakeLock.root}.inputs;
       llmAgentsLockNode = flakeLock.nodes.${rootInputs.llm-agents};
       piPlaywrightLockNode = flakeLock.nodes.${rootInputs.pi-playwright};
+      jevonsLockNode = flakeLock.nodes.${rootInputs.jevons};
       isPinnedGitHubInput =
         inputName:
         let
@@ -1357,8 +1358,15 @@
           assert llmAgentsLockNode.inputs.nixpkgs != rootInputs.nixpkgs;
           assert lib.hasInfix "https://cache.numtide.com" flakeSource;
           assert lib.hasInfix "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g=" flakeSource;
+          assert jevonsLockNode.original.type == "github";
+          assert jevonsLockNode.locked.type == "github";
+          assert jevonsLockNode.original.owner == jevonsLockNode.locked.owner;
+          assert jevonsLockNode.original.repo == jevonsLockNode.locked.repo;
+          assert jevonsLockNode.original.ref == "v${extensionPackages.jevons.version}";
+          assert builtins.match "v[0-9]+\\.[0-9]+\\.[0-9]+" jevonsLockNode.original.ref != null;
+          assert builtins.match "[0-9a-f]{40}" jevonsLockNode.locked.rev != null;
+          assert lib.hasPrefix "sha256-" jevonsLockNode.locked.narHash;
           assert lib.all isPinnedGitHubInput [
-            "jevons"
             "pi-ask-user"
             "pi-mcp-adapter"
             "pi-web-access"
