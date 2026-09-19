@@ -7,6 +7,7 @@ let
     realizePiPackages
     realizeProfile
     realizeSkills
+    resourceAssertions
     ;
   piModule = config.flake.modules.homeManager.pi;
 
@@ -65,48 +66,14 @@ let
         mcps = enabledMcps;
         skills = enabledSkills;
         tools = enabledTools;
+        herdrPlugins = lib.filterAttrs (
+          name: _: config.dendriticSlop.herdr.plugins.${name}.enable
+        ) catalog.herdrPlugins;
       };
-      allEnabled = lib.concatMap builtins.attrValues (builtins.attrValues enabledResources);
+      allEnabled = lib.concatMap builtins.attrValues (
+        builtins.attrValues (builtins.removeAttrs enabledResources [ "herdrPlugins" ])
+      );
       requiredTargets = lib.unique (lib.concatMap (resource: resource.requiresTargets) allEnabled);
-      requiredTargetAssertions = lib.concatLists (
-        lib.mapAttrsToList (
-          kind: resources:
-          lib.concatLists (
-            lib.mapAttrsToList (
-              name: resource:
-              map (target: {
-                assertion = config.dendriticSlop.targets.${target}.enable;
-                message = "${kind}.${name} requires dendriticSlop.targets.${target}.enable = true";
-              }) resource.requiresTargets
-            ) resources
-          )
-        ) enabledResources
-      );
-      resourceEnabled =
-        reference:
-        let
-          parts = lib.splitString "." reference;
-          kind = builtins.head parts;
-          name = builtins.elemAt parts 1;
-        in
-        if kind == "herdrPlugins" then
-          config.dendriticSlop.herdr.plugins.${name}.enable
-        else
-          config.dendriticSlop.${kind}.${name}.enable;
-      requiredResourceAssertions = lib.concatLists (
-        lib.mapAttrsToList (
-          kind: resources:
-          lib.concatLists (
-            lib.mapAttrsToList (
-              name: resource:
-              map (reference: {
-                assertion = resourceEnabled reference;
-                message = "${kind}.${name} requires dendriticSlop.${reference}.enable = true";
-              }) resource.requiresResources
-            ) resources
-          )
-        ) enabledResources
-      );
       realizedPiPackages = realizePiPackages {
         extensions = enabledExtensions;
         inherit pkgs;
@@ -165,7 +132,13 @@ let
         profileDefaults
         ++ [
           (lib.mkIf config.dendriticSlop.enable {
-            assertions = requiredTargetAssertions ++ requiredResourceAssertions;
+            assertions = resourceAssertions {
+              inherit catalog pkgs;
+              selected = enabledResources;
+              selectedTargets = builtins.attrNames (
+                lib.filterAttrs (_: target: target.enable) config.dendriticSlop.targets
+              );
+            };
 
             dendriticSlop.targets = lib.genAttrs requiredTargets (_: {
               enable = lib.mkDefault true;

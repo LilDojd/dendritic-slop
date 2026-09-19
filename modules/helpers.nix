@@ -21,89 +21,15 @@ let
     "herdrPlugins"
   ];
 
-  evalResourceSelection =
+  # Validate the final selection; Home Manager owns defaults and override priorities.
+  resourceAssertions =
     {
       catalog,
-      selection ? { },
-    }:
-    let
-      declaredTargets = lib.unique (
-        targetNames
-        ++ lib.concatMap (profile: profile.targets) (builtins.attrValues catalog.profiles)
-        ++ lib.concatMap (
-          kind: lib.concatMap (resource: resource.requiresTargets) (builtins.attrValues catalog.${kind})
-        ) resourceKinds
-      );
-      targets = lib.genAttrs declaredTargets (_: { });
-      selectionOptions =
-        type: default: values:
-        lib.mapAttrs (
-          _: _:
-          lib.mkOption {
-            inherit type default;
-          }
-        ) values;
-      optionsFor = type: default: {
-        profiles = selectionOptions type default catalog.profiles;
-        targets = selectionOptions type default targets;
-        skills = selectionOptions type default catalog.skills;
-        mcps = selectionOptions type default catalog.mcps;
-        extensions = selectionOptions type default catalog.extensions;
-        tools = selectionOptions type default catalog.tools;
-        herdrPlugins = selectionOptions type default catalog.herdrPlugins;
-      };
-      overrideModule = {
-        options = optionsFor (lib.types.nullOr lib.types.bool) null;
-        config = selection;
-      };
-      overrides = (lib.evalModules { modules = [ overrideModule ]; }).config;
-      explicitValues = values: lib.filterAttrs (_: value: value != null) values;
-      explicitSelection = {
-        profiles = explicitValues overrides.profiles;
-        targets = explicitValues overrides.targets;
-        skills = explicitValues overrides.skills;
-        mcps = explicitValues overrides.mcps;
-        extensions = explicitValues overrides.extensions;
-        tools = explicitValues overrides.tools;
-        herdrPlugins = explicitValues overrides.herdrPlugins;
-      };
-      effectiveModule =
-        { config, ... }:
-        {
-          options = optionsFor lib.types.bool false;
-          config = lib.mkMerge (
-            [ explicitSelection ]
-            ++ lib.mapAttrsToList (
-              profileName: profile:
-              lib.mkIf config.profiles.${profileName} (
-                {
-                  targets = lib.genAttrs profile.targets (_: lib.mkDefault true);
-                }
-                // lib.genAttrs resourceKinds (kind: lib.genAttrs profile.members.${kind} (_: lib.mkDefault true))
-              )
-            ) catalog.profiles
-          );
-        };
-      effective = (lib.evalModules { modules = [ effectiveModule ]; }).config;
-    in
-    {
-      inherit effective overrides;
-    };
-
-  resolveResources =
-    {
-      catalog,
-      selection,
+      selected,
+      selectedTargets,
       pkgs,
     }:
     let
-      inherit (selection) effective overrides;
-      enabledNames = values: builtins.attrNames (lib.filterAttrs (_: enabled: enabled) values);
-      enabledProfiles = enabledNames effective.profiles;
-      selectedTargets = enabledNames effective.targets;
-      selected = lib.genAttrs resourceKinds (
-        kind: lib.filterAttrs (name: _: effective.${kind}.${name}) catalog.${kind}
-      );
       entriesFor =
         resources:
         lib.concatMap (
@@ -132,21 +58,6 @@ let
         in
         visit [ ] start;
 
-      profileOrigins =
-        kind: name:
-        lib.filter (
-          profileName: builtins.elem name catalog.profiles.${profileName}.members.${kind}
-        ) enabledProfiles;
-      originText =
-        kind: name:
-        let
-          origins = profileOrigins kind name;
-        in
-        if origins == [ ] then
-          "explicit leaf selection"
-        else
-          "profile ${lib.concatStringsSep ", " origins}";
-
       declaredRequirementChecks = lib.concatMap (
         entry:
         map (requirement: {
@@ -165,24 +76,12 @@ let
         entry:
         map (target: {
           assertion = builtins.elem target selectedTargets;
-          message = "${entry.reference} selected by ${originText entry.kind entry.name} requires ${
-            if overrides.targets.${target} == false then "explicitly disabled" else "disabled"
-          } target ${target}; enable targets.${target} or disable ${entry.reference}";
+          message = "${entry.reference} requires dendriticSlop.targets.${target}.enable = true";
         }) entry.resource.requiresTargets
-        ++ map (
-          requirement:
-          let
-            requiredEntry = lib.findFirst (candidate: candidate.reference == requirement) null allEntries;
-            explicitlyDisabled =
-              requiredEntry != null && overrides.${requiredEntry.kind}.${requiredEntry.name} == false;
-          in
-          {
-            assertion = builtins.elem requirement selectedReferences;
-            message = "${entry.reference} selected by ${originText entry.kind entry.name} requires ${
-              if explicitlyDisabled then "explicitly disabled" else "disabled"
-            } resource ${requirement}; enable ${requirement} or disable ${entry.reference}";
-          }
-        ) entry.resource.requiresResources
+        ++ map (requirement: {
+          assertion = builtins.elem requirement selectedReferences;
+          message = "${entry.reference} requires resource ${requirement}; enable it or disable ${entry.reference}";
+        }) entry.resource.requiresResources
       ) selectedEntries;
 
       packagesFor =
@@ -231,7 +130,9 @@ let
         lib.foldl' (
           result: entry:
           let
-            value = key entry;
+            rawValue = key entry;
+            # Attribute names are identities, not derivation dependencies.
+            value = if rawValue == null then null else builtins.unsafeDiscardStringContext rawValue;
           in
           if value == null then
             result
@@ -284,28 +185,8 @@ let
         (collisionCheck "Herdr keybinding" (occurrences (entry: entry.binding.key) bindingEntries))
       ];
 
-      checks = declaredRequirementChecks ++ requirementChecks ++ platformChecks ++ collisionChecks;
-      validated = lib.foldl' (
-        result: check:
-        assert lib.assertMsg check.assertion check.message;
-        result
-      ) true checks;
     in
-    assert validated;
-    {
-      profiles = enabledProfiles;
-      targets = selectedTargets;
-      selection = {
-        inherit effective overrides;
-      };
-      inherit (selected)
-        skills
-        mcps
-        extensions
-        tools
-        herdrPlugins
-        ;
-    };
+    declaredRequirementChecks ++ requirementChecks ++ platformChecks ++ collisionChecks;
 
   mkRepositoryProjection =
     {
@@ -785,7 +666,6 @@ in
 
   config.flake.lib = {
     inherit
-      evalResourceSelection
       isValidSkillName
       mkLocalSkillRoot
       mkRepositoryProjection
@@ -795,7 +675,7 @@ in
       realizePiPackages
       realizeProfile
       realizeSkills
-      resolveResources
+      resourceAssertions
       resourceKinds
       targetNames
       ;

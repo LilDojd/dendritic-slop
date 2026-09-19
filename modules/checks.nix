@@ -15,30 +15,28 @@
       profilePackages = config.dendriticSlopInternal.realized.profiles pkgs;
       catalogType = config.dendriticSlopInternal.resourceSchema.catalogType;
       inherit (config.flake.lib)
-        evalResourceSelection
         realizeHerdrPlugins
         realizePiPackages
         realizeProfile
-        resolveResources
+        resourceAssertions
+        resourceKinds
         ;
-      resolve =
+      # Synthetic fixtures exercise the same invariant checker used by Home Manager.
+      validSelection =
         catalog': requested:
-        resolveResources {
+        lib.all (check: check.assertion) (resourceAssertions {
           catalog = catalog';
-          selection = evalResourceSelection {
-            catalog = catalog';
-            selection = requested;
-          };
           inherit pkgs;
-        };
-      tryResolve =
-        catalog': requested:
-        builtins.tryEval (
-          let
-            resolved = resolve catalog' requested;
-          in
-          builtins.deepSeq resolved resolved
-        );
+          selectedTargets = [
+            "git"
+            "herdr"
+            "pi"
+            "rules"
+          ];
+          selected = lib.genAttrs resourceKinds (
+            kind: lib.filterAttrs (name: _: requested.${kind}.${name} or false) catalog'.${kind}
+          );
+        });
 
       tryCatalog =
         value:
@@ -82,48 +80,6 @@
         };
       };
 
-      absentSelection = evalResourceSelection { inherit catalog; };
-      nullableSelection = evalResourceSelection {
-        inherit catalog;
-        selection = {
-          skills.bro = null;
-          targets.herdr = null;
-        };
-      };
-      explicitFalseSelection = evalResourceSelection {
-        inherit catalog;
-        selection = {
-          skills.bro = false;
-          targets.herdr = false;
-        };
-      };
-      profileDefaultSelection = evalResourceSelection {
-        inherit catalog;
-        selection.profiles.core = true;
-      };
-      explicitTrueSelection = evalResourceSelection {
-        inherit catalog;
-        selection = {
-          skills.bro = true;
-          targets.herdr = true;
-        };
-      };
-
-      profileOnly = tryResolve catalog { profiles.core = true; };
-      standaloneLeaf = tryResolve catalog { skills.bro = true; };
-      realSkillPackages = tryResolve catalog { skills.coding-guidelines = true; };
-      profileWithDisable = tryResolve catalog {
-        profiles.core = true;
-        skills.bro = false;
-      };
-      profileUnion = tryResolve catalog {
-        profiles.core = true;
-        profiles.web = true;
-      };
-      disabledRequirement = tryResolve catalog {
-        profiles.core = true;
-        targets.herdr = false;
-      };
       duplicateCatalog = catalog // {
         skills = catalog.skills // {
           duplicate-bro = catalog.skills.bro // {
@@ -132,7 +88,7 @@
           };
         };
       };
-      duplicateExposedName = tryResolve duplicateCatalog {
+      duplicateExposedName = validSelection duplicateCatalog {
         skills = {
           bro = true;
           duplicate-bro = true;
@@ -146,7 +102,7 @@
           };
         };
       };
-      duplicateMcpId = tryResolve duplicateMcpCatalog {
+      duplicateMcpId = validSelection duplicateMcpCatalog {
         mcps = {
           context7 = true;
           duplicate-context7 = true;
@@ -180,7 +136,7 @@
             };
           };
         in
-        tryResolve fixtureCatalog {
+        validSelection fixtureCatalog {
           herdrPlugins = {
             jj-workspace = true;
             fixture-plugin = true;
@@ -294,7 +250,7 @@
           };
         };
       };
-      unsupportedPackage = tryResolve unsupportedCatalog { skills.unsupported-runtime = true; };
+      unsupportedPackage = validSelection unsupportedCatalog { skills.unsupported-runtime = true; };
 
       mkHome =
         extraModule:
@@ -323,6 +279,16 @@
           in
           builtins.deepSeq evaluated.activationPackage evaluated.activationPackage
         );
+
+      homeWithStandalonePi = mkHome { dendriticSlop.tools.pi.enable = true; };
+      homeWithMissingAdapter = tryHome { dendriticSlop.mcps.linear.enable = true; };
+      homeWithDisabledHerdr = tryHome {
+        dendriticSlop = {
+          profiles.core.enable = true;
+          targets.herdr.enable = false;
+        };
+      };
+      homeWithStandaloneSkill = mkHome { dendriticSlop.skills.bro.enable = true; };
 
       tryContext7Secret =
         value:
@@ -834,6 +800,10 @@
           assert homeWithProfiles.config.dendriticSlop.targets.pi.enable;
           assert homeWithProfiles.config.dendriticSlop.targets.rules.enable;
           assert !homeWithDisabledPi.success;
+          assert !homeWithDisabledHerdr.success;
+          assert !homeWithMissingAdapter.success;
+          assert homeWithStandalonePi.config.programs.pi.coding-agent.enable;
+          assert homeWithStandaloneSkill.config.dendriticSlop.skills.bro.enable;
           assert bridgeUnset.profiles.core.enable && bridgeUnset.skills.ty.enable;
           assert bridgeTrue.profiles.core.enable && bridgeTrue.skills.ty.enable;
           assert !bridgeFalse.profiles.core.enable && !bridgeFalse.skills.ty.enable;
@@ -1478,7 +1448,7 @@
           assert !homeWithStoreSecret.success;
           assert !homeWithUnsafeSecretExtension.success;
           assert !homeWithMcpCollision.success;
-          assert !duplicateMcpId.success;
+          assert !duplicateMcpId;
           assert homeWithMergedMcps.config.dendriticSlop.mcps.browser.enable;
           assert homeWithMergedMcps.config.dendriticSlop.mcps.context7.enable;
           assert homeWithMergedMcps.config.dendriticSlop.extensions.pi-mcp-adapter.enable;
@@ -1578,54 +1548,19 @@
           assert catalogEvaluation.success;
           assert !invalidMcpVariant.success;
           assert !invalidExtensionVariant.success;
-          assert absentSelection.overrides.skills.bro == null;
-          assert absentSelection.overrides.targets.herdr == null;
-          assert !absentSelection.effective.skills.bro;
-          assert !absentSelection.effective.targets.herdr;
-          assert nullableSelection.overrides.skills.bro == null;
-          assert nullableSelection.overrides.targets.herdr == null;
-          assert !nullableSelection.effective.skills.bro;
-          assert !nullableSelection.effective.targets.herdr;
-          assert explicitFalseSelection.overrides.skills.bro == false;
-          assert explicitFalseSelection.overrides.targets.herdr == false;
-          assert !explicitFalseSelection.effective.skills.bro;
-          assert !explicitFalseSelection.effective.targets.herdr;
-          assert profileDefaultSelection.overrides.skills.bro == null;
-          assert profileDefaultSelection.overrides.targets.herdr == null;
-          assert profileDefaultSelection.effective.skills.bro;
-          assert profileDefaultSelection.effective.targets.herdr;
-          assert explicitTrueSelection.overrides.skills.bro == true;
-          assert explicitTrueSelection.overrides.targets.herdr == true;
-          assert explicitTrueSelection.effective.skills.bro;
-          assert explicitTrueSelection.effective.targets.herdr;
-          assert profileOnly.success;
-          assert profileOnly.value.skills ? bro;
-          assert builtins.elem "herdr" profileOnly.value.targets;
-          assert standaloneLeaf.success;
-          assert standaloneLeaf.value.skills ? bro;
-          assert realSkillPackages.success;
-          assert realSkillPackages.value.skills ? coding-guidelines;
-          assert profileWithDisable.success;
-          assert profileWithDisable.value.selection.overrides.skills.bro == false;
-          assert !(profileWithDisable.value.skills ? bro);
-          assert profileUnion.success;
-          assert profileUnion.value.extensions ? pi-playwright;
-          assert profileUnion.value.extensions ? web-access;
-          assert profileUnion.value.mcps ? browser;
-          assert !disabledRequirement.success;
-          assert !duplicateExposedName.success;
-          assert !duplicateMcpId.success;
-          assert !duplicatePluginSource.success;
-          assert !duplicatePluginId.success;
-          assert !duplicatePluginExecutable.success;
-          assert !duplicatePluginKey.success;
+          assert !duplicateExposedName;
+          assert !duplicateMcpId;
+          assert pluginCollision (distinctPlugin { });
+          assert validSelection catalog { herdrPlugins.jj-workspace = true; };
+          assert !duplicatePluginSource;
+          assert !duplicatePluginId;
+          assert !duplicatePluginExecutable;
+          assert !duplicatePluginKey;
           assert !pluginVersionMismatch.success;
           assert pluginPackageWithoutVersion.success;
           assert !profileExecutableCollision.success;
-          assert !unsupportedPackage.success;
+          assert !unsupportedPackage;
           assert (builtins.head catalog.skills.jujutsu.runtimeExecutables).package pkgs == pkgs.jujutsu;
-          assert profileOnly.value.extensions ? pi-mcp-adapter;
-          assert profileOnly.value.tools ? pi;
           assert catalog.extensions.pi-mcp-adapter.realization.packageId == "pi-mcp-adapter";
           assert catalog.extensions.superpowers-bootstrap.repository == "superpowers";
           pkgs.runCommand "registry-schema-check" { } ''
