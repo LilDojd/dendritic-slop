@@ -485,6 +485,23 @@
         "type": "github"
       }
     },
+    "pi-jev-compact": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1789816100,
+        "narHash": "sha256-1igZTn6usw1ZxRxgHq6XzEhYTiQsf81XSJC7B84CU98=",
+        "owner": "LilDojd",
+        "repo": "pi-jev-compact",
+        "rev": "dfe7d031e03a75dc2c03c6cf34ce1cf040733038",
+        "type": "github"
+      },
+      "original": {
+        "owner": "LilDojd",
+        "repo": "pi-jev-compact",
+        "rev": "dfe7d031e03a75dc2c03c6cf34ce1cf040733038",
+        "type": "github"
+      }
+    },
     "pi-mcp-adapter": {
       "flake": false,
       "locked": {
@@ -549,6 +566,7 @@
         "nixpkgs": "nixpkgs_3",
         "pi": "pi",
         "pi-ask-user": "pi-ask-user",
+        "pi-jev-compact": "pi-jev-compact",
         "pi-mcp-adapter": "pi-mcp-adapter",
         "pi-web-access": "pi-web-access",
         "ponytail": "ponytail",

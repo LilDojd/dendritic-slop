@@ -75,6 +75,11 @@
       flake = false;
     };
 
+    pi-jev-compact = {
+      url = "github:LilDojd/pi-jev-compact/dfe7d031e03a75dc2c03c6cf34ce1cf040733038";
+      flake = false;
+    };
+
     pi-mcp-adapter = {
       url = "github:nicobailon/pi-mcp-adapter";
       flake = false;

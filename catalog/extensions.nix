@@ -58,6 +58,26 @@ in
     };
   };
 
+  pi-jev-compact = {
+    title = "Pi Jev compaction";
+    description = "Use Jev-pruned text in Pi's native compaction flow. Shares conversation text and tool inputs with TypeSafe in trusted projects using FAST_JEV_API_KEY or TYPESAFE_API_KEY; tool-result bodies are omitted. Independent of Jevons pause and accounting. Pinned to the LilDojd fork with trust, transport, diagnostic and request-receipt hardening. Images and thinking in the summarized span are not retained; native summary fallback remains available.";
+    homepage = "https://github.com/LilDojd/pi-jev-compact";
+
+    requiresTargets = [ "pi" ];
+    capabilities = {
+      executesCode = true;
+      network = true;
+      readsSecrets = true;
+    };
+    secretCapable = true;
+    realization = {
+      type = "package";
+      package = pkgs: pkgs.callPackage ../packages/pi-jev-compact.nix { source = inputs.pi-jev-compact; };
+      packageId = "pi-jev-compact";
+      version = packageVersion inputs.pi-jev-compact;
+    };
+  };
+
   pi-mcp-adapter = {
     title = "Pi MCP adapter";
     description = "Connect Pi to local and remote Model Context Protocol servers.";
