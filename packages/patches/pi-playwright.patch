@@ -1,0 +1,79 @@
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -1,6 +1,6 @@
+ import { mkdir } from "node:fs/promises";
+ import { tmpdir } from "node:os";
+-import { join } from "node:path";
++import { basename, join } from "node:path";
+ import { Type } from "@earendil-works/pi-ai";
+ import { defineTool } from "@earendil-works/pi-coding-agent";
+ import { chromium } from "playwright";
+@@ -10,7 +10,6 @@
+ const navigateSchema = Type.Object({
+     url: Type.String({ description: "URL to open" }),
+     headless: Type.Optional(Type.Boolean({ description: "Launch headless. Defaults to true unless PI_PLAYWRIGHT_HEADFUL=1." })),
+-    executablePath: Type.Optional(Type.String({ description: "Optional path to a local Chrome/Chromium executable" })),
+     timeoutMs: Type.Optional(Type.Number({ description: "Navigation timeout in milliseconds" })),
+ });
+ const snapshotSchema = Type.Object({
+@@ -54,7 +53,7 @@
+ }
+ async function getPage(params) {
+     const headless = getHeadless(params?.headless);
+-    const executablePath = params?.executablePath;
++    const executablePath = "@browserExecutable@";
+     const mustRelaunch = !state.browser || state.headless !== headless || (state.executablePath ?? "") !== (executablePath ?? "");
+     if (mustRelaunch) {
+         await closeBrowser();
+@@ -85,7 +84,7 @@
+     state.executablePath = undefined;
+ }
+ function formatJson(value) {
+-    return JSON.stringify(value, null, 2);
++    return JSON.stringify(value, null, 2) ?? String(value);
+ }
+ function normalizeButton(button) {
+     if (button === "right" || button === "middle")
+@@ -144,8 +143,11 @@
+     parameters: navigateSchema,
+     async execute(_toolCallId, params) {
+         try {
++            const url = new URL(params.url);
++            if (!["http:", "https:"].includes(url.protocol))
++                throw new Error("Only HTTP(S) URLs are allowed");
+             const page = await getPage(params);
+-            await page.goto(params.url, {
++            await page.goto(url.href, {
+                 waitUntil: "domcontentloaded",
+                 timeout: params.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+             });
+@@ -255,8 +257,18 @@
+         const page = await requirePage();
+         page.setDefaultTimeout(params.timeoutMs ?? DEFAULT_TIMEOUT_MS);
+         const value = params.selector
+-            ? await page.locator(params.selector).first().evaluate(params.function)
+-            : await page.evaluate(params.function);
++            ? await page.locator(params.selector).first().evaluate((element, source) => {
++                const fn = globalThis.eval("(" + source + ")");
++                if (typeof fn !== "function")
++                    throw new Error("browser_evaluate requires a JavaScript function");
++                return fn(element);
++            }, params.function)
++            : await page.evaluate((source) => {
++                const fn = globalThis.eval("(" + source + ")");
++                if (typeof fn !== "function")
++                    throw new Error("browser_evaluate requires a JavaScript function");
++                return fn();
++            }, params.function);
+         return { content: [{ type: "text", text: formatJson(value) }], details: undefined };
+     },
+ });
+@@ -270,7 +282,7 @@
+         const page = await requirePage();
+         const dir = join(tmpdir(), "pi-playwright-screenshots");
+         await mkdir(dir, { recursive: true });
+-        const filename = params.filename ?? `screenshot-${Date.now()}.png`;
++        const filename = basename(params.filename ?? `screenshot-${Date.now()}.png`);
+         const filePath = join(dir, filename);
+         if (params.selector) {
+             await page.locator(params.selector).first().screenshot({ path: filePath });

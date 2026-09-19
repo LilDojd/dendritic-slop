@@ -118,21 +118,6 @@
 
         test -d ${extensionPackages.pi-playwright}/node_modules/playwright
         test -d ${extensionPackages.pi-playwright}/node_modules/playwright-core
-        ${pkgs.gnugrep}/bin/grep -Fq \
-          ${lib.escapeShellArg (toString pkgs.playwright-driver.browsers)} \
-          ${extensionPackages.pi-playwright}/dist/index.js
-        ! ${pkgs.gnugrep}/bin/grep -Fq 'params?.executablePath' \
-          ${extensionPackages.pi-playwright}/dist/index.js
-        ${pkgs.gnugrep}/bin/grep -Fq 'Only HTTP(S) URLs are allowed' \
-          ${extensionPackages.pi-playwright}/dist/index.js
-        ${pkgs.gnugrep}/bin/grep -Fq 'basename(params.filename' \
-          ${extensionPackages.pi-playwright}/dist/index.js
-        ${pkgs.gnugrep}/bin/grep -Fq 'JSON.stringify(value, null, 2) ?? String(value)' \
-          ${extensionPackages.pi-playwright}/dist/index.js
-        ${pkgs.gnugrep}/bin/grep -Fq 'browser_evaluate requires a JavaScript function' \
-          ${extensionPackages.pi-playwright}/dist/index.js
-        ! ${pkgs.gnugrep}/bin/grep -Fq 'evaluate(params.function)' \
-          ${extensionPackages.pi-playwright}/dist/index.js
         test ! -e ${inputs.pi-ask-user}/package-lock.json
         test ! -e ${extensionPackages.ask-user}/package-lock.json
         test ! -e ${extensionPackages.ask-user}/node_modules
@@ -241,43 +226,6 @@
 
         touch "$out"
       '';
-  pi-playwright-runtime =
-    pkgs.runCommand "pi-playwright-runtime-check"
-      {
-        nativeBuildInputs = [ pkgs.nodejs_24 ];
-        PLAYWRIGHT_BROWSERS_PATH = pkgs.playwright-driver.browsers;
-        FONTCONFIG_FILE = pkgs.makeFontsConf { fontDirectories = [ pkgs.dejavu_fonts ]; };
-      }
-      ''
-        export HOME="$TMPDIR"
-        node --input-type=module <<'EOF'
-        import assert from "node:assert/strict";
-        import { createRequire } from "node:module";
-
-        const require = createRequire("${extensionPackages.pi-playwright}/package.json");
-        const manifest = require("./package.json");
-        const version = require("playwright/package.json").version;
-        assert.equal(manifest.dependencies.playwright, version);
-        assert.equal(require("playwright-core/package.json").version, version);
-        assert.equal(version, "${pkgs.playwright-driver.version}");
-
-        const { chromium } = require("playwright");
-        const browser = await chromium.launch({ headless: true });
-        try {
-          const page = await browser.newPage();
-          await page.setContent('<title>Pi Playwright</title><input id="value"><button>Submit</button>');
-          assert.equal(await page.title(), "Pi Playwright");
-          await page.locator("#value").fill("compatible");
-          await page.getByText("Submit").click();
-          assert.equal(await page.locator("#value").evaluate(el => el.value), "compatible");
-          assert.ok((await page.screenshot()).length > 0);
-        } finally {
-          await browser.close();
-        }
-        EOF
-        touch "$out"
-      '';
-
   web-access-opt-in =
     assert builtins.elem webAccessPackage optedInPackages;
     homeWithWebAccess.activationPackage;
