@@ -34,6 +34,8 @@
     assert !home.config.dendriticSlop.extensions.pi-starship.enable;
     assert catalog.extensions.pi-goal.profiles == [ ];
     assert catalog.extensions.pi-starship.profiles == [ ];
+    assert toString extensionPackages.pi-goal.src == toString inputs.narumitw-pi-extensions;
+    assert toString extensionPackages.pi-starship.src == toString inputs.narumitw-pi-extensions;
     assert !builtins.elem (toString extensionPackages.pi-goal) corePackages;
     assert !builtins.elem (toString extensionPackages.pi-starship) corePackages;
     assert !home.config.dendriticSlop.extensions.jevons.enable;

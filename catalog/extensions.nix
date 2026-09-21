@@ -71,8 +71,14 @@ in
     secretCapable = true;
     realization = {
       type = "package";
-      package = pkgs: pkgs.callPackage ../packages/pi-goal.nix { };
+      package =
+        pkgs:
+        pkgs.callPackage ../packages/narumitw-extension.nix {
+          source = inputs.narumitw-pi-extensions;
+          pname = "pi-goal";
+        };
       packageId = "@narumitw/pi-goal";
+      version = packageVersion (inputs.narumitw-pi-extensions + "/packages/pi-goal");
     };
   };
 
@@ -150,8 +156,14 @@ in
     secretCapable = true;
     realization = {
       type = "package";
-      package = pkgs: pkgs.callPackage ../packages/pi-starship.nix { };
+      package =
+        pkgs:
+        pkgs.callPackage ../packages/narumitw-extension.nix {
+          source = inputs.narumitw-pi-extensions;
+          pname = "pi-starship";
+        };
       packageId = "@narumitw/pi-starship";
+      version = packageVersion (inputs.narumitw-pi-extensions + "/packages/pi-starship");
     };
   };
 

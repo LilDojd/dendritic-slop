@@ -57,6 +57,11 @@
 
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
+    narumitw-pi-extensions = {
+      url = "github:narumiruna/pi-extensions";
+      flake = false;
+    };
+
     ponytail = {
       url = "github:DietrichGebert/ponytail";
       flake = false;

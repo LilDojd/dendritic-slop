@@ -39,6 +39,7 @@
         "!astral-agent-skills",
         "!herdr-plugin-jj-workspace",
         "!leonardomso-rust-skills",
+        "!narumitw-pi-extensions",
         "!superpowers"
       ],
       "groupName": "Nix flake inputs"
@@ -64,6 +65,14 @@
       "matchManagers": ["nix"],
       "matchDepNames": ["leonardomso-rust-skills"],
       "groupName": "Leonardo Rust skills",
+      "minimumReleaseAge": "3 days",
+      "automerge": false
+    },
+    {
+      "description": "Review Narumitw Pi extensions separately",
+      "matchManagers": ["nix"],
+      "matchDepNames": ["narumitw-pi-extensions"],
+      "groupName": "Narumitw Pi extensions",
       "minimumReleaseAge": "3 days",
       "automerge": false
     },

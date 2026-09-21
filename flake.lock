@@ -345,6 +345,22 @@
         "type": "github"
       }
     },
+    "narumitw-pi-extensions": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1789938153,
+        "narHash": "sha256-/Px8CBH9Jf9gl+b5FMMFeQA6JzZ3ERbBMDPQivlTPAs=",
+        "owner": "narumiruna",
+        "repo": "pi-extensions",
+        "rev": "617cac04bca3b27487006537fff5fb96bf3b7857",
+        "type": "github"
+      },
+      "original": {
+        "owner": "narumiruna",
+        "repo": "pi-extensions",
+        "type": "github"
+      }
+    },
     "nix-darwin": {
       "inputs": {
         "nixpkgs": [
@@ -562,6 +578,7 @@
         "jevons": "jevons",
         "leonardomso-rust-skills": "leonardomso-rust-skills",
         "llm-agents": "llm-agents",
+        "narumitw-pi-extensions": "narumitw-pi-extensions",
         "nix-darwin": "nix-darwin",
         "nixpkgs": "nixpkgs_3",
         "pi": "pi",
