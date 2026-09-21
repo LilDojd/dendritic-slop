@@ -40,7 +40,7 @@ in
 
   jevons = {
     title = "Jevons";
-    description = "Share task evidence with TypeSafe for semantic skill ranking, review and shadow recovery in trusted projects.";
+    description = "Share task evidence with TypeSafe for semantic skill ranking, verification selection and shadow recovery in trusted projects.";
     homepage = "https://github.com/LilDojd/jevons";
 
     requiresTargets = [ "pi" ];

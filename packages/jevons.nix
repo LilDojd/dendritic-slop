@@ -52,7 +52,7 @@ stdenvNoCC.mkDerivation {
   '';
 
   meta = {
-    description = "Semantic task assistance and code review for Pi";
+    description = "Semantic task assistance and verification for Pi";
     homepage = "https://github.com/LilDojd/jevons";
     license = lib.licenses.mit;
   };

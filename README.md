@@ -97,7 +97,7 @@ Networked and executable leaves expose capability metadata in the generated cata
 
 Set `dendriticSlop.extensions.jevons.enable = true;` in the consuming host or Home Manager configuration. No profile enables it by default. The pinned package supplies its two runtime dependencies; Pi and TypeBox remain host peers. Activation performs no package installation.
 
-Installing Jevons opts into sending bounded task text, skill metadata, diagnostics and selected source to TypeSafe in trusted projects; no `--jevons` flag is required. Recovery defaults to shadow mode, tool feedback and investigation are disabled, and usage reporting does not enforce spending limits. Use `/jevons pause` to stop requests. Git/Jujutsu and optional GitHub review commands use the host's executables.
+Installing Jevons opts into sending bounded task text, skill metadata, diagnostics and selected source to TypeSafe in trusted projects; no `--jevons` flag is required. Recovery defaults to shadow mode, tool feedback is disabled, and usage reporting does not enforce spending limits. Use `/jevons pause` to stop requests. Verification uses the host's Git/Jujutsu executables.
 
 Supply `TYPESAFE_API_KEY` through the Pi process environment or the consuming Home Manager configuration's `programs.pi.coding-agent.environment.TYPESAFE_API_KEY.file`, pointing to an absolute runtime secret path. Never put the key, an `.env` file or transient session state in this flake or the Nix store.
 
