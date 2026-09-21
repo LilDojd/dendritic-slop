@@ -58,6 +58,24 @@ in
     };
   };
 
+  pi-goal = {
+    title = "Pi Goal";
+    description = "Autonomous single-objective goals with session-local state, continuation limits, and optional token budgets.";
+    homepage = "https://github.com/narumiruna/pi-extensions/tree/main/packages/pi-goal";
+
+    requiresTargets = [ "pi" ];
+    capabilities = {
+      executesCode = true;
+      mutatesUserConfig = true;
+    };
+    secretCapable = true;
+    realization = {
+      type = "package";
+      package = pkgs: pkgs.callPackage ../packages/pi-goal.nix { };
+      packageId = "@narumitw/pi-goal";
+    };
+  };
+
   pi-jev-compact = {
     title = "Pi Jev compaction";
     description = "Use Jev-pruned text in Pi's native compaction flow. Shares conversation text and tool inputs with TypeSafe in trusted projects using FAST_JEV_API_KEY or TYPESAFE_API_KEY; tool-result bodies are omitted. Independent of Jevons pause and accounting. Pinned to the LilDojd fork with trust, transport, diagnostic and request-receipt hardening. Images and thinking in the summarized span are not retained; native summary fallback remains available.";
@@ -114,6 +132,26 @@ in
       type = "package";
       package = pkgs: pkgs.callPackage ../packages/pi-playwright.nix { };
       packageId = "@lebronj/pi-playwright";
+    };
+  };
+
+  pi-starship = {
+    title = "Pi Starship";
+    description = "Native Starship-style footer. Optional modules run local commands, query GitHub via gh, and read cloud metadata. Bundled configuration skill is excluded.";
+    homepage = "https://github.com/narumiruna/pi-extensions/tree/main/packages/pi-starship";
+
+    requiresTargets = [ "pi" ];
+    capabilities = {
+      executesCode = true;
+      network = true;
+      readsSecrets = true;
+      mutatesUserConfig = true;
+    };
+    secretCapable = true;
+    realization = {
+      type = "package";
+      package = pkgs: pkgs.callPackage ../packages/pi-starship.nix { };
+      packageId = "@narumitw/pi-starship";
     };
   };
 

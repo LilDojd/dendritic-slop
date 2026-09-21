@@ -522,6 +522,9 @@ rec {
       ask_user = toString extensionPackages.ask-user;
       fetch_content = toString extensionPackages.web-access;
       get_search_content = toString extensionPackages.web-access;
+      goal_complete = toString extensionPackages.pi-goal;
+      goal_blocked = toString extensionPackages.pi-goal;
+      goal_wait = toString extensionPackages.pi-goal;
       jevons_decide = toString extensionPackages.jevons;
       jevons_review = toString extensionPackages.jevons;
       mcp = toString extensionPackages.pi-mcp-adapter;

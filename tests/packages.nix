@@ -30,6 +30,12 @@
     assert defaultPackages == [ ];
     assert builtins.elem (toString extensionPackages.ask-user) corePackages;
     assert builtins.elem (toString extensionPackages.pi-mcp-adapter) corePackages;
+    assert !home.config.dendriticSlop.extensions.pi-goal.enable;
+    assert !home.config.dendriticSlop.extensions.pi-starship.enable;
+    assert catalog.extensions.pi-goal.profiles == [ ];
+    assert catalog.extensions.pi-starship.profiles == [ ];
+    assert !builtins.elem (toString extensionPackages.pi-goal) corePackages;
+    assert !builtins.elem (toString extensionPackages.pi-starship) corePackages;
     assert !home.config.dendriticSlop.extensions.jevons.enable;
     assert catalog.extensions.jevons.profiles == [ ];
     assert catalog.extensions.jevons.capabilities.network;
@@ -110,6 +116,10 @@
         }
         EOF
         )
+
+        starship_peers='{"@earendil-works/pi-coding-agent":"*","@earendil-works/pi-tui":"*"}'
+        check_package ${extensionPackages.pi-goal} ./dist/index.ts "$mcp_adapter_peers"
+        check_package ${extensionPackages.pi-starship} ./dist/index.ts "$starship_peers"
 
         check_package ${extensionPackages.ask-user} ./index.ts "$ask_user_peers"
         check_package ${extensionPackages.pi-mcp-adapter} ./index.ts "$mcp_adapter_peers"

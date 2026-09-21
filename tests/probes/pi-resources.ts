@@ -12,8 +12,10 @@ export default function (pi: any) {
           throw new Error(`wrong source for ${name}: ${tool.sourceInfo?.path}`);
         }
       }
-      if (!pi.getCommands().some((command: any) => command.name === "mcp")) {
-        throw new Error("missing MCP command");
+      for (const name of ["mcp", "goal", "starship"]) {
+        if (!pi.getCommands().some((command: any) => command.name === name)) {
+          throw new Error(`missing command: ${name}`);
+        }
       }
       writeFileSync(process.env.DENDRITIC_SLOP_SMOKE_MARKER!, "loaded\n");
       ctx.shutdown();
