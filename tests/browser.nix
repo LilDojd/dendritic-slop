@@ -10,7 +10,9 @@ let
     browserRoot = extensionPackages.pi-playwright;
   };
 in
-{
+# The Darwin build sandbox denies Chromium's own sandbox bootstrap, so the
+# headless shell aborts at launch there; exercise the real browser on Linux.
+lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
   pi-playwright-runtime =
     pkgs.runCommand "pi-playwright-runtime-check"
       {
