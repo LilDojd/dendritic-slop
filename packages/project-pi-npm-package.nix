@@ -8,16 +8,13 @@ let
   package = builtins.fromJSON (builtins.readFile (source + "/package.json"));
   packageLock = builtins.fromJSON (builtins.readFile (source + "/package-lock.json"));
   hostPeerMeta = lib.mapAttrs (_: _: { optional = true; }) hostPeers;
-  removeHostDevRecords =
-    path: record:
-    !(
-      lib.hasPrefix "node_modules/@earendil-works/pi-coding-agent/node_modules/@earendil-works/" path
-      && (record.integrity or "") == ""
-    );
+  hostPeerRecords = map (name: "node_modules/${name}") (builtins.attrNames hostPeers);
+  # Only production dependencies are installed, and Pi provides its host peers.
+  keepRecord = path: record: !(record.dev or false) && !builtins.elem path hostPeerRecords;
   projectDependencies = dependencies: builtins.removeAttrs dependencies removeDependencies;
   projectRoot =
     root:
-    root
+    builtins.removeAttrs root [ "devDependencies" ]
     // {
       dependencies = projectDependencies (root.dependencies or { });
       peerDependencies = (root.peerDependencies or { }) // hostPeers;
@@ -32,11 +29,8 @@ in
     };
   };
   packageLock = packageLock // {
-    packages = lib.filterAttrs removeHostDevRecords (
-      packageLock.packages
-      // {
-        "" = projectRoot packageLock.packages."";
-      }
-    );
+    packages = lib.filterAttrs keepRecord packageLock.packages // {
+      "" = projectRoot packageLock.packages."";
+    };
   };
 }
