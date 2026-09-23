@@ -26,18 +26,7 @@ let
       runtimePackages = skill.runtimePackages or (_: [ ]);
     }
   ) skills;
-  superpowersPackage =
-    pkgs:
-    config.flake.lib.mkRepositoryProjection {
-      inherit pkgs;
-      skills = projectionSkills;
-      name = "superpowers";
-      repository = repositories.superpowers;
-      leafPaths = map (skill: skill.repositoryPath) (
-        lib.filter (skill: (skill.repository or null) == "superpowers") (builtins.attrValues skills)
-      );
-    };
-  extensions = import ../catalog/extensions.nix { inherit inputs superpowersPackage herdrSource; };
+  extensions = import ../catalog/extensions.nix { inherit inputs herdrSource; };
   mcps = import ../catalog/mcps.nix { inherit inputs; };
   tools = import ../catalog/tools.nix { inherit inputs herdrSource; };
   herdrPlugins = import ../catalog/herdr-plugins.nix { inherit inputs; };

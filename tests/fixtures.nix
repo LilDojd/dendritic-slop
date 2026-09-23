@@ -362,16 +362,6 @@ rec {
   homeWithLiteralSecret = tryContext7Secret "literal-secret-value";
   homeWithNixPathSecret = tryContext7Secret ./fixtures.nix;
   homeWithStoreSecret = tryContext7Secret "${builtins.storeDir}/context7-key";
-  homeWithUnsafeSecretExtension = tryHome {
-    dendriticSlop = {
-      profiles.core.enable = true;
-      extensions.superpowers-bootstrap.enable = true;
-      mcps.context7 = {
-        enable = true;
-        secrets.apiKeyFile = context7SecretPath;
-      };
-    };
-  };
   homeWithMcpCollision = tryHome {
     dendriticSlopInternal.mcp.servers = [
       {
@@ -399,7 +389,7 @@ rec {
         python.enable = true;
       };
       skills = {
-        brainstorming.enable = true;
+        rust-skills.enable = true;
         bro.enable = false;
         ty.enable = false;
       };

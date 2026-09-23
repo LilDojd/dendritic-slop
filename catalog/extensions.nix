@@ -1,6 +1,5 @@
 {
   inputs,
-  superpowersPackage,
   herdrSource,
 }:
 let
@@ -164,22 +163,6 @@ in
         };
       packageId = "@narumitw/pi-starship";
       version = packageVersion (inputs.narumitw-pi-extensions + "/packages/pi-starship");
-    };
-  };
-
-  superpowers-bootstrap = {
-    title = "Superpowers Pi bootstrap";
-    description = "Inject the reviewed Superpowers bootstrap and Pi tool mapping without duplicate skill discovery.";
-    homepage = "https://github.com/obra/superpowers";
-    repository = "superpowers";
-
-    requiresTargets = [ "pi" ];
-    capabilities.executesCode = true;
-    realization = {
-      type = "package";
-      package = superpowersPackage;
-      packageId = "superpowers";
-      version = packageVersion inputs.superpowers;
     };
   };
 

@@ -20,7 +20,6 @@
   piPackage,
   piResourceProbe,
   pkgs,
-  realizedSkills,
   system,
   webAccessPackage,
   ...
@@ -51,7 +50,6 @@
     assert builtins.elem herdrPackage homeWithProfiles.config.home.packages;
     assert piPackage == inputs.llm-agents.packages.${system}.pi;
     assert herdrPackage == inputs.llm-agents.packages.${system}.herdr;
-    assert extensionPackages.superpowers-bootstrap == realizedSkills.repositories.superpowers;
     assert builtins.length duplicatePiPackage.settingsPackages == 1;
     assert !conflictingPiPackage.success;
     pkgs.runCommand "declarative-pi-packages-check"
@@ -133,12 +131,6 @@
         test ! -e ${inputs.pi-ask-user}/package-lock.json
         test ! -e ${extensionPackages.ask-user}/package-lock.json
         test ! -e ${extensionPackages.ask-user}/node_modules
-        ${pkgs.jq}/bin/jq -e \
-          '.pi.extensions == ["./.pi/extensions/superpowers.ts"]
-           and (.pi.skills // []) == []
-           and (.pi.prompts // []) == []
-           and (.pi.themes // []) == []' \
-          ${extensionPackages.superpowers-bootstrap}/package.json >/dev/null
 
         test -d ${extensionPackages.pi-mcp-adapter}/node_modules/@modelcontextprotocol/client
         test -d ${extensionPackages.pi-mcp-adapter}/node_modules/@modelcontextprotocol/ext-apps
@@ -166,14 +158,6 @@
         await import("unpdf");
         EOF
         )
-        test -f ${extensionPackages.superpowers-bootstrap}/skills/using-superpowers/SKILL.md
-        test ! -e ${extensionPackages.superpowers-bootstrap}/skills/writing-skills/render-graphs.js
-
-        bootstrap=${extensionPackages.superpowers-bootstrap}/.pi/extensions/superpowers.ts
-        ! ${pkgs.gnugrep}/bin/grep -Fq 'resources_discover' "$bootstrap"
-        ${pkgs.gnugrep}/bin/grep -Fq 'superpowers:using-superpowers bootstrap for pi' "$bootstrap"
-        ${pkgs.gnugrep}/bin/grep -Fq '## Pi tool mapping' "$bootstrap"
-        ${pkgs.gnugrep}/bin/grep -Fq 'Pi has native skills' "$bootstrap"
         test -f ${herdrAgentStateResource.realization.source}
         test -x ${piPackage}/bin/pi
         test -x ${herdrPackage}/bin/herdr

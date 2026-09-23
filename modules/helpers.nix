@@ -190,101 +190,30 @@ let
 
   mkRepositoryProjection =
     {
-      pkgs,
       name,
       repository,
       leafPaths,
-      skills,
     }:
     let
       allowedPaths = lib.unique (leafPaths ++ repository.supportPaths);
       sourceString = toString repository.source;
-      filteredSource = builtins.path {
-        path = repository.source;
-        name = "reviewed-${name}-source";
-        filter =
-          path: _:
-          let
-            pathString = toString path;
-            relative =
-              if pathString == sourceString then "" else lib.removePrefix "${sourceString}/" pathString;
-          in
-          relative == ""
-          || lib.any (
-            allowed:
-            relative == allowed || lib.hasPrefix "${allowed}/" relative || lib.hasPrefix "${relative}/" allowed
-          ) allowedPaths;
-      };
-      packagingInputs = lib.unique (map (package: package pkgs) repository.buildInputs);
-      immutablePatches = map (
-        patchPath:
-        builtins.path {
-          path = patchPath;
-          name = "reviewed-${name}-${builtins.baseNameOf patchPath}";
-        }
-      ) repository.patches;
-      executableEntrypoints = lib.filter (
-        entrypoint: entrypoint.type == "executable"
-      ) repository.entrypoints;
-      interpreterEntrypoints = lib.filter (
-        entrypoint: entrypoint.type == "interpreter"
-      ) repository.entrypoints;
-      entrypointPackages =
-        entrypoint:
-        let
-          owner = skills.${entrypoint.owner};
-        in
-        lib.unique (
-          owner.runtimePackages pkgs ++ map (runtime: runtime.package pkgs) owner.runtimeExecutables
-        );
-      entrypointsAreOwned = lib.all (
-        entrypoint:
-        entrypoint.owner != null
-        && builtins.hasAttr entrypoint.owner skills
-        && skills.${entrypoint.owner}.repository == name
-      ) repository.entrypoints;
     in
-    assert lib.assertMsg entrypointsAreOwned
-      "Every reviewed ${name} entrypoint must be owned by a leaf in that repository";
-    if
-      repository.entrypoints == [ ] && repository.ignoredEntrypoints == [ ] && repository.patches == [ ]
-    then
-      filteredSource
-    else
-      pkgs.runCommand "reviewed-${name}-projection"
-        {
-          nativeBuildInputs = packagingInputs;
-          passthru = {
-            inherit allowedPaths packagingInputs;
-            entrypoints = repository.entrypoints;
-          };
-        }
-        ''
-          mkdir -p "$out"
-          cp -R ${filteredSource}/. "$out/"
-          chmod -R u+w "$out"
-
-          ${lib.concatMapStringsSep "\n" (patch: ''
-            patch --no-backup-if-mismatch -d "$out" -p1 < ${lib.escapeShellArg patch}
-          '') immutablePatches}
-
-          ${lib.concatMapStringsSep "\n" (path: ''
-            test -f "$out/${path}"
-            rm "$out/${path}"
-          '') repository.ignoredEntrypoints}
-
-          ${lib.concatMapStringsSep "\n" (entrypoint: ''
-            test -f "$out/${entrypoint.path}"
-            chmod +x "$out/${entrypoint.path}"
-            patchShebangs "$out/${entrypoint.path}"
-            wrapProgram "$out/${entrypoint.path}" \
-              --prefix PATH : ${lib.escapeShellArg (lib.makeBinPath (entrypointPackages entrypoint))}
-          '') executableEntrypoints}
-
-          ${lib.concatMapStringsSep "\n" (entrypoint: ''
-            test -f "$out/${entrypoint.path}"
-          '') interpreterEntrypoints}
-        '';
+    builtins.path {
+      path = repository.source;
+      name = "reviewed-${name}-source";
+      filter =
+        path: _:
+        let
+          pathString = toString path;
+          relative =
+            if pathString == sourceString then "" else lib.removePrefix "${sourceString}/" pathString;
+        in
+        relative == ""
+        || lib.any (
+          allowed:
+          relative == allowed || lib.hasPrefix "${allowed}/" relative || lib.hasPrefix "${relative}/" allowed
+        ) allowedPaths;
+    };
 
   mkLocalSkillRoot =
     {
@@ -475,9 +404,8 @@ let
       repositories = lib.mapAttrs (
         name: repository:
         mkRepositoryProjection {
-          inherit pkgs name repository;
+          inherit name repository;
           leafPaths = leafPathsFor name;
-          inherit (catalog) skills;
         }
       ) catalog.repositories;
       targets = lib.mapAttrs (

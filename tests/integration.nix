@@ -22,9 +22,6 @@
   home-manager-module =
     assert home.config.programs.pi.coding-agent.extensions == [ ];
     assert home.config.programs.pi.coding-agent.skills == [ ];
-    assert lib.all (
-      name: !home.config.dendriticSlop.skills.${name}.enable
-    ) catalog.profiles.superpowers.members.skills;
     assert managedHerdrAgentState.source == herdrAgentStateResource.realization.source;
     assert managedHerdrAgentState.force;
     assert !managedSkills.force;

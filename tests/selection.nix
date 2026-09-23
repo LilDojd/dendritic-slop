@@ -36,7 +36,6 @@
     assert !(home.options.dendriticSlop ? autoEnable);
     assert !builtins.hasAttr "actionbook-rust" home.options.dendriticSlop.skills;
     assert !builtins.hasAttr "astral-python" home.options.dendriticSlop.skills;
-    assert !builtins.hasAttr "superpowers" home.options.dendriticSlop.skills;
     assert lib.all (name: !home.config.dendriticSlop.skills.${name}.enable) (
       builtins.attrNames catalog.skills
     );
@@ -48,7 +47,7 @@
     assert homeWithProfiles.config.dendriticSlop.skills.ruff.enable;
     assert !homeWithProfiles.config.dendriticSlop.skills.ty.enable;
     assert homeWithProfiles.config.dendriticSlop.skills.uv.enable;
-    assert homeWithProfiles.config.dendriticSlop.skills.brainstorming.enable;
+    assert homeWithProfiles.config.dendriticSlop.skills.rust-skills.enable;
     assert homeWithProfiles.config.dendriticSlop.extensions.ask-user.enable;
     assert homeWithProfiles.config.dendriticSlop.extensions.herdr-agent-state.enable;
     assert homeWithProfiles.config.dendriticSlop.extensions.pi-mcp-adapter.enable;
@@ -87,7 +86,6 @@
     assert !unsupportedPackage;
     assert (builtins.head catalog.skills.jujutsu.runtimeExecutables).package pkgs == pkgs.jujutsu;
     assert catalog.extensions.pi-mcp-adapter.realization.packageId == "pi-mcp-adapter";
-    assert catalog.extensions.superpowers-bootstrap.repository == "superpowers";
     pkgs.runCommand "registry-schema-check" { } ''
       touch "$out"
     '';

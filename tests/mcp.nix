@@ -17,7 +17,6 @@
   homeWithOnlyLinear,
   homeWithRelativeSecret,
   homeWithStoreSecret,
-  homeWithUnsafeSecretExtension,
   lib,
   linearMcpJson,
   mcpSecretProbe,
@@ -43,7 +42,6 @@
     assert !homeWithLiteralSecret.success;
     assert !homeWithNixPathSecret.success;
     assert !homeWithStoreSecret.success;
-    assert !homeWithUnsafeSecretExtension.success;
     assert !homeWithMcpCollision.success;
     assert !duplicateMcpId;
     assert homeWithMergedMcps.config.dendriticSlop.mcps.browser.enable;
@@ -66,7 +64,6 @@
     assert catalog.extensions.pi-mcp-adapter.secretCapable;
     assert catalog.extensions.pi-playwright.secretCapable;
     assert catalog.extensions.web-access.secretCapable;
-    assert !catalog.extensions.superpowers-bootstrap.secretCapable;
     pkgs.runCommand "mcp-registry-check"
       {
         mcpConfig = pkgs.writeText "expected-mcp.json" (

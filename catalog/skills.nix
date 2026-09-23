@@ -3,32 +3,6 @@ let
   inherit (builtins) listToAttrs map;
 
   runtime = package: executable: { inherit package executable; };
-  shellRuntime = [
-    (runtime (pkgs: pkgs.bash) "bash")
-    (runtime (pkgs: pkgs.coreutils) "env")
-  ];
-  browserLauncher =
-    pkgs:
-    if pkgs.stdenv.hostPlatform.isLinux then
-      pkgs.symlinkJoin {
-        name = "superpowers-browser-launcher";
-        paths = [ pkgs.xdg-utils ];
-        postBuild = ''
-          ln -s xdg-open "$out/bin/open"
-        '';
-      }
-    else
-      pkgs.symlinkJoin {
-        name = "superpowers-browser-launcher";
-        paths = [
-          (pkgs.writeShellScriptBin "open" ''
-            exec /usr/bin/open "$@"
-          '')
-        ];
-        postBuild = ''
-          ln -s open "$out/bin/xdg-open"
-        '';
-      };
   named = name: value: {
     inherit name value;
   };
@@ -152,81 +126,9 @@ let
       ]
   );
 
-  superpowersLeaves = [
-    "brainstorming"
-    "dispatching-parallel-agents"
-    "executing-plans"
-    "finishing-a-development-branch"
-    "receiving-code-review"
-    "requesting-code-review"
-    "subagent-driven-development"
-    "systematic-debugging"
-    "test-driven-development"
-    "using-git-worktrees"
-    "using-superpowers"
-    "verification-before-completion"
-    "writing-plans"
-    "writing-skills"
-  ];
-  superpowersRuntime =
-    name:
-    if name == "brainstorming" then
-      shellRuntime
-      ++ [
-        (runtime (pkgs: pkgs.gnugrep) "grep")
-        (runtime (pkgs: pkgs.gnused) "sed")
-        (runtime (pkgs: pkgs.nodejs_24) "node")
-        (runtime (pkgs: if pkgs.stdenv.hostPlatform.isLinux then pkgs.procps else pkgs.ps) "ps")
-        (runtime browserLauncher "open")
-        (runtime browserLauncher "xdg-open")
-      ]
-    else if name == "subagent-driven-development" then
-      shellRuntime
-      ++ [
-        (runtime (pkgs: pkgs.gawk) "awk")
-        (runtime (pkgs: pkgs.gitMinimal) "git")
-      ]
-    else if name == "systematic-debugging" then
-      shellRuntime
-      ++ [
-        (runtime (pkgs: pkgs.findutils) "find")
-        (runtime (pkgs: pkgs.nodejs_24) "npm")
-      ]
-    else if
-      builtins.elem name [
-        "executing-plans"
-        "finishing-a-development-branch"
-        "requesting-code-review"
-        "using-git-worktrees"
-      ]
-    then
-      [ (runtime (pkgs: pkgs.gitMinimal) "git") ]
-    else
-      [ ];
-  superpowers = listToAttrs (
-    map (
-      name:
-      named name {
-        title = name;
-        description = "Reviewed Superpowers workflow: ${name}.";
-        homepage = "https://github.com/obra/superpowers";
-        repository = "superpowers";
-        repositoryPath = "skills/${name}";
-
-        runtimeExecutables = superpowersRuntime name;
-        capabilities = {
-          executesCode = superpowersRuntime name != [ ];
-          network = name == "brainstorming";
-          mutatesUserConfig = name == "subagent-driven-development";
-        };
-
-      }
-    ) superpowersLeaves
-  );
 in
 actionbook
 // astral
-// superpowers
 // {
   bro = {
     title = "Bro";

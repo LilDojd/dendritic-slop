@@ -39,8 +39,7 @@
         "!astral-agent-skills",
         "!herdr-plugin-jj-workspace",
         "!leonardomso-rust-skills",
-        "!narumitw-pi-extensions",
-        "!superpowers"
+        "!narumitw-pi-extensions"
       ],
       "groupName": "Nix flake inputs"
     },
@@ -73,14 +72,6 @@
       "matchManagers": ["nix"],
       "matchDepNames": ["narumitw-pi-extensions"],
       "groupName": "Narumitw Pi extensions",
-      "minimumReleaseAge": "3 days",
-      "automerge": false
-    },
-    {
-      "description": "Review Superpowers skills separately",
-      "matchManagers": ["nix"],
-      "matchDepNames": ["superpowers"],
-      "groupName": "Superpowers skills",
       "minimumReleaseAge": "3 days",
       "automerge": false
     },

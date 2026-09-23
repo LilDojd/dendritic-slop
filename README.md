@@ -38,7 +38,6 @@ Import Home Manager, impermanence, and the aggregate module:
       rust.enable = true;
       python.enable = true;
       web.enable = true;
-      superpowers.enable = false;
     };
 
     skills.ty.enable = false;

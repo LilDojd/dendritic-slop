@@ -288,26 +288,6 @@ let
     };
   };
 
-  repositoryEntrypointModule = {
-    options = {
-      path = mkOption { type = nonEmptyString; };
-      type = mkOption {
-        type = types.enum [
-          "executable"
-          "interpreter"
-        ];
-      };
-      interpreter = mkOption {
-        type = types.nullOr nonEmptyString;
-        default = null;
-      };
-      owner = mkOption {
-        type = types.nullOr resourceName;
-        default = null;
-      };
-    };
-  };
-
   repositoryModule =
     { name, ... }:
     {
@@ -332,22 +312,6 @@ let
         };
         supportPaths = mkOption {
           type = types.listOf nonEmptyString;
-          default = [ ];
-        };
-        entrypoints = mkOption {
-          type = types.listOf (types.submodule repositoryEntrypointModule);
-          default = [ ];
-        };
-        ignoredEntrypoints = mkOption {
-          type = types.listOf nonEmptyString;
-          default = [ ];
-        };
-        patches = mkOption {
-          type = types.listOf types.path;
-          default = [ ];
-        };
-        buildInputs = mkOption {
-          type = types.listOf packageFunction;
           default = [ ];
         };
       };

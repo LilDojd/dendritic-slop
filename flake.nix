@@ -95,11 +95,6 @@
       flake = false;
     };
 
-    superpowers = {
-      url = "github:obra/superpowers";
-      flake = false;
-    };
-
     systems.url = "github:nix-systems/default";
 
     tsk = {

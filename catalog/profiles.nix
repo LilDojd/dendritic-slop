@@ -84,30 +84,6 @@
     ];
   };
 
-  superpowers = {
-    title = "Superpowers";
-    description = "A complete reviewed software-development workflow.";
-    members = {
-      extensions = [ "superpowers-bootstrap" ];
-      skills = [
-        "brainstorming"
-        "dispatching-parallel-agents"
-        "executing-plans"
-        "finishing-a-development-branch"
-        "receiving-code-review"
-        "requesting-code-review"
-        "subagent-driven-development"
-        "systematic-debugging"
-        "test-driven-development"
-        "using-git-worktrees"
-        "using-superpowers"
-        "verification-before-completion"
-        "writing-plans"
-        "writing-skills"
-      ];
-    };
-  };
-
   web = {
     title = "Web";
     description = "Reviewed web access and local browser automation for Pi.";
