@@ -516,7 +516,6 @@ rec {
       goal_blocked = toString extensionPackages.pi-goal;
       goal_wait = toString extensionPackages.pi-goal;
       jevons_decide = toString extensionPackages.jevons;
-      jevons_review = toString extensionPackages.jevons;
       mcp = toString extensionPackages.pi-mcp-adapter;
       mcpScript = toString extensionPackages.pi-mcp-adapter;
       source_check = toString extensionPackages.web-access;
