@@ -60,6 +60,17 @@
     ];
   };
 
+  anthropic-claude-plugins = {
+    input = "claude-plugins-official";
+    source = inputs.claude-plugins-official;
+    homepage = "https://github.com/anthropics/claude-plugins-official";
+    license = "Apache-2.0";
+    licenseEvidence = [ (inputs.claude-plugins-official + "/plugins/frontend-design/LICENSE") ];
+
+    exportedLeaves = [ "frontend-design" ];
+    supportPaths = [ "plugins/frontend-design/LICENSE" ];
+  };
+
   astral-python = {
     input = "astral-agent-skills";
     source = inputs.astral-agent-skills;

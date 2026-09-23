@@ -126,6 +126,22 @@
         "type": "github"
       }
     },
+    "claude-plugins-official": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1790098375,
+        "narHash": "sha256-lC7vA39JqQzPj10g1OsV8lHTpU1H5VCVqU/NdOETSm0=",
+        "owner": "anthropics",
+        "repo": "claude-plugins-official",
+        "rev": "db467cc56673fc963ca418b4165c688dfbe77007",
+        "type": "github"
+      },
+      "original": {
+        "owner": "anthropics",
+        "repo": "claude-plugins-official",
+        "type": "github"
+      }
+    },
     "flake-parts": {
       "inputs": {
         "nixpkgs-lib": [
@@ -304,6 +320,22 @@
       "original": {
         "owner": "LilDojd",
         "repo": "jevons",
+        "type": "github"
+      }
+    },
+    "joelhooks-skills": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1787335957,
+        "narHash": "sha256-hsAfjBXxs7nCQ3PONV/jsQWyhf/NYxBUHtH0mWBBn/0=",
+        "owner": "joelhooks",
+        "repo": "skills",
+        "rev": "7c0a930d761bc05f50c3d31cf55ba7f289b45861",
+        "type": "github"
+      },
+      "original": {
+        "owner": "joelhooks",
+        "repo": "skills",
         "type": "github"
       }
     },
@@ -570,12 +602,14 @@
       "inputs": {
         "actionbook-rust-skills": "actionbook-rust-skills",
         "astral-agent-skills": "astral-agent-skills",
+        "claude-plugins-official": "claude-plugins-official",
         "flake-parts": "flake-parts",
         "herdr-plugin-jj-workspace": "herdr-plugin-jj-workspace",
         "home-manager": "home-manager",
         "impermanence": "impermanence",
         "import-tree": "import-tree",
         "jevons": "jevons",
+        "joelhooks-skills": "joelhooks-skills",
         "leonardomso-rust-skills": "leonardomso-rust-skills",
         "llm-agents": "llm-agents",
         "narumitw-pi-extensions": "narumitw-pi-extensions",

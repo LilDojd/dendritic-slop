@@ -37,7 +37,9 @@
       "matchDepNames": [
         "!actionbook-rust-skills",
         "!astral-agent-skills",
+        "!claude-plugins-official",
         "!herdr-plugin-jj-workspace",
+        "!joelhooks-skills",
         "!leonardomso-rust-skills",
         "!narumitw-pi-extensions"
       ],
@@ -56,6 +58,22 @@
       "matchManagers": ["nix"],
       "matchDepNames": ["astral-agent-skills"],
       "groupName": "Astral agent skills",
+      "minimumReleaseAge": "3 days",
+      "automerge": false
+    },
+    {
+      "description": "Review Anthropic Claude plugin skills separately",
+      "matchManagers": ["nix"],
+      "matchDepNames": ["claude-plugins-official"],
+      "groupName": "Anthropic Claude plugin skills",
+      "minimumReleaseAge": "3 days",
+      "automerge": false
+    },
+    {
+      "description": "Review Joel Hooks skills separately",
+      "matchManagers": ["nix"],
+      "matchDepNames": ["joelhooks-skills"],
+      "groupName": "Joel Hooks skills",
       "minimumReleaseAge": "3 days",
       "automerge": false
     },

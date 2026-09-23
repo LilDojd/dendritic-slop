@@ -148,6 +148,22 @@ actionbook
     ];
   };
 
+  frontend-design = {
+    title = "Frontend design";
+    description = "Create distinctive, production-grade frontend interfaces.";
+    homepage = "https://github.com/anthropics/claude-plugins-official/tree/main/plugins/frontend-design";
+    repository = "anthropic-claude-plugins";
+    repositoryPath = "plugins/frontend-design/skills/frontend-design";
+  };
+
+  # Upstream publishes no license; the leaf is vendored from its pinned source.
+  uncomplect = {
+    title = "Uncomplect";
+    description = "Pressure-test a design for complection, deletability, and deep module boundaries.";
+    homepage = "https://github.com/joelhooks/skills/tree/main/skills/uncomplect";
+    source = inputs.joelhooks-skills + "/skills/uncomplect";
+  };
+
   herdr = {
     title = "Herdr";
     description = "Inspect and control Herdr workspaces, tabs, panes, commands, and agents.";

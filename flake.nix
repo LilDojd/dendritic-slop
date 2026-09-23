@@ -14,6 +14,11 @@
       flake = false;
     };
 
+    claude-plugins-official = {
+      url = "github:anthropics/claude-plugins-official";
+      flake = false;
+    };
+
     actionbook-rust-skills = {
       url = "github:actionbook/rust-skills";
       flake = false;
@@ -35,6 +40,11 @@
     };
 
     impermanence.url = "github:nix-community/impermanence";
+
+    joelhooks-skills = {
+      url = "github:joelhooks/skills";
+      flake = false;
+    };
 
     jevons = {
       url = "github:LilDojd/jevons";
