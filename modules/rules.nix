@@ -5,6 +5,11 @@ let
     { config, lib, ... }:
     let
       cfg = config.dendriticSlop;
+      # Herdr agent kinds of the harnesses this configuration installs.
+      spawnableAgents = lib.filter (name: cfg.targets.${name}.enable or false) [
+        "pi"
+        "claude"
+      ];
       rulesFor =
         {
           harness,
@@ -30,10 +35,12 @@ let
           # Python tool selection
 
           Respect each repository's existing Python package manager, formatter, linter, and type checker. Prefer project-pinned `uv run` tools, then declaratively packaged tools. Do not use `uvx`, install packages, or migrate project tooling without explicit user approval.
+        ''
+        + lib.optionalString (cfg.targets.herdr.enable or false) ''
 
           # Herdr agent selection
 
-          When working in Herdr, only spawn ${harness} agents unless the user explicitly requests another agent kind.
+          When working in Herdr, spawn only agents from the following list unless the user explicitly requests another agent kind: ${lib.concatStringsSep ", " spawnableAgents}.
         '';
     in
     {

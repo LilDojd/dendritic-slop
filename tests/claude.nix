@@ -26,7 +26,10 @@ let
   };
   homeWithClaudeOnly = mkHome {
     dendriticSlop = {
-      targets.claude.enable = true;
+      targets = {
+        claude.enable = true;
+        rules.enable = true;
+      };
       skills.bro.enable = true;
       mcps.linear.enable = true;
     };
@@ -64,7 +67,14 @@ in
     assert claude.settings.env.DISABLE_AUTOUPDATER == "1";
     assert builtins.length claude.settings.hooks.SessionStart == 1;
     assert claude.hooks ? "herdr-agent-state.sh";
-    assert lib.hasInfix "only spawn Claude agents" claude.context;
+    assert lib.hasInfix
+      "spawn only agents from the following list unless the user explicitly requests another agent kind: pi, claude."
+      claude.context;
+    assert lib.hasInfix "Declarative self-management"
+      homeWithClaudeOnly.config.programs.claude-code.context;
+    assert !lib.hasInfix "Herdr agent selection" homeWithClaudeOnly.config.programs.claude-code.context;
+    assert lib.hasInfix "requests another agent kind: pi, claude."
+      homeWithClaude.config.programs.pi.coding-agent.rules;
     assert lib.hasInfix "# Engineering principles" claude.context;
     assert !homeWithClaudeOnly.config.programs.pi.coding-agent.enable;
     assert !(homeWithClaudeOnly.config.programs.claude-code.settings ? hooks);
