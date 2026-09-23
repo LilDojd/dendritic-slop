@@ -10,8 +10,10 @@ let
           harness,
           runtimeMutations,
         }:
+        builtins.readFile ../resources/rules/context.md
+        + "\n"
         # markdown
-        ''
+        + ''
           # Declarative self-management
 
           Global ${harness} and LLM tooling is managed by the `dendritic-slop` flake and its consuming host flake.
@@ -38,7 +40,7 @@ let
       options.dendriticSlop.targets.rules.enable = lib.mkOption {
         type = lib.types.bool;
         default = false;
-        description = "Enable harness rules for declarative global tooling and Herdr agent selection.";
+        description = "Enable the global agent context and harness rules for declarative tooling and Herdr agent selection.";
       };
 
       config = lib.mkIf (cfg.enable && cfg.targets.rules.enable) {
@@ -46,12 +48,10 @@ let
           harness = "Pi";
           runtimeMutations = "`pi install`";
         });
-        programs.claude-code.rules.dendritic-slop =
-          lib.mkIf (cfg.targets.claude.enable or false)
-            (rulesFor {
-              harness = "Claude";
-              runtimeMutations = "`claude plugin install`, `claude mcp add`, or `/config`";
-            });
+        programs.claude-code.context = lib.mkIf (cfg.targets.claude.enable or false) (rulesFor {
+          harness = "Claude";
+          runtimeMutations = "`claude plugin install`, `claude mcp add`, or `/config`";
+        });
       };
     };
 in

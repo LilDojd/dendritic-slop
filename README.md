@@ -87,8 +87,9 @@ connection time by a `headersHelper` that reads the runtime secret file.
 
 With the Herdr target enabled, Claude also receives Herdr's session hook and its
 versioned hook file, so `herdr integration status` reports it installed. With the
-rules target enabled, Claude receives the declarative self-management rules as
-`~/.claude/rules/dendritic-slop.md`.
+rules target enabled, every harness receives the global agent context from
+`resources/rules/context.md` plus its declarative self-management rules (Pi's
+rules and Claude's `~/.claude/CLAUDE.md`).
 
 `settings.json` is a read-only store link: set preferences through
 `programs.claude-code.settings` in the consuming configuration. The auto-updater

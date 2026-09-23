@@ -64,7 +64,8 @@ in
     assert claude.settings.env.DISABLE_AUTOUPDATER == "1";
     assert builtins.length claude.settings.hooks.SessionStart == 1;
     assert claude.hooks ? "herdr-agent-state.sh";
-    assert lib.hasInfix "only spawn Claude agents" claude.rules.dendritic-slop;
+    assert lib.hasInfix "only spawn Claude agents" claude.context;
+    assert lib.hasInfix "# Engineering principles" claude.context;
     assert !homeWithClaudeOnly.config.programs.pi.coding-agent.enable;
     assert !(homeWithClaudeOnly.config.programs.claude-code.settings ? hooks);
     assert builtins.attrNames homeWithClaudeOnly.config.programs.claude-code.mcpServers == [ "linear" ];
