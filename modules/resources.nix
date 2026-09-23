@@ -131,10 +131,17 @@ let
         extensions = resourceOptions catalog.extensions;
         tools = resourceOptions catalog.tools;
       };
+      options.dendriticSlopInternal.skills.selected = lib.mkOption {
+        type = lib.types.attrsOf lib.types.path;
+        readOnly = true;
+        internal = true;
+        description = "Realized roots of the selected skills, keyed by skill name, for every harness.";
+      };
 
       config = lib.mkMerge (
         profileDefaults
         ++ [
+          { dendriticSlopInternal.skills.selected = selectedTargets; }
           (lib.mkIf config.dendriticSlop.enable {
             assertions = resourceAssertions {
               inherit catalog pkgs;

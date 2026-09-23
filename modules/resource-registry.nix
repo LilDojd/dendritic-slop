@@ -99,5 +99,14 @@ in
     internal = true;
   };
 
-  config.dendriticSlopInternal.catalog = catalog;
+  options.dendriticSlopInternal.herdrSource = lib.mkOption {
+    type = lib.types.path;
+    readOnly = true;
+    internal = true;
+    description = "Pinned Herdr source providing agent integration assets.";
+  };
+
+  config.dendriticSlopInternal = {
+    inherit catalog herdrSource;
+  };
 }

@@ -1,6 +1,7 @@
 { lib, ... }:
 let
   targetNames = [
+    "claude"
     "git"
     "herdr"
     "pi"

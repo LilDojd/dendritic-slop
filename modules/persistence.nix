@@ -11,7 +11,8 @@
       ]
       ++ lib.optional (
         homeCfg.tools.tsk.enable || homeCfg.skills.tsk-cli.enable || homeCfg.herdr.plugins.tsk.enable
-      ) ".tsk";
+      ) ".tsk"
+      ++ lib.optional homeCfg.targets.claude.enable ".claude";
     in
     {
       config = lib.mkIf enabled {

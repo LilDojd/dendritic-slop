@@ -33,6 +33,12 @@ let
       config = lib.mkIf (config.dendriticSlop.enable && config.dendriticSlop.targets.pi.enable) {
         assertions = [
           {
+            assertion =
+              config.dendriticSlopInternal.mcp.servers == [ ]
+              || config.dendriticSlop.extensions.pi-mcp-adapter.enable;
+            message = "Pi reads selected MCP servers through dendriticSlop.extensions.pi-mcp-adapter; enable it or disable the Pi target";
+          }
+          {
             assertion = !hasProcessSecrets || unsafeExtensionNames == [ ];
             message = ''
               Runtime secrets are exposed to the Pi process, but these selected extensions are not reviewed as secret-capable: ${lib.concatStringsSep ", " unsafeExtensionNames}

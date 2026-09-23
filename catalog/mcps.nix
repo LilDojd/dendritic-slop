@@ -5,8 +5,6 @@
     description = "Expose the pinned agent-browser automation server over local MCP stdio.";
     homepage = "https://github.com/vercel-labs/agent-browser";
 
-    requiresTargets = [ "pi" ];
-    requiresResources = [ "extensions.pi-mcp-adapter" ];
     capabilities = {
       executesCode = true;
       network = true;
@@ -26,8 +24,6 @@
     description = "Find, create, and update Linear issues, projects, and comments with browser OAuth.";
     homepage = "https://linear.app/docs/mcp";
 
-    requiresTargets = [ "pi" ];
-    requiresResources = [ "extensions.pi-mcp-adapter" ];
     capabilities = {
       network = true;
       readsSecrets = true;
@@ -45,8 +41,6 @@
     description = "Look up current library documentation and examples.";
     homepage = "https://context7.com";
 
-    requiresTargets = [ "pi" ];
-    requiresResources = [ "extensions.pi-mcp-adapter" ];
     capabilities = {
       network = true;
       readsSecrets = true;

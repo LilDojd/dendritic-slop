@@ -4,6 +4,20 @@ let
   herdrSourceManifest = builtins.fromTOML (builtins.readFile (herdrSource + "/Cargo.toml"));
 in
 {
+  claude-code = {
+    title = "Claude Code";
+    description = "Run Anthropic's Claude Code terminal coding agent.";
+    homepage = "https://github.com/anthropics/claude-code";
+
+    requiresTargets = [ "claude" ];
+    capabilities = {
+      executesCode = true;
+      network = true;
+    };
+    package = llmAgentPackage "claude-code";
+    executable = "claude";
+  };
+
   herdr = {
     title = "Herdr";
     description = "Coordinate terminal coding-agent sessions.";

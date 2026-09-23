@@ -2,7 +2,7 @@
 
 ![100% slop](https://img.shields.io/badge/%F0%9F%A4%96%20100%25-slop-a3e635?style=plastic&labelColor=4c1d95 "100% LLM-generated")
 
-Declarative, reviewed Pi and LLM tooling for NixOS, nix-darwin, and Home Manager.
+Declarative, reviewed Pi, Claude Code, and LLM tooling for NixOS, nix-darwin, and Home Manager.
 
 ## Flake input
 
@@ -33,6 +33,8 @@ Import Home Manager, impermanence, and the aggregate module:
     enable = true;
     username = "alice";
 
+    targets.claude.enable = true;
+
     profiles = {
       core.enable = true;
       rust.enable = true;
@@ -50,7 +52,7 @@ Import Home Manager, impermanence, and the aggregate module:
 }
 ```
 
-The NixOS aggregate persists `.pi/agent` and `.local/state/dendritic-slop`. Set `dendriticSlop.targets.persistence.enable = false` to disable this persistence policy.
+The NixOS aggregate persists `.pi/agent` and `.local/state/dendritic-slop`, plus `.claude` when the Claude target is enabled. Set `dendriticSlop.targets.persistence.enable = false` to disable this persistence policy.
 
 ## nix-darwin
 
@@ -73,6 +75,25 @@ Import Home Manager and `inputs.dendritic-slop.modules.darwin.slop`. The selecti
 Profiles apply defaults. Explicit `targets.<name>.enable`, `skills.<name>.enable`, `mcps.<name>.enable`, `extensions.<name>.enable`, `tools.<name>.enable`, and `herdr.plugins.<name>.enable` values take precedence.
 
 Home Manager owns `~/.agents/skills` when enabled and refuses to overwrite unmanaged content. Move conflicting files aside manually before activation.
+
+## Claude Code
+
+`dendriticSlop.targets.claude.enable` installs Claude Code from `llm-agents.nix`
+through Home Manager's `programs.claude-code`. Every harness receives the same
+selection: each selected skill is linked whole into `~/.claude/skills/<name>`
+(Pi reads `~/.agents/skills`), and each selected MCP server is rendered into the
+generated `hm` personal plugin. Secret-backed MCP headers are produced at
+connection time by a `headersHelper` that reads the runtime secret file.
+
+With the Herdr target enabled, Claude also receives Herdr's session hook and its
+versioned hook file, so `herdr integration status` reports it installed. With the
+rules target enabled, Claude receives the declarative self-management rules as
+`~/.claude/rules/dendritic-slop.md`.
+
+`settings.json` is a read-only store link: set preferences through
+`programs.claude-code.settings` in the consuming configuration. The auto-updater
+is disabled; updates arrive through the flake. Do not use `claude plugin install`
+or `claude mcp add` for global tooling.
 
 ## tsk (explicit opt-in)
 

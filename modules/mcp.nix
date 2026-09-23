@@ -73,7 +73,7 @@ let
         ];
         default = "lazy";
       };
-      piProcessEnvironment = lib.mkOption {
+      environmentFiles = lib.mkOption {
         type = lib.types.attrsOf runtimeSecretPath;
         default = { };
       };
@@ -100,7 +100,7 @@ let
           secretHeaders = lib.foldl' (
             headers: secretName: headers // resource.secretFiles.${secretName}.headers
           ) { } (builtins.attrNames configuredSecrets);
-          piProcessEnvironment = lib.mapAttrs' (
+          environmentFiles = lib.mapAttrs' (
             secretName: secret:
             lib.nameValuePair secret.environment (config.dendriticSlop.mcps.${name}.secrets.${secretName})
           ) configuredSecrets;
@@ -121,7 +121,7 @@ let
         {
           owner = "mcps.${name}";
           inherit (resource) serverId lifecycle;
-          inherit transport piProcessEnvironment;
+          inherit transport environmentFiles;
         };
 
       selectedContributions = lib.mapAttrsToList contributionFor enabledMcps;
@@ -132,8 +132,7 @@ let
       ) (lib.unique serverIds);
 
       environmentEntries = lib.concatMap (
-        contribution:
-        lib.mapAttrsToList (name: path: { inherit name path; }) contribution.piProcessEnvironment
+        contribution: lib.mapAttrsToList (name: path: { inherit name path; }) contribution.environmentFiles
       ) contributions;
       environmentGroups = lib.groupBy (entry: entry.name) environmentEntries;
       conflictingEnvironmentNames = builtins.attrNames (
@@ -141,7 +140,7 @@ let
           _: entries: builtins.length (lib.unique (map (entry: entry.path) entries)) > 1
         ) environmentGroups
       );
-      piProcessEnvironment = lib.mapAttrs (_: entries: {
+      piEnvironment = lib.mapAttrs (_: entries: {
         file = (builtins.head entries).path;
       }) environmentGroups;
 
@@ -189,7 +188,7 @@ let
         assert lib.assertMsg (duplicateServerIds == [ ])
           "MCP server IDs must be globally unique; collisions: ${lib.concatStringsSep ", " duplicateServerIds}";
         assert lib.assertMsg (conflictingEnvironmentNames == [ ])
-          "MCP Pi-process environment declarations conflict: ${lib.concatStringsSep ", " conflictingEnvironmentNames}";
+          "MCP secret environment declarations conflict: ${lib.concatStringsSep ", " conflictingEnvironmentNames}";
         builtins.listToAttrs (
           map (
             contribution: lib.nameValuePair contribution.serverId (renderContribution contribution)
@@ -217,7 +216,7 @@ let
           }
           {
             assertion = conflictingEnvironmentNames == [ ];
-            message = "MCP Pi-process environment declarations conflict: ${lib.concatStringsSep ", " conflictingEnvironmentNames}";
+            message = "MCP secret environment declarations conflict: ${lib.concatStringsSep ", " conflictingEnvironmentNames}";
           }
           {
             assertion = invalidSecretHeaderMcps == [ ];
@@ -225,7 +224,7 @@ let
           }
         ];
 
-        programs.pi.coding-agent.environment = piProcessEnvironment;
+        programs.pi.coding-agent.environment = piEnvironment;
 
         xdg.configFile."mcp/mcp.json" = lib.mkIf (contributions != [ ]) {
           text = builtins.toJSON { mcpServers = renderedServers; };

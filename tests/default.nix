@@ -9,4 +9,5 @@ import ./selection.nix fixtures
 // import ./mcp.nix fixtures
 // import ./herdr.nix fixtures
 // import ./tsk.nix fixtures
+// import ./claude.nix fixtures
 // import ./integration.nix fixtures

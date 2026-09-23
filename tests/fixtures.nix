@@ -300,7 +300,12 @@ rec {
     );
 
   homeWithStandalonePi = mkHome { dendriticSlop.tools.pi.enable = true; };
-  homeWithMissingAdapter = tryHome { dendriticSlop.mcps.linear.enable = true; };
+  homeWithMissingAdapter = tryHome {
+    dendriticSlop = {
+      targets.pi.enable = true;
+      mcps.linear.enable = true;
+    };
+  };
   homeWithDisabledHerdr = tryHome {
     dendriticSlop = {
       profiles.core.enable = true;
