@@ -85,8 +85,15 @@ let
             ) config.dendriticSlopInternal.mcp.servers
           );
           settings = lib.mkMerge [
-            # Updates arrive through the flake; the store copy is immutable.
-            { env.DISABLE_AUTOUPDATER = "1"; }
+            {
+              # Updates arrive through the flake; the store copy is immutable.
+              env.DISABLE_AUTOUPDATER = "1";
+              attribution = {
+                commit = "";
+                pr = "";
+                sessionUrl = false;
+              };
+            }
             (lib.mkIf herdrIntegration {
               hooks.SessionStart = [
                 {
