@@ -217,6 +217,22 @@
         "type": "github"
       }
     },
+    "herdr-projects": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1790221674,
+        "narHash": "sha256-zGxQCZArx6p5zur5kiXw1AcT9gkdf5SVUECHbvFELrQ=",
+        "owner": "eliasstravik",
+        "repo": "herdr-projects",
+        "rev": "1bbe606dcff694caf821072928d141f8dc03eda7",
+        "type": "github"
+      },
+      "original": {
+        "owner": "eliasstravik",
+        "repo": "herdr-projects",
+        "type": "github"
+      }
+    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -605,6 +621,7 @@
         "claude-plugins-official": "claude-plugins-official",
         "flake-parts": "flake-parts",
         "herdr-plugin-jj-workspace": "herdr-plugin-jj-workspace",
+        "herdr-projects": "herdr-projects",
         "home-manager": "home-manager",
         "impermanence": "impermanence",
         "import-tree": "import-tree",

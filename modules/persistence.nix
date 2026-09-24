@@ -12,6 +12,10 @@
       ++ lib.optional (
         homeCfg.tools.tsk.enable || homeCfg.skills.tsk-cli.enable || homeCfg.herdr.plugins.tsk.enable
       ) ".tsk"
+      ++ lib.optionals homeCfg.herdr.plugins.projects.enable [
+        ".herdr-projects"
+        ".config/herdr-projects"
+      ]
       ++ lib.optional homeCfg.targets.claude.enable ".claude";
     in
     {

@@ -51,6 +51,8 @@
       ${pkgs.bash}/bin/bash -n ${enabledHerdrManageScript}
       touch "$out"
     '';
+  # Building the root runs the upstream Rust suite and verifies the packaged manifest/executable.
+  herdr-plugin-projects = (config.dendriticSlopInternal.realized.herdrPlugins pkgs).projects.root;
   herdr-plugin-jj-workspace-package = jjWorkspacePackage;
   herdr-plugin-jj-workspace-root = jjWorkspaceRoot;
   herdr-plugin-jj-workspace-manifest = jjWorkspaceManifest;

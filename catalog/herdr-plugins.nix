@@ -5,6 +5,32 @@ let
   packageManifest = builtins.fromTOML (builtins.readFile (source + "/Cargo.toml"));
 in
 {
+  projects =
+    let
+      source = inputs.herdr-projects;
+      manifest = builtins.fromTOML (builtins.readFile (source + "/herdr-plugin.toml"));
+    in
+    {
+      title = "Herdr Projects";
+      description = "Coordinate parallel agent threads with shared project memory and a project overview.";
+      homepage = "https://github.com/eliasstravik/herdr-projects";
+      requiresTargets = [ "herdr" ];
+      capabilities = {
+        executesCode = true;
+        network = true;
+        mutatesUserConfig = true;
+      };
+      inherit source;
+      pluginId = manifest.id;
+      inherit (manifest) version;
+      minimumHerdrVersion = manifest.min_herdr_version;
+      executable = "herdr-projects";
+      executablePath = "target/release/herdr-projects";
+      actions = map (action: { inherit (action) id title; }) manifest.actions;
+      package =
+        pkgs: pkgs.callPackage ../packages/herdr-projects.nix { inherit (inputs) herdr-projects; };
+    };
+
   tsk =
     let
       manifest = builtins.fromTOML (builtins.readFile (inputs.tsk + "/herdr-plugin.toml"));

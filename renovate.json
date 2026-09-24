@@ -39,6 +39,7 @@
         "!astral-agent-skills",
         "!claude-plugins-official",
         "!herdr-plugin-jj-workspace",
+        "!herdr-projects",
         "!joelhooks-skills",
         "!leonardomso-rust-skills",
         "!narumitw-pi-extensions"
@@ -96,7 +97,7 @@
     {
       "description": "Separate Herdr plugin input updates",
       "matchManagers": ["nix"],
-      "matchDepNames": ["herdr-plugin-jj-workspace"],
+      "matchDepNames": ["herdr-plugin-jj-workspace", "herdr-projects"],
       "groupName": "Herdr plugins",
       "minimumReleaseAge": "3 days",
       "automerge": false

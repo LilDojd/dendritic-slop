@@ -34,6 +34,11 @@
       flake = false;
     };
 
+    herdr-projects = {
+      url = "github:eliasstravik/herdr-projects";
+      flake = false;
+    };
+
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
