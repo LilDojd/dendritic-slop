@@ -108,20 +108,6 @@ The NixOS persistence policy also retains `~/.tsk` when any tsk resource is
 selected. Update through the flake, not `tsk update`; skill and plugin setup are
 managed declaratively, so do not run `tsk setup`.
 
-## Herdr Projects (explicit opt-in)
-
-Enable `dendriticSlop.herdr.plugins.projects.enable` with the Herdr target to
-install the `herdr-projects` CLI and register its actions, popups, and background
-ticker. Create a project from your shell with
-`herdr-projects new "Refactor" --repo "$PWD"` (not `herdr projects`). Open its overview
-with `herdr plugin action invoke open-popup --plugin herdr-projects`. No shortcut
-is assigned, preserving the Jujutsu plugin's `prefix+a` binding.
-
-Optional sidebar rows and agent progress hooks are not configured. Do not run
-upstream's `configure` against managed settings or use `update`; setup and updates
-belong in the flakes. NixOS persistence retains `~/.herdr-projects` and
-`~/.config/herdr-projects`. Projects uses Git worktrees, not Jujutsu workspaces.
-
 ## Security model
 
 Resources are selected from a closed typed catalog. External sources are pinned, projected through reviewed allowlists, and built with Nix. Source updates must be reviewed in their commit or pull request; `flake.lock` records the installed revisions, not proof of review. Activation does not fetch packages. Credentials remain outside the Nix store; MCP secret options accept only absolute runtime file paths.
