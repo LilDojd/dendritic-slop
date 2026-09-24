@@ -13,6 +13,7 @@
   jjWorkspaceResource,
   jjWorkspaceRoot,
   lib,
+  mkHome,
   pkgs,
   ...
 }:
@@ -53,6 +54,26 @@
     '';
   # Building the root runs the upstream Rust suite and verifies the packaged manifest/executable.
   herdr-plugin-projects = (config.dendriticSlopInternal.realized.herdrPlugins pkgs).projects.root;
+  herdr-plugin-projects-path =
+    let
+      enabled = mkHome {
+        dendriticSlop = {
+          targets.herdr.enable = true;
+          herdr.plugins.projects.enable = true;
+        };
+      };
+      package = (config.dendriticSlopInternal.realized.herdrPlugins pkgs).projects.package;
+    in
+    assert !(builtins.elem package home.config.home.packages);
+    pkgs.runCommand "herdr-plugin-projects-path-check" { } ''
+      export HOME="$TMPDIR/home"
+      mkdir -p "$HOME"
+      export PATH="${enabled.config.home.path}/bin:$PATH"
+      test "$(command -v herdr-projects)" = "${enabled.config.home.path}/bin/herdr-projects"
+      herdr-projects new "Refactor"
+      herdr-projects list | grep -Fx "$(printf 'refactor\tactive\tno threads')"
+      touch "$out"
+    '';
   herdr-plugin-jj-workspace-package = jjWorkspacePackage;
   herdr-plugin-jj-workspace-root = jjWorkspaceRoot;
   herdr-plugin-jj-workspace-manifest = jjWorkspaceManifest;

@@ -229,7 +229,7 @@ let
           ];
         }
         (lib.mkIf (cfg.enable && cfg.targets.herdr.enable) {
-          home.packages = [ herdrPackage ];
+          home.packages = [ herdrPackage ] ++ map (name: realizedPlugins.${name}.package) enabledPluginNames;
         })
       ];
     };

@@ -111,7 +111,9 @@ managed declaratively, so do not run `tsk setup`.
 ## Herdr Projects (explicit opt-in)
 
 Enable `dendriticSlop.herdr.plugins.projects.enable` with the Herdr target to
-register the Projects actions, popups, and background ticker. Open its overview
+install the `herdr-projects` CLI and register its actions, popups, and background
+ticker. Create a project from your shell with
+`herdr-projects new "Refactor" --repo "$PWD"` (not `herdr projects`). Open its overview
 with `herdr plugin action invoke open-popup --plugin herdr-projects`. No shortcut
 is assigned, preserving the Jujutsu plugin's `prefix+a` binding.
 
