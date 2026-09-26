@@ -1,5 +1,5 @@
 {
-  description = "Dendritic Nix modules for Pi and LLM tooling";
+  description = "Home Manager modules, skills, and packages for Claude Code, Pi, and Herdr";
 
   nixConfig = {
     extra-substituters = [ "https://cache.numtide.com" ];
@@ -39,8 +39,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    impermanence.url = "github:nix-community/impermanence";
-
     joelhooks-skills = {
       url = "github:joelhooks/skills";
       flake = false;
@@ -52,11 +50,6 @@
     };
 
     import-tree.url = "github:denful/import-tree";
-
-    nix-darwin = {
-      url = "github:nix-darwin/nix-darwin";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
 
     leonardomso-rust-skills = {
       url = "github:leonardomso/rust-skills";
@@ -79,10 +72,7 @@
 
     pi = {
       url = "github:lukasl-dev/pi.nix";
-      inputs = {
-        nixpkgs.follows = "nixpkgs";
-        systems.follows = "systems";
-      };
+      inputs.nixpkgs.follows = "nixpkgs";
     };
 
     pi-ask-user = {

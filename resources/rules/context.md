@@ -31,3 +31,18 @@ When the setup is becomes complex create `devenv.nix` and run commands within:
     $ devenv shell -- cli args
 
 See https://devenv.sh/ad-hoc-developer-environments/
+
+# Declarative self-management
+
+Global agent and LLM tooling is managed by the `dendritic-slop` flake and its consuming host flake.
+
+1. Change `dendritic-slop` for shared resources, or the consuming flake for host selection and secrets. Do not mutate runtime configuration or use `claude plugin install`, `claude mcp add`, `/config`, or `pi install`.
+2. Pin and review external packages, skills, and extensions before enabling them.
+3. Keep credentials and transient state outside the Nix store.
+4. Format changed Nix files and run `nix flake check --no-eval-cache --no-build --all-systems`.
+
+These rules do not restrict project-local agent or MCP configuration.
+
+# Python tool selection
+
+Respect each repository's existing Python package manager, formatter, linter, and type checker. Prefer project-pinned `uv run` tools, then declaratively packaged tools. Do not use `uvx`, install packages, or migrate project tooling without explicit user approval.
