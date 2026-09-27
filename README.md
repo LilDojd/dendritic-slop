@@ -24,7 +24,9 @@ The flake configures the Numtide binary cache used by packages from `llm-agents.
 ## Outputs
 
 - `modules.homeManager.default` imports every module below.
-- `skills.<name>`: pinned skill directories. `skillSets.{core,rust,python}` group them.
+- `skills.<name>`: pinned skill directories. `skillSets.{core,rust,python,pydantic}` group them.
+  `pydantic` covers Pydantic, Pydantic AI, and Logfire; the Pydantic AI migration skills are
+  only in `skills`. Logfire skills expect the hosted Logfire MCP server in `programs.mcp.servers`.
 - `packages.<system>.*`: Pi extensions (`pi-ask-user`, `pi-mcp-adapter`, `pi-web-access`, `pi-playwright`, `pi-goal`, `pi-starship`, `pi-jev-compact`, `jevons`), `tsk`, and Herdr plugin roots (`herdr-plugin-jj-workspace`, `herdr-plugin-tsk`).
 
 ## Home Manager

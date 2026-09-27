@@ -49,6 +49,31 @@ let
     "uv"
   ];
 
+  pydanticSkills = fromDir "${inputs.pydantic-skills}/skills";
+
+  pydantic = pydanticSkills [
+    "building-pydantic-ai-agents"
+    "logfire-evals"
+    "logfire-infrastructure"
+    "logfire-instrumentation"
+    "logfire-query"
+    "logfire-setup"
+    "logfire-ui"
+    "pydantic"
+    "pydantic-ai-harness"
+  ];
+
+  pydanticMigrations = pydanticSkills [
+    "migrating-agno-to-pydantic-ai"
+    "migrating-claude-agent-sdk-to-pydantic-ai"
+    "migrating-google-adk-to-pydantic-ai"
+    "migrating-langchain-to-pydantic-ai"
+    "migrating-mastra-to-pydantic-ai"
+    "migrating-openai-agents-sdk-to-pydantic-ai"
+    "migrating-pi-to-pydantic-ai"
+    "migrating-vercel-ai-sdk-and-eve-to-pydantic-ai"
+  ];
+
   ponytail = fromDir "${inputs.ponytail}/skills" [
     "ponytail"
     "ponytail-audit"
@@ -71,7 +96,14 @@ let
 in
 {
   flake = {
-    skills = core // rust // python // extra;
-    skillSets = { inherit core rust python; };
+    skills = core // rust // python // pydantic // pydanticMigrations // extra;
+    skillSets = {
+      inherit
+        core
+        rust
+        python
+        pydantic
+        ;
+    };
   };
 }

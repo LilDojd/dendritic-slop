@@ -95,6 +95,11 @@
       flake = false;
     };
 
+    pydantic-skills = {
+      url = "github:pydantic/skills";
+      flake = false;
+    };
+
     systems.url = "github:nix-systems/default";
 
     tsk = {

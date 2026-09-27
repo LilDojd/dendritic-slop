@@ -522,6 +522,22 @@
         "type": "github"
       }
     },
+    "pydantic-skills": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1789788340,
+        "narHash": "sha256-0uMY4UPsdgbCsPtwxrFJbz5vkYRSEhdjvJkmhH3DFDs=",
+        "owner": "pydantic",
+        "repo": "skills",
+        "rev": "238d97102650c1caa51f35027aee13c469c59542",
+        "type": "github"
+      },
+      "original": {
+        "owner": "pydantic",
+        "repo": "skills",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "actionbook-rust-skills": "actionbook-rust-skills",
@@ -543,6 +559,7 @@
         "pi-mcp-adapter": "pi-mcp-adapter",
         "pi-web-access": "pi-web-access",
         "ponytail": "ponytail",
+        "pydantic-skills": "pydantic-skills",
         "systems": "systems_3",
         "tsk": "tsk"
       }
