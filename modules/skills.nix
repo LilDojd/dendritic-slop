@@ -86,6 +86,7 @@ let
   core = ponytail // {
     bro = ../resources/skills/bro;
     jujutsu = ../resources/skills/jujutsu;
+    test-audit = ../resources/skills/test-audit;
   };
 
   extra = {
