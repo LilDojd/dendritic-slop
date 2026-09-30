@@ -27,7 +27,7 @@ The flake configures the Numtide binary cache used by packages from `llm-agents.
 - `skills.<name>`: pinned skill directories. `skillSets.{core,rust,python,pydantic}` group them.
   `pydantic` covers Pydantic, Pydantic AI, and Logfire; the Pydantic AI migration skills are
   only in `skills`. Logfire skills expect the hosted Logfire MCP server in `programs.mcp.servers`.
-- `packages.<system>.*`: Pi extensions (`pi-ask-user`, `pi-web-access`, `pi-playwright`, `pi-goal`, `pi-starship`, `pi-jev-compact`, `jevons`), `tsk`, and Herdr plugin roots (`herdr-plugin-jj-workspace`, `herdr-plugin-tsk`).
+- `packages.<system>.*`: Pi (with the standalone codemode worker embedded), Pi extensions (`pi-ask-user`, `pi-web-access`, `pi-playwright`, `pi-goal`, `pi-starship`, `pi-jev-compact`, `jevons`), `tsk`, and Herdr plugin roots (`herdr-plugin-jj-workspace`, `herdr-plugin-tsk`).
 
 ## Home Manager
 
@@ -70,7 +70,8 @@ and enables `enableMcpIntegration`, so `programs.mcp.servers` reach Claude Code.
 ### `pi`
 
 Imports the [pi.nix](https://github.com/lukasl-dev/pi.nix) module and defaults its
-package to `llm-agents.nix`. `dendriticSlop.piPackages` collects Pi packages from any module
+package to this flake's `pi`, based on `llm-agents.nix` with the codemode worker embedded.
+`dendriticSlop.piPackages` collects Pi packages from any module
 into `settings.packages`, which pi.nix does not merge. `programs.mcp.servers` are written to
 Pi's native `~/.pi/agent/mcp.json`. The file is read-only, so change exposure and enablement
 in Nix instead of through `/mcp` or `pi mcp add`.

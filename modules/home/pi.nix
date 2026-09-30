@@ -1,4 +1,4 @@
-{ inputs, ... }:
+{ inputs, self, ... }:
 {
   flake.modules.homeManager.pi =
     {
@@ -22,7 +22,7 @@
 
       config = {
         programs.pi.coding-agent = {
-          package = lib.mkDefault inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.pi;
+          package = lib.mkDefault self.packages.${pkgs.stdenv.hostPlatform.system}.pi;
           settings = lib.mkIf (packages != [ ]) { packages = map toString (lib.unique packages); };
         };
 
