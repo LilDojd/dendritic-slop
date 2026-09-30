@@ -1,4 +1,4 @@
-{ inputs, self, ... }:
+{ inputs, ... }:
 {
   flake.modules.homeManager.pi =
     {
@@ -9,6 +9,7 @@
     }:
     let
       packages = config.dendriticSlop.piPackages;
+      mcp = config.programs.mcp;
     in
     {
       imports = [ inputs.pi.homeModules.default ];
@@ -20,13 +21,27 @@
       };
 
       config = {
-        dendriticSlop.piPackages = lib.mkIf (config.programs.mcp.servers != { }) [
-          self.packages.${pkgs.stdenv.hostPlatform.system}.pi-mcp-adapter
-        ];
         programs.pi.coding-agent = {
           package = lib.mkDefault inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.pi;
           settings = lib.mkIf (packages != [ ]) { packages = map toString (lib.unique packages); };
         };
+
+        home.file.".pi/agent/mcp.json" =
+          lib.mkIf (config.programs.pi.coding-agent.enable && mcp.enable && mcp.servers != { })
+            {
+              source = (pkgs.formats.json { }).generate "pi-mcp.json" {
+                mcpServers = lib.mapAttrs (
+                  name: server:
+                  lib.hm.mcp.transformMcpServer {
+                    inherit server;
+                    extraTransforms = [
+                      lib.hm.mcp.addType
+                      (lib.hm.mcp.wrapEnvFilesCommand { inherit pkgs name; })
+                    ];
+                  }
+                ) mcp.servers;
+              };
+            };
       };
     };
 }

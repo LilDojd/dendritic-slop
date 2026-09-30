@@ -23,9 +23,6 @@
         pi-jev-compact = pkgs.callPackage ../packages/pi-jev-compact.nix {
           source = inputs.pi-jev-compact;
         };
-        pi-mcp-adapter = pkgs.callPackage ../packages/pi-mcp-adapter.nix {
-          source = inputs.pi-mcp-adapter;
-        };
         pi-playwright = pkgs.callPackage ../packages/pi-playwright.nix { };
         pi-starship = narumitw "pi-starship";
         pi-web-access = pkgs.callPackage ../packages/pi-web-access.nix { source = inputs.pi-web-access; };

@@ -85,11 +85,6 @@
       flake = false;
     };
 
-    pi-mcp-adapter = {
-      url = "github:nicobailon/pi-mcp-adapter";
-      flake = false;
-    };
-
     pi-web-access = {
       url = "github:nicobailon/pi-web-access";
       flake = false;
