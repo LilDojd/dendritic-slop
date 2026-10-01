@@ -17,7 +17,6 @@
     {
       packages = {
         inherit tsk;
-        jevons = pkgs.callPackage ../packages/jevons.nix { source = inputs.jevons; };
         pi = pkgs.callPackage ../packages/pi.nix {
           pi = inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.pi;
         };
@@ -26,6 +25,7 @@
           source = inputs.pi-claude-bridge;
         };
         pi-goal = narumitw "pi-goal";
+        pi-jev = pkgs.callPackage ../packages/pi-jev.nix { source = inputs.pi-jev; };
         pi-jev-compact = pkgs.callPackage ../packages/pi-jev-compact.nix {
           source = inputs.pi-jev-compact;
         };

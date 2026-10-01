@@ -44,11 +44,6 @@
       flake = false;
     };
 
-    jevons = {
-      url = "github:LilDojd/jevons";
-      flake = false;
-    };
-
     import-tree.url = "github:denful/import-tree";
 
     leonardomso-rust-skills = {
@@ -82,6 +77,11 @@
 
     pi-claude-bridge = {
       url = "github:elidickinson/pi-claude-bridge/9dafd0301faad79cf6a1974d92af424189476b5d";
+      flake = false;
+    };
+
+    pi-jev = {
+      url = "github:y0usaf/pi-jev/cbbc35dacee9337e575f7de913ef2757ad64a198";
       flake = false;
     };
 

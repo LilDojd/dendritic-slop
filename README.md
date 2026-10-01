@@ -27,7 +27,7 @@ The flake configures the Numtide binary cache used by packages from `llm-agents.
 - `skills.<name>`: pinned skill directories. `skillSets.{core,rust,python,pydantic}` group them.
   `pydantic` covers Pydantic, Pydantic AI, and Logfire; the Pydantic AI migration skills are
   only in `skills`. Logfire skills expect the hosted Logfire MCP server in `programs.mcp.servers`.
-- `packages.<system>.*`: Pi (with the standalone codemode worker embedded), Pi extensions (`pi-ask-user`, `pi-claude-bridge`, `pi-web-access`, `pi-playwright`, `pi-goal`, `pi-starship`, `pi-jev-compact`, `jevons`), `tsk`, and Herdr plugin roots (`herdr-plugin-jj-workspace`, `herdr-plugin-tsk`).
+- `packages.<system>.*`: Pi (with the standalone codemode worker embedded), Pi extensions (`pi-ask-user`, `pi-claude-bridge`, `pi-web-access`, `pi-playwright`, `pi-goal`, `pi-starship`, `pi-jev-compact`, `pi-jev`), `tsk`, and Herdr plugin roots (`herdr-plugin-jj-workspace`, `herdr-plugin-tsk`).
 
 ## Home Manager
 
@@ -82,6 +82,12 @@ Home Manager with `provider.pathToClaudeCodeExecutable = lib.getExe config.progr
 Set `provider.plan` (`"pro"` or `"max"`) and `askClaude.enabled` explicitly so the
 startup notice does not try to rewrite the managed config. AskClaude is opt-in;
 Extra Usage is disabled by default. Claude authentication and sessions stay outside the store.
+
+`pi-jev` replaces Jevons with `jev_ask` and automatic shadow-mode tool/output
+judges. It uses the runtime `TYPESAFE_API_KEY`; truncated arguments and output
+are sent to TypeSafe, including possible secrets. The packaged client only
+allows `https://api.typesafe.ai/v1/systemone`, so project config cannot redirect
+the key to another endpoint. Configure judges through `~/.pi/agent/pi-jev.json`.
 
 ### `skills`
 

@@ -24,6 +24,48 @@
         test ! -e "$PI_CODING_AGENT_DIR/git"
         touch "$out"
       '';
+      checks.pi-jev = pkgs.runCommand "pi-jev-check" { } ''
+        export HOME="$TMPDIR/home"
+        export PI_CODING_AGENT_DIR="$HOME/.pi/agent"
+        export TYPESAFE_API_KEY="fixture-never-send"
+        mkdir -p "$PI_CODING_AGENT_DIR" "$TMPDIR/work"
+        echo '{"packages":["${self'.packages.pi-jev}"]}' > "$PI_CODING_AGENT_DIR/settings.json"
+        cd "$TMPDIR/work"
+        ${self'.packages.pi}/bin/pi --offline --mode rpc --no-session \
+          -e ${../resources/tests/pi-jev.js} < /dev/null > smoke.txt 2> errors.txt
+        cat errors.txt >&2
+        ${pkgs.gnugrep}/bin/grep -Fx 'Pi Jev smoke passed' smoke.txt
+        test ! -e "$PI_CODING_AGENT_DIR/npm"
+        test ! -e "$PI_CODING_AGENT_DIR/git"
+
+        ${pkgs.nodejs}/bin/node --input-type=module <<'EOF'
+        import assert from "node:assert/strict";
+        import { askJev, DEFAULT_ENDPOINT } from "${self'.packages.pi-jev}/src/client.ts";
+        let calls = 0;
+        globalThis.fetch = async (url, options) => {
+          calls++;
+          assert.equal(url, DEFAULT_ENDPOINT);
+          assert.equal(options.headers.Authorization, "Bearer fixture-never-send");
+          return new Response(JSON.stringify({
+            model: "fixture",
+            answers: { safe: { type: "noul", noul: 0.8 } },
+          }));
+        };
+        const call = {
+          apiKey: "fixture-never-send", retries: 0, state: "check",
+          questions: { safe: { type: "noul", instructions: "Is this safe?" } },
+        };
+        await assert.rejects(
+          askJev({ ...call, endpoint: "https://untrusted.invalid/v1/systemone" }),
+          /Only the TypeSafe endpoint is allowed/,
+        );
+        assert.equal(calls, 0);
+        const result = await askJev(call);
+        assert.equal(result.answers.safe.noul, 0.8);
+        assert.equal(calls, 1);
+        EOF
+        touch "$out"
+      '';
       checks.home =
         (inputs.home-manager.lib.homeManagerConfiguration {
           inherit pkgs;
@@ -54,6 +96,7 @@
                   piPackages = [
                     self'.packages.pi-ask-user
                     self'.packages.pi-claude-bridge
+                    self'.packages.pi-jev
                   ];
                   mcpHeaderSecrets.context7.CONTEXT7_API_KEY = "/run/secrets/context7";
                   herdr = {
