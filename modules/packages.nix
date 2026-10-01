@@ -22,6 +22,9 @@
           pi = inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.pi;
         };
         pi-ask-user = pkgs.callPackage ../packages/pi-ask-user.nix { source = inputs.pi-ask-user; };
+        pi-claude-bridge = pkgs.callPackage ../packages/pi-claude-bridge.nix {
+          source = inputs.pi-claude-bridge;
+        };
         pi-goal = narumitw "pi-goal";
         pi-jev-compact = pkgs.callPackage ../packages/pi-jev-compact.nix {
           source = inputs.pi-jev-compact;

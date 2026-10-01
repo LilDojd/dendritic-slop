@@ -2,6 +2,7 @@
 {
   source,
   hostPeers,
+  extension ? "./index.ts",
   removeDependencies ? [ ],
 }:
 let
@@ -24,7 +25,7 @@ in
 {
   package = projectRoot package // {
     pi = {
-      extensions = [ "./index.ts" ];
+      extensions = [ extension ];
       skills = [ ];
     };
   };

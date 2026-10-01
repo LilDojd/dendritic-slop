@@ -27,7 +27,7 @@ The flake configures the Numtide binary cache used by packages from `llm-agents.
 - `skills.<name>`: pinned skill directories. `skillSets.{core,rust,python,pydantic}` group them.
   `pydantic` covers Pydantic, Pydantic AI, and Logfire; the Pydantic AI migration skills are
   only in `skills`. Logfire skills expect the hosted Logfire MCP server in `programs.mcp.servers`.
-- `packages.<system>.*`: Pi (with the standalone codemode worker embedded), Pi extensions (`pi-ask-user`, `pi-web-access`, `pi-playwright`, `pi-goal`, `pi-starship`, `pi-jev-compact`, `jevons`), `tsk`, and Herdr plugin roots (`herdr-plugin-jj-workspace`, `herdr-plugin-tsk`).
+- `packages.<system>.*`: Pi (with the standalone codemode worker embedded), Pi extensions (`pi-ask-user`, `pi-claude-bridge`, `pi-web-access`, `pi-playwright`, `pi-goal`, `pi-starship`, `pi-jev-compact`, `jevons`), `tsk`, and Herdr plugin roots (`herdr-plugin-jj-workspace`, `herdr-plugin-tsk`).
 
 ## Home Manager
 
@@ -75,6 +75,13 @@ package to this flake's `pi`, based on `llm-agents.nix` with the codemode worker
 into `settings.packages`, which pi.nix does not merge. `programs.mcp.servers` are written to
 Pi's native `~/.pi/agent/mcp.json`. The file is read-only, so change exposure and enablement
 in Nix instead of through `/mcp` or `pi mcp add`.
+
+`pi-claude-bridge` registers Claude Code as a Pi provider. Add it to
+`dendriticSlop.piPackages` and declare `~/.pi/agent/claude-bridge.json` through
+Home Manager with `provider.pathToClaudeCodeExecutable = lib.getExe config.programs.claude-code.package`.
+Set `provider.plan` (`"pro"` or `"max"`) and `askClaude.enabled` explicitly so the
+startup notice does not try to rewrite the managed config. AskClaude is opt-in;
+Extra Usage is disabled by default. Claude authentication and sessions stay outside the store.
 
 ### `skills`
 

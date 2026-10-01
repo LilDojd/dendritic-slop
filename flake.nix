@@ -80,6 +80,11 @@
       flake = false;
     };
 
+    pi-claude-bridge = {
+      url = "github:elidickinson/pi-claude-bridge/9dafd0301faad79cf6a1974d92af424189476b5d";
+      flake = false;
+    };
+
     pi-jev-compact = {
       url = "github:LilDojd/pi-jev-compact/dfe7d031e03a75dc2c03c6cf34ce1cf040733038";
       flake = false;
