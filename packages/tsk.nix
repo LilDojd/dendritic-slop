@@ -10,6 +10,8 @@ rustPlatform.buildRustPackage {
   src = tsk;
   cargoLock.lockFile = tsk + "/Cargo.lock";
   nativeCheckInputs = [ gitMinimal ];
+  # Parallel copy-and-exec tests race on Linux with ETXTBSY.
+  dontUseCargoParallelTests = true;
 
   meta = {
     description = "A terminal task board for you and your agents";
