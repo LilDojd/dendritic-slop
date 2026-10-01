@@ -17,6 +17,7 @@
     {
       packages = {
         inherit tsk;
+        inherit (pkgs) mcp-grafana;
         pi = pkgs.callPackage ../packages/pi.nix {
           pi = inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}.pi;
         };

@@ -27,7 +27,7 @@ The flake configures the Numtide binary cache used by packages from `llm-agents.
 - `skills.<name>`: pinned skill directories. `skillSets.{core,rust,python,pydantic}` group them.
   `pydantic` covers Pydantic, Pydantic AI, and Logfire; the Pydantic AI migration skills are
   only in `skills`. Logfire skills expect the hosted Logfire MCP server in `programs.mcp.servers`.
-- `packages.<system>.*`: Pi (with the standalone codemode worker embedded), Pi extensions (`pi-ask-user`, `pi-claude-bridge`, `pi-web-access`, `pi-playwright`, `pi-goal`, `pi-starship`, `pi-jev-compact`, `pi-jev`), `tsk`, and Herdr plugin roots (`herdr-plugin-jj-workspace`, `herdr-plugin-tsk`).
+- `packages.<system>.*`: Grafana MCP (`mcp-grafana`), Pi (with the standalone codemode worker embedded), Pi extensions (`pi-ask-user`, `pi-claude-bridge`, `pi-web-access`, `pi-playwright`, `pi-goal`, `pi-starship`, `pi-jev-compact`, `pi-jev`), `tsk`, and Herdr plugin roots (`herdr-plugin-jj-workspace`, `herdr-plugin-tsk`).
 
 ## Home Manager
 
@@ -104,6 +104,22 @@ Appends `resources/rules/context.md` to Claude Code's `CLAUDE.md` and Pi's syste
 runtime secret files into `${VARIABLE}` in `programs.mcp.servers.<server>.headers`.
 Claude Code resolves them with a `headersHelper`, and Pi receives them as environment
 variables, so secrets never enter the store.
+
+### Grafana MCP
+
+The `mcp-grafana` package reuses the version pinned by Nixpkgs. Enable it in the
+consuming Home Manager configuration:
+
+```nix
+programs.mcp.servers.grafana = {
+  command = lib.getExe slopPackages.mcp-grafana;
+  args = [ "--disable-write" ];
+};
+```
+
+Set `GRAFANA_URL` and `GRAFANA_SERVICE_ACCOUNT_TOKEN` in the agent's environment
+before launching Claude Code or Pi. The stdio server inherits them; credentials
+stay outside the Nix store. Remove `--disable-write` to allow mutations.
 
 ### `herdr`
 

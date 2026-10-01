@@ -85,6 +85,10 @@
                   pi.coding-agent.enable = true;
                   mcp = {
                     enable = true;
+                    servers.grafana = {
+                      command = pkgs.lib.getExe self'.packages.mcp-grafana;
+                      args = [ "--disable-write" ];
+                    };
                     servers.context7 = {
                       url = "https://mcp.context7.com/mcp";
                       headers.Authorization = "Bearer \${CONTEXT7_API_KEY}";
