@@ -76,7 +76,7 @@
     };
 
     pi-claude-bridge = {
-      url = "github:elidickinson/pi-claude-bridge/874fa7c2678456336f23b64e784e2057e608d83e";
+      url = "github:elidickinson/pi-claude-bridge/6aa276a1498e5376363f5c1f8cf04bfcaee38c93";
       flake = false;
     };
 
