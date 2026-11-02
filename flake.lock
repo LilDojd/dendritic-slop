@@ -444,34 +444,34 @@
     "pi-claude-bridge": {
       "flake": false,
       "locked": {
-        "lastModified": 1792772212,
-        "narHash": "sha256-/jBJOHGVlhk1iG8xU9NQG7t3koAEX/sBq+a3A1pLd8M=",
+        "lastModified": 1793396569,
+        "narHash": "sha256-8asHumCj7UrQsa3Niogq4U1RAuqt2OEIBirQyHtKNJE=",
         "owner": "elidickinson",
         "repo": "pi-claude-bridge",
-        "rev": "6aa276a1498e5376363f5c1f8cf04bfcaee38c93",
+        "rev": "0b41f78189de09c6da6baf3acc0f604b089f08fb",
         "type": "github"
       },
       "original": {
         "owner": "elidickinson",
         "repo": "pi-claude-bridge",
-        "rev": "6aa276a1498e5376363f5c1f8cf04bfcaee38c93",
+        "rev": "0b41f78189de09c6da6baf3acc0f604b089f08fb",
         "type": "github"
       }
     },
     "pi-jev": {
       "flake": false,
       "locked": {
-        "lastModified": 1790824636,
-        "narHash": "sha256-LCOvdK8a7GjNA4KYZkaDQBuhBu9uX0MzPiOodNyHZKU=",
+        "lastModified": 1793459997,
+        "narHash": "sha256-Y59/AcbRGej9xXcf1eVEBtBFP3OF0nhOzKP6vMZRxe4=",
         "owner": "y0usaf",
         "repo": "pi-jev",
-        "rev": "cbbc35dacee9337e575f7de913ef2757ad64a198",
+        "rev": "cae0d673ee9f7af70c1f7e43710ac0041910eec6",
         "type": "github"
       },
       "original": {
         "owner": "y0usaf",
         "repo": "pi-jev",
-        "rev": "cbbc35dacee9337e575f7de913ef2757ad64a198",
+        "rev": "cae0d673ee9f7af70c1f7e43710ac0041910eec6",
         "type": "github"
       }
     },
