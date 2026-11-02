@@ -76,12 +76,12 @@
     };
 
     pi-claude-bridge = {
-      url = "github:elidickinson/pi-claude-bridge/6aa276a1498e5376363f5c1f8cf04bfcaee38c93";
+      url = "github:elidickinson/pi-claude-bridge/0b41f78189de09c6da6baf3acc0f604b089f08fb";
       flake = false;
     };
 
     pi-jev = {
-      url = "github:y0usaf/pi-jev/cbbc35dacee9337e575f7de913ef2757ad64a198";
+      url = "github:y0usaf/pi-jev/cae0d673ee9f7af70c1f7e43710ac0041910eec6";
       flake = false;
     };
 
