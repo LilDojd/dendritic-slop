@@ -444,17 +444,17 @@
     "pi-claude-bridge": {
       "flake": false,
       "locked": {
-        "lastModified": 1794263015,
-        "narHash": "sha256-GJGohRn55sfuizR9d/qBrBGiue6ABTN8XWjmYGOhAFA=",
+        "lastModified": 1794592897,
+        "narHash": "sha256-7V2qH47clAj3h6DQeMJEEmDp21NItma7TzpaB61b7Pw=",
         "owner": "elidickinson",
         "repo": "pi-claude-bridge",
-        "rev": "334c2b689d7c2bd047b5ad278bca5d4ccd8c5682",
+        "rev": "45fc71d23d5860ea4e3ff88ca09eb628136429cc",
         "type": "github"
       },
       "original": {
         "owner": "elidickinson",
         "repo": "pi-claude-bridge",
-        "rev": "334c2b689d7c2bd047b5ad278bca5d4ccd8c5682",
+        "rev": "45fc71d23d5860ea4e3ff88ca09eb628136429cc",
         "type": "github"
       }
     },
